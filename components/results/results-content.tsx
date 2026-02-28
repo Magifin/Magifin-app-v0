@@ -13,6 +13,12 @@ import {
   Lock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion"
 
 function calculateEstimate(params: URLSearchParams) {
   let minGain = 0
@@ -160,6 +166,16 @@ export function ResultsContent() {
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
 
+          <Button size="lg" className="mt-8 h-12 px-8 text-base" asChild>
+            <Link href="/onboarding">
+              {"Créer mon espace Magifin"}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {"Gratuit. Sans engagement."}
+          </p>
+
           {/* Impact summary */}
           <div className="mt-10 flex flex-col items-center gap-4">
             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
@@ -184,28 +200,34 @@ export function ResultsContent() {
           </div>
         </div>
 
-        {/* Reasoning explanation */}
-        <div className="mb-12 mx-auto w-full max-w-2xl rounded-xl border border-border/60 bg-muted/30 px-6 py-5">
-          <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {"Pourquoi cette estimation ?"}
-          </p>
-          <p className="text-center text-sm leading-relaxed text-foreground/80">
-            {"Selon vos réponses, certaines optimisations fiscales pertinentes semblent applicables à votre situation. Voici les leviers identifiés\u00A0:"}
-          </p>
-          <ul className="mt-3 flex flex-col gap-2">
-            {result.optimisations.slice(0, 2).map((item, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                <span className="text-sm text-foreground/80">{item}</span>
-              </li>
-            ))}
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-              <span className="text-sm text-muted-foreground">
-                {"D'autres déductions pourraient s'appliquer après analyse complète"}
-              </span>
-            </li>
-          </ul>
+        {/* Reasoning explanation (accordion) */}
+        <div className="mb-12 mx-auto w-full max-w-2xl rounded-xl border border-border/60 bg-muted/30 px-4">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="reasoning" className="border-b-0">
+              <AccordionTrigger className="py-4 text-xs font-medium uppercase tracking-widest text-muted-foreground hover:no-underline">
+                {"Pourquoi cette estimation ?"}
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <p className="text-sm leading-relaxed text-foreground/80">
+                  {"Selon vos réponses, certaines optimisations fiscales pertinentes semblent applicables à votre situation. Voici les leviers identifiés\u00A0:"}
+                </p>
+                <ul className="mt-3 flex flex-col gap-2">
+                  {result.optimisations.slice(0, 2).map((item, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                      <span className="text-sm text-foreground/80">{item}</span>
+                    </li>
+                  ))}
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                    <span className="text-sm text-muted-foreground">
+                      {"D'autres déductions pourraient s'appliquer après analyse complète"}
+                    </span>
+                  </li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         {/* Results sections */}
@@ -305,27 +327,22 @@ export function ResultsContent() {
             <p className="mt-5 text-sm text-muted-foreground">
               {"Créez votre espace gratuit pour débloquer toutes vos optimisations fiscales."}
             </p>
-            <Button size="sm" className="mt-4 w-full" asChild>
-              <Link href="/onboarding">
-                {"Créer mon espace Magifin"}
-                <ArrowRight className="ml-2 h-3.5 w-3.5" />
-              </Link>
-            </Button>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <Button size="lg" className="h-12 px-8 text-base" asChild>
-            <Link href="/onboarding">
-              {"Créer mon espace Magifin"}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <p className="text-sm text-muted-foreground">
+        {/* Secondary CTA */}
+        <div className="mt-12 flex flex-col items-center gap-3 text-center">
+          <Link
+            href="/onboarding"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            {"Créer mon espace Magifin"}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+          <p className="text-xs text-muted-foreground">
             Gratuit. Sans engagement. Suivi complet de votre optimisation.
           </p>
-          <p className="mt-4 max-w-lg text-xs leading-relaxed text-muted-foreground/70">
+          <p className="mt-3 max-w-lg text-xs leading-relaxed text-muted-foreground/70">
             {"Estimation indicative basée sur les informations fournies. Magifin ne remplace pas un conseiller fiscal. Vérifiez toujours votre déclaration avant envoi."}
           </p>
         </div>
