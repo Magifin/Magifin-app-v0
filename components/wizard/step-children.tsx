@@ -44,13 +44,12 @@ export function StepChildren({ data, updateData }: StepProps) {
   return (
     <div>
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        {"Combien d'enfants avez-vous a charge ?"}
+        {"Combien d\u2019enfants avez-vous à charge ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Les enfants a charge ouvrent droit a des deductions fiscales."}
+        {"Les enfants à charge ouvrent droit à des déductions fiscales."}
       </p>
 
-      {/* Counter */}
       <div className="mt-8 flex items-center gap-4">
         <Button
           variant="outline"
@@ -74,15 +73,14 @@ export function StepChildren({ data, updateData }: StepProps) {
           <Plus className="h-4 w-4" />
         </Button>
         <span className="text-sm text-muted-foreground">
-          {data.childrenCount <= 1 ? "enfant" : "enfants"} a charge
+          {data.childrenCount <= 1 ? "enfant" : "enfants"} {"à charge"}
         </span>
       </div>
 
-      {/* Ages */}
       {data.childrenCount > 0 && (
         <div className="mt-8">
           <p className="mb-4 text-sm font-medium text-foreground">
-            {"Age de chaque enfant"}
+            {"Âge de chaque enfant"}
           </p>
           <div className="flex flex-col gap-3">
             {data.childrenAges.map((age, i) => (
@@ -97,7 +95,7 @@ export function StepChildren({ data, updateData }: StepProps) {
                   value={age}
                   onChange={(e) => updateAge(i, parseInt(e.target.value) || 0)}
                   className="w-24"
-                  placeholder="Age"
+                  placeholder="Âge"
                 />
                 <span className="text-sm text-muted-foreground">ans</span>
                 <button

@@ -11,9 +11,9 @@ interface Message {
 }
 
 const SUGGESTED = [
-  "Quelles deductions puis-je reclamer pour mes enfants ?",
-  "Comment fonctionne la reduction titres-services ?",
-  "Quel est le plafond de l'epargne pension ?",
+  "Quelles déductions puis-je réclamer pour mes enfants ?",
+  "Comment fonctionne la réduction titres-services ?",
+  "Quel est le plafond de l\u2019épargne pension ?",
 ]
 
 export default function AssistantPage() {
@@ -21,7 +21,7 @@ export default function AssistantPage() {
     {
       role: "assistant",
       content:
-        "Bonjour ! Je suis Magi, votre assistant fiscal intelligent. Comment puis-je vous aider aujourd'hui ?",
+        "Bonjour ! Je suis Magi, votre assistant fiscal intelligent. Comment puis-je vous aider aujourd\u2019hui ?",
     },
   ])
   const [input, setInput] = useState("")
@@ -36,7 +36,7 @@ export default function AssistantPage() {
       {
         role: "assistant",
         content:
-          "Merci pour votre question. Cette fonctionnalite sera bientot disponible avec une integration IA complete. En attendant, n'hesitez pas a consulter notre module d'optimisation fiscale pour une analyse detaillee de votre situation.",
+          "Merci pour votre question. Cette fonctionnalité sera bientôt disponible avec une intégration IA complète. En attendant, n\u2019hésitez pas à consulter notre module d\u2019optimisation fiscale pour une analyse détaillée de votre situation.",
       },
     ])
     setInput("")
@@ -49,7 +49,7 @@ export default function AssistantPage() {
           Assistant IA
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Posez vos questions fiscales a Magi.
+          {"Posez vos questions fiscales à Magi."}
         </p>
       </div>
 

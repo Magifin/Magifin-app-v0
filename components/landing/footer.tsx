@@ -16,7 +16,7 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {"La plateforme d'optimisation financiere intelligente pour les contribuables belges."}
+              {"La plateforme d\u2019optimisation financière intelligente pour les contribuables belges."}
             </p>
           </div>
 
@@ -38,7 +38,7 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+                  <Link href="/dashboard/assistant" className="text-sm text-muted-foreground hover:text-foreground">
                     Assistant IA
                   </Link>
                 </li>
@@ -46,17 +46,17 @@ export function Footer() {
             </div>
             <div>
               <h4 className="mb-4 text-sm font-semibold text-card-foreground">
-                Legal
+                {"Légal"}
               </h4>
               <ul className="flex flex-col gap-3">
                 <li>
                   <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
-                    {"Politique de confidentialite"}
+                    {"Politique de confidentialité"}
                   </Link>
                 </li>
                 <li>
                   <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
-                    {"Conditions d'utilisation"}
+                    {"Conditions d\u2019utilisation"}
                   </Link>
                 </li>
                 <li>
@@ -70,7 +70,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t border-border/50 pt-8 text-center text-sm text-muted-foreground">
-          {"© 2026 Magifin. Tous droits reserves."}
+          {"© 2026 Magifin. Tous droits réservés."}
         </div>
       </div>
     </footer>

@@ -21,23 +21,23 @@ const documents = [
     date: null,
   },
   {
-    name: "Attestation epargne pension (281.60)",
-    category: "Epargne pension",
+    name: "Attestation épargne pension (281.60)",
+    category: "Épargne pension",
     status: "missing" as const,
     date: null,
   },
   {
-    name: "Composition de menage",
+    name: "Composition de ménage",
     category: "Situation familiale",
     status: "received" as const,
-    date: "03 dec 2025",
+    date: "03 déc 2025",
   },
 ]
 
 const statusConfig = {
   received: {
     icon: CheckCircle2,
-    label: "Recu",
+    label: "Reçu",
     className: "text-accent bg-accent/10",
   },
   pending: {
@@ -61,7 +61,7 @@ export default function DocumentsPage() {
             Documents
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Gerez vos attestations et justificatifs fiscaux.
+            {"Gérez vos attestations et justificatifs fiscaux."}
           </p>
         </div>
         <Button>

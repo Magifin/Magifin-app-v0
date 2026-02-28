@@ -17,7 +17,7 @@ export function StepServices({ data, updateData }: StepProps) {
         Utilisez-vous des titres-services ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Les titres-services (aide menagere) donnent droit a une reduction d'impot."}
+        {"Les titres-services (aide ménagère) donnent droit à une réduction d\u2019impôt."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -43,7 +43,7 @@ export function StepServices({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J'utilise des titres-services"}
+              {"J\u2019utilise des titres-services"}
             </p>
           </div>
         </button>
@@ -81,7 +81,7 @@ export function StepServices({ data, updateData }: StepProps) {
       {data.titresServices && (
         <div className="mt-8">
           <label className="mb-2 block text-sm font-medium text-foreground">
-            Nombre de titres-services achetes par an
+            {"Nombre de titres-services achetés par an"}
           </label>
           <div className="flex items-center gap-2">
             <Input
@@ -99,7 +99,7 @@ export function StepServices({ data, updateData }: StepProps) {
             <span className="text-sm text-muted-foreground">titres</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {"Maximum 170 titres par personne (ou 340 par menage)."}
+            {"Maximum 170 titres par personne (ou 340 par ménage)."}
           </p>
         </div>
       )}

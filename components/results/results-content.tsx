@@ -33,8 +33,8 @@ function calculateEstimate(params: URLSearchParams) {
     const childDeduction = children * 50
     minGain += childDeduction * 0.8
     maxGain += childDeduction * 1.2
-    optimisations.push(`Deduction pour ${children} enfant(s) a charge`)
-    documents.push("Composition de menage officielle")
+    optimisations.push(`Déduction pour ${children} enfant(s) à charge`)
+    documents.push("Composition de ménage officielle")
   }
 
   // Childcare
@@ -42,8 +42,8 @@ function calculateEstimate(params: URLSearchParams) {
     const childcareDeduction = Math.min(childcareCost, 16.4 * 250) * 0.45
     minGain += childcareDeduction * 0.7
     maxGain += childcareDeduction
-    optimisations.push("Frais de garde d'enfants deductibles")
-    documents.push("Attestations fiscales des creches / gardiennes")
+    optimisations.push("Frais de garde d\u2019enfants déductibles")
+    documents.push("Attestations fiscales des crèches / gardiennes")
     actions.push("Demander les attestations de garde (formulaire 281.86)")
   }
 
@@ -52,7 +52,7 @@ function calculateEstimate(params: URLSearchParams) {
     const tsReduction = titresServicesAmount * 9 * 0.3
     minGain += tsReduction * 0.9
     maxGain += tsReduction
-    optimisations.push("Reduction pour titres-services")
+    optimisations.push("Réduction pour titres-services")
     documents.push("Attestation fiscale titres-services")
   }
 
@@ -64,7 +64,7 @@ function calculateEstimate(params: URLSearchParams) {
         : Math.min(epargnesPensionAmount, 1310) * 0.25
     minGain += pensionReduction * 0.9
     maxGain += pensionReduction
-    optimisations.push("Reduction pour epargne pension")
+    optimisations.push("Réduction pour épargne pension")
     documents.push("Attestation 281.60 de votre banque")
   }
 
@@ -72,12 +72,12 @@ function calculateEstimate(params: URLSearchParams) {
   if (optimisations.length === 0) {
     minGain = 100
     maxGain = 400
-    optimisations.push("Analyse complete de votre profil recommandee")
-    actions.push("Creer votre espace pour une analyse approfondie")
+    optimisations.push("Analyse complète de votre profil recommandée")
+    actions.push("Créer votre espace pour une analyse approfondie")
   }
 
-  actions.push("Verifier vos documents avant la declaration")
-  actions.push("Creer votre espace Magifin pour un suivi complet")
+  actions.push("Vérifier vos documents avant la déclaration")
+  actions.push("Créer votre espace Magifin pour un suivi complet")
 
   return {
     minGain: Math.round(minGain),
@@ -94,7 +94,6 @@ export function ResultsContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
       <header className="border-b border-border/50 px-6 py-4">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <Link
@@ -102,7 +101,7 @@ export function ResultsContent() {
             className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Modifier mes reponses
+            Modifier mes réponses
           </Link>
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
@@ -123,19 +122,19 @@ export function ResultsContent() {
             Votre estimation
           </p>
           <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
-            {"Vous pourriez recuperer entre"}
+            {"Vous pourriez récupérer entre"}
           </h1>
           <div className="mt-4 flex items-center justify-center gap-3">
             <span className="font-[family-name:var(--font-heading)] text-5xl font-bold text-primary sm:text-6xl">
-              {result.minGain}{"€"}
+              {result.minGain}{"\u00A0€"}
             </span>
             <span className="text-2xl text-muted-foreground">et</span>
             <span className="font-[family-name:var(--font-heading)] text-5xl font-bold text-primary sm:text-6xl">
-              {result.maxGain}{"€"}
+              {result.maxGain}{"\u00A0€"}
             </span>
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
-            *Estimation basee sur les informations fournies. Le montant reel peut varier.
+            {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
         </div>
 
@@ -148,7 +147,7 @@ export function ResultsContent() {
                 <TrendingUp className="h-5 w-5" />
               </div>
               <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                Optimisations detectees
+                {"Optimisations détectées"}
               </h2>
             </div>
             <ul className="flex flex-col gap-3">
@@ -194,7 +193,7 @@ export function ResultsContent() {
                 <ListChecks className="h-5 w-5" />
               </div>
               <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                Actions recommandees
+                {"Actions recommandées"}
               </h2>
             </div>
             <ul className="flex flex-col gap-3">
@@ -214,7 +213,7 @@ export function ResultsContent() {
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <Button size="lg" className="h-12 px-8 text-base" asChild>
             <Link href="/dashboard">
-              Creer mon espace Magifin
+              {"Créer mon espace Magifin"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

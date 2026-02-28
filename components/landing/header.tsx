@@ -25,7 +25,7 @@ export function Header() {
             href="#how-it-works"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Comment ca marche
+            Comment ça marche
           </Link>
           <Link
             href="#products"
@@ -71,7 +71,7 @@ export function Header() {
               className="text-sm font-medium text-muted-foreground"
               onClick={() => setMobileOpen(false)}
             >
-              Comment ca marche
+              Comment ça marche
             </Link>
             <Link
               href="#products"

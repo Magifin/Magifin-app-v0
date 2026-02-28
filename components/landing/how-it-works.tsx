@@ -4,23 +4,23 @@ const steps = [
   {
     number: "01",
     icon: ClipboardList,
-    title: "Repondez a quelques questions",
+    title: "Répondez à quelques questions",
     description:
-      "Un questionnaire simple et rapide sur votre situation familiale et financiere pour identifier les opportunites.",
+      "Un questionnaire simple et rapide sur votre situation familiale et financière pour identifier les opportunités.",
   },
   {
     number: "02",
     icon: Search,
-    title: "Magifin detecte vos optimisations fiscales",
+    title: "Magifin détecte vos optimisations fiscales",
     description:
-      "Notre algorithme analyse votre profil et identifie toutes les deductions auxquelles vous avez droit.",
+      "Notre algorithme analyse votre profil et identifie toutes les déductions auxquelles vous avez droit.",
   },
   {
     number: "03",
     icon: FileCheck,
-    title: "Recevez votre estimation et les actions a prendre",
+    title: "Recevez votre estimation et les actions à prendre",
     description:
-      "Un rapport clair avec le montant estime de votre remboursement et les demarches a suivre.",
+      "Un rapport clair avec le montant estimé de votre remboursement et les démarches à suivre.",
   },
 ]
 
@@ -33,10 +33,10 @@ export function HowItWorks() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-16 text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-accent">
-            Comment ca marche
+            Comment ça marche
           </p>
           <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-card-foreground sm:text-4xl text-balance">
-            Trois etapes simples vers votre remboursement
+            Trois étapes simples vers votre remboursement
           </h2>
         </div>
 

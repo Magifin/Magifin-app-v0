@@ -14,10 +14,10 @@ export function StepPension({ data, updateData }: StepProps) {
   return (
     <div>
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        {"Avez-vous une epargne pension ?"}
+        {"Avez-vous une épargne pension ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"L'epargne pension vous donne droit a une reduction d'impot de 30% (max 1.020€) ou 25% (max 1.310€)."}
+        {"L\u2019épargne pension vous donne droit à une réduction d\u2019impôt de 30\u00A0% (max 1.020\u00A0€) ou 25\u00A0% (max 1.310\u00A0€)."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -43,7 +43,7 @@ export function StepPension({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J'ai une epargne pension"}
+              {"J\u2019ai une épargne pension"}
             </p>
           </div>
         </button>
@@ -72,7 +72,7 @@ export function StepPension({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Non</p>
             <p className="text-sm text-muted-foreground">
-              {"Pas d'epargne pension"}
+              {"Pas d\u2019épargne pension"}
             </p>
           </div>
         </button>
@@ -81,7 +81,7 @@ export function StepPension({ data, updateData }: StepProps) {
       {data.epargnesPension && (
         <div className="mt-8">
           <label className="mb-2 block text-sm font-medium text-foreground">
-            Montant annuel verse
+            {"Montant annuel versé"}
           </label>
           <div className="flex items-center gap-2">
             <Input
@@ -100,7 +100,7 @@ export function StepPension({ data, updateData }: StepProps) {
             <span className="text-sm text-muted-foreground">{"€ / an"}</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {"Plafond: 1.020€ (reduction de 30%) ou 1.310€ (reduction de 25%)."}
+            {"Plafond\u00A0: 1.020\u00A0€ (réduction de 30\u00A0%) ou 1.310\u00A0€ (réduction de 25\u00A0%)."}
           </p>
         </div>
       )}

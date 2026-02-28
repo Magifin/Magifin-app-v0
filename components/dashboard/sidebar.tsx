@@ -97,7 +97,7 @@ export function DashboardSidebar() {
           </div>
           <button
             className="text-sidebar-foreground/50 transition-colors hover:text-sidebar-foreground"
-            aria-label="Se deconnecter"
+            aria-label="Se déconnecter"
           >
             <LogOut className="h-4 w-4" />
           </button>

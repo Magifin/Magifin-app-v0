@@ -25,11 +25,11 @@ export interface WizardData {
 }
 
 const STEPS = [
-  "Situation du menage",
+  "Situation du ménage",
   "Enfants",
   "Frais de garde",
   "Titres-services",
-  "Epargne pension",
+  "Épargne pension",
 ]
 
 const defaultData: WizardData = {
@@ -57,7 +57,6 @@ export default function WizardPage() {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep((s) => s + 1)
     } else {
-      // Build query params for results page
       const params = new URLSearchParams()
       params.set("situation", data.situation)
       params.set("children", String(data.childrenCount))
@@ -113,7 +112,6 @@ export default function WizardPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
       <header className="border-b border-border/50 px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Link
@@ -135,14 +133,11 @@ export default function WizardPage() {
         </div>
       </header>
 
-      {/* Progress */}
       <WizardProgress steps={STEPS} currentStep={currentStep} />
 
-      {/* Step content */}
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10">
         <div className="flex-1">{renderStep()}</div>
 
-        {/* Navigation */}
         <div className="flex items-center justify-between border-t border-border/50 pt-6 mt-10">
           <Button
             variant="ghost"
@@ -150,10 +145,10 @@ export default function WizardPage() {
             disabled={currentStep === 0}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Precedent
+            {"Précédent"}
           </Button>
           <Button onClick={next} disabled={!canProceed()}>
-            {currentStep === STEPS.length - 1 ? "Voir les resultats" : "Suivant"}
+            {currentStep === STEPS.length - 1 ? "Voir les résultats" : "Suivant"}
           </Button>
         </div>
       </div>

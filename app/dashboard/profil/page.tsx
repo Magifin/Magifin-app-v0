@@ -9,7 +9,7 @@ export default function ProfilPage() {
           Profil
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Gerez vos informations personnelles.
+          {"Gérez vos informations personnelles."}
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function ProfilPage() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-card-foreground">
-              Numero national (optionnel)
+              {"Numéro national (optionnel)"}
             </label>
             <Input placeholder="XX.XX.XX-XXX.XX" />
           </div>

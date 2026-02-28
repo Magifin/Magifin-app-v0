@@ -12,20 +12,20 @@ interface StepProps {
 const situations = [
   {
     value: "single",
-    label: "Isole(e)",
+    label: "Isolé(e)",
     description: "Vous vivez seul(e)",
     icon: User,
   },
   {
     value: "couple",
     label: "En couple",
-    description: "Marie(e) ou cohabitant(e) legal(e)",
+    description: "Marié(e) ou cohabitant(e) légal(e)",
     icon: Users,
   },
   {
     value: "cohabitation",
     label: "Cohabitation de fait",
-    description: "Vous vivez avec votre partenaire sans statut legal",
+    description: "Vous vivez avec votre partenaire sans statut légal",
     icon: Heart,
   },
 ]
@@ -37,7 +37,7 @@ export function StepSituation({ data, updateData }: StepProps) {
         Quelle est votre situation familiale ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-        Selectionnez la situation qui correspond a votre menage.
+        {"Sélectionnez la situation qui correspond à votre ménage."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3">

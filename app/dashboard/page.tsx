@@ -10,28 +10,28 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 const checklistItems = [
-  { label: "Completer le questionnaire fiscal", done: true },
-  { label: "Verifier les frais de garde", done: true },
+  { label: "Compléter le questionnaire fiscal", done: true },
+  { label: "Vérifier les frais de garde", done: true },
   { label: "Ajouter les attestations titres-services", done: false },
-  { label: "Confirmer l'epargne pension", done: false },
-  { label: "Telecharger le rapport fiscal", done: false },
+  { label: "Confirmer l\u2019épargne pension", done: false },
+  { label: "Télécharger le rapport fiscal", done: false },
 ]
 
 const documents = [
   { name: "Attestation garde enfants", status: "received" as const },
   { name: "Attestation titres-services", status: "pending" as const },
-  { name: "Attestation epargne pension (281.60)", status: "missing" as const },
+  { name: "Attestation épargne pension (281.60)", status: "missing" as const },
 ]
 
 const nextActions = [
   {
-    title: "Completer vos documents",
-    description: "2 documents restent a fournir pour finaliser votre dossier.",
+    title: "Compléter vos documents",
+    description: "2 documents restent à fournir pour finaliser votre dossier.",
     href: "/dashboard/documents",
   },
   {
-    title: "Consulter l'assistant IA",
-    description: "Posez vos questions sur votre situation fiscale a Magi.",
+    title: "Consulter l\u2019assistant IA",
+    description: "Posez vos questions sur votre situation fiscale à Magi.",
     href: "/dashboard/assistant",
   },
 ]
@@ -39,13 +39,12 @@ const nextActions = [
 export default function DashboardPage() {
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
           Bonjour, Jean
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Voici un apercu de votre optimisation fiscale.
+          {"Voici un aperçu de votre optimisation fiscale."}
         </p>
       </div>
 
@@ -55,23 +54,23 @@ export default function DashboardPage() {
           <div>
             <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp className="h-4 w-4 text-accent" />
-              Gain fiscal estime
+              {"Gain fiscal estimé"}
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-[family-name:var(--font-heading)] text-4xl font-bold text-primary sm:text-5xl">
-                847{"€"}
+                {"847\u00A0€"}
               </span>
               <span className="text-lg text-muted-foreground">
-                {"- 1.204€"}
+                {"– 1.204\u00A0€"}
               </span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Estimation basee sur votre profil actuel
+              {"Estimation basée sur votre profil actuel"}
             </p>
           </div>
           <Button asChild>
             <Link href="/wizard">
-              Mettre a jour
+              {"Mettre à jour"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -126,7 +125,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-card-foreground">{doc.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {doc.status === "received"
-                      ? "Recu"
+                      ? "Reçu"
                       : doc.status === "pending"
                         ? "En attente"
                         : "Manquant"}
@@ -138,7 +137,7 @@ export default function DashboardPage() {
           <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
             <Link href="/dashboard/documents">
               <FileText className="mr-2 h-3.5 w-3.5" />
-              Gerer les documents
+              {"Gérer les documents"}
             </Link>
           </Button>
         </div>
