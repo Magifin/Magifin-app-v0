@@ -1,77 +1,158 @@
 import Link from "next/link"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowRight, ShieldCheck, TrendingUp, Lock, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+const recommendations = [
+  {
+    icon: FileText,
+    category: "Fiscalite",
+    title: "Optimisation fiscale incomplete",
+    text: "Un gain estime entre 100\u00A0\u20AC et 400\u00A0\u20AC reste possible.",
+    cta: "Completer mon analyse",
+    href: "/dashboard",
+    disabled: false,
+  },
+  {
+    icon: ShieldCheck,
+    category: "Assurance",
+    title: "Protection financiere a optimiser",
+    text: "Certaines assurances peuvent ameliorer votre protection et votre fiscalite.",
+    cta: "Verifier mes assurances",
+    href: "/dashboard",
+    disabled: false,
+  },
+  {
+    icon: TrendingUp,
+    category: "Epargne & Investissement",
+    title: "Optimisation future",
+    text: "Des recommandations personnalisees seront bientot disponibles.",
+    cta: "Bientot disponible",
+    href: "#",
+    disabled: true,
+  },
+]
+
 export default function WelcomePage() {
+  const score = 62
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
-      <div className="flex max-w-md flex-col items-center gap-8 text-center">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <span className="text-base font-bold text-primary-foreground">M</span>
-          </div>
-          <span className="font-[family-name:var(--font-heading)] text-2xl font-bold tracking-tight text-foreground">
-            Magifin
-          </span>
-        </div>
-
-        {/* Success icon */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
-          <CheckCircle2 className="h-8 w-8 text-accent" />
-        </div>
-
-        {/* Title */}
-        <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl text-balance">
-            {"Votre espace est prêt"}
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            {"Votre analyse fiscale a été sauvegardée. Vous pouvez maintenant suivre vos optimisations, ajouter vos documents et maximiser votre remboursement."}
-          </p>
-        </div>
-
-        {/* What's next */}
-        <div className="flex w-full flex-col gap-3 rounded-xl border border-border/60 bg-muted/30 px-5 py-4">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {"Prochaines étapes"}
-          </p>
-          <ul className="flex flex-col gap-2.5">
-            <li className="flex items-start gap-2 text-left">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                1
-              </span>
-              <span className="text-sm text-foreground/80">
-                {"Consultez votre tableau de bord personnalisé"}
-              </span>
-            </li>
-            <li className="flex items-start gap-2 text-left">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                2
-              </span>
-              <span className="text-sm text-foreground/80">
-                {"Ajoutez vos attestations fiscales"}
-              </span>
-            </li>
-            <li className="flex items-start gap-2 text-left">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                3
-              </span>
-              <span className="text-sm text-foreground/80">
-                {"Suivez vos optimisations en temps réel"}
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        {/* CTA */}
-        <Button size="lg" className="h-12 w-full px-8 text-base" asChild>
-          <Link href="/dashboard">
-            {"Accéder à mon espace"}
-            <ArrowRight className="ml-2 h-4 w-4" />
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Header bar */}
+      <header className="border-b border-border/50 px-6 py-4">
+        <div className="mx-auto flex max-w-3xl items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+              <span className="text-xs font-bold text-primary-foreground">M</span>
+            </div>
+            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+              Magifin
+            </span>
           </Link>
-        </Button>
-      </div>
+          <Link
+            href="/dashboard"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {"Aller au tableau de bord"}
+          </Link>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
+        {/* Greeting */}
+        <div className="mb-12">
+          <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl">
+            {"Bonjour \uD83D\uDC4B"}
+          </h1>
+          <p className="mt-2 max-w-lg text-base leading-relaxed text-muted-foreground">
+            {"Voici les premieres optimisations detectees pour votre situation financiere."}
+          </p>
+        </div>
+
+        {/* Score section */}
+        <div className="mb-14 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <p className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            {"Votre optimisation financiere"}
+          </p>
+          <div className="flex items-end gap-3">
+            <span className="font-[family-name:var(--font-heading)] text-5xl font-extrabold tracking-tight text-primary sm:text-6xl">
+              {score}%
+            </span>
+            <span className="mb-2 text-sm text-muted-foreground">
+              {"d'efficacite fiscale"}
+            </span>
+          </div>
+          {/* Progress bar */}
+          <div className="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-accent transition-all"
+              style={{ width: `${score}%` }}
+            />
+          </div>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            {"Plusieurs ameliorations simples peuvent augmenter votre efficacite financiere."}
+          </p>
+        </div>
+
+        {/* Recommendation cards */}
+        <div className="mb-14">
+          <p className="mb-5 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            {"Recommandations"}
+          </p>
+          <div className="grid gap-5 sm:grid-cols-3">
+            {recommendations.map((rec, i) => (
+              <div
+                key={i}
+                className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
+              >
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                    {rec.disabled ? (
+                      <Lock className="h-5 w-5 text-muted-foreground/50" />
+                    ) : (
+                      <rec.icon className="h-5 w-5" />
+                    )}
+                  </div>
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {rec.category}
+                  </span>
+                </div>
+                <h3 className="mb-1.5 font-[family-name:var(--font-heading)] text-base font-semibold text-card-foreground">
+                  {rec.title}
+                </h3>
+                <p className="mb-5 flex-1 text-sm leading-relaxed text-muted-foreground">
+                  {rec.text}
+                </p>
+                {rec.disabled ? (
+                  <span className="inline-flex h-9 items-center justify-center rounded-md bg-muted px-4 text-xs font-medium text-muted-foreground">
+                    {rec.cta}
+                  </span>
+                ) : (
+                  <Button size="sm" variant="outline" className="w-full" asChild>
+                    <Link href={rec.href}>
+                      {rec.cta}
+                      <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Button size="lg" className="h-12 px-8 text-base" asChild>
+            <Link href="/dashboard">
+              {"Acceder a mon espace complet"}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <p className="max-w-sm text-xs leading-relaxed text-muted-foreground/70">
+            {"Estimation indicative basee sur les informations fournies. Magifin ne remplace pas un conseiller fiscal."}
+          </p>
+        </div>
+      </main>
     </div>
   )
 }
