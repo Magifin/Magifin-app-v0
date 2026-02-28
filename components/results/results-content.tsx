@@ -11,7 +11,6 @@ import {
   ListChecks,
   FileText,
   Lock,
-  Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -95,45 +94,9 @@ function calculateEstimate(params: URLSearchParams) {
   }
 }
 
-function buildAnalysisSummary(params: URLSearchParams): string[] {
-  const lines: string[] = []
-
-  const children = parseInt(params.get("children") || "0")
-  const hasChildcare = params.get("hasChildcare") === "true"
-  const hasTitresServices = params.get("titresServices") === "true"
-  const hasEpargnesPension = params.get("epargnesPension") === "true"
-
-  lines.push(
-    "Selon vos réponses, plusieurs optimisations fiscales pertinentes ont été identifiées pour votre situation."
-  )
-
-  const levers: string[] = []
-  if (children > 0) levers.push("les enfants à charge")
-  if (hasChildcare) levers.push("les frais de garde")
-  if (hasTitresServices) levers.push("les titres-services")
-  if (hasEpargnesPension) levers.push("l'épargne pension")
-
-  if (levers.length > 0) {
-    lines.push(
-      `Les leviers principaux concernent ${levers.join(", ")}.`
-    )
-  } else {
-    lines.push(
-      "Les leviers principaux concernent les dépenses du quotidien et l'épargne."
-    )
-  }
-
-  lines.push(
-    "Une analyse complète permettrait de vérifier d'autres opportunités adaptées à votre profil."
-  )
-
-  return lines
-}
-
 export function ResultsContent() {
   const searchParams = useSearchParams()
   const result = calculateEstimate(searchParams)
-  const analysisSummary = buildAnalysisSummary(searchParams)
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -167,30 +130,17 @@ export function ResultsContent() {
       </header>
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
-        {/* Magi analysis summary */}
-        <div className="mb-10 flex flex-col items-center">
-          <div className="w-full max-w-xl rounded-xl border border-primary/10 bg-primary/[0.03] px-5 py-4">
-            <div className="mb-3 flex items-center justify-center gap-2">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <h2 className="font-[family-name:var(--font-heading)] text-sm font-semibold text-foreground">
-                Analyse personnalisée Magi
-              </h2>
-            </div>
-            <div className="flex flex-col gap-2 text-center">
-              {analysisSummary.map((line, i) => (
-                <p key={i} className="text-[13px] leading-relaxed text-foreground/80">
-                  {line}
-                </p>
-              ))}
-            </div>
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">Magi</p>
-          </div>
-        </div>
-
         {/* Hero estimate */}
         <div className="mb-16 flex flex-col items-center text-center">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            {"Magi a analysé votre situation"}
+          </p>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+            {"Selon vos réponses, plusieurs optimisations fiscales pertinentes ont été identifiées."}
+          </p>
+
+          <div className="my-6 h-px w-16 bg-border" />
+
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-accent">
             Votre estimation
           </p>
