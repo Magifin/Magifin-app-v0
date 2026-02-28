@@ -160,24 +160,24 @@ export function ResultsContent() {
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
 
-          {/* Real-life savings impact */}
+          {/* Impact summary */}
           <div className="mt-10 flex flex-col items-center gap-4">
             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {"Ce que cela représente pour vous"}
+              {"Impact estimé sur votre situation"}
             </p>
             <div className="flex flex-wrap justify-center gap-2.5">
               {[
-                { icon: "\uD83D\uDED2", label: "2 à 4 semaines de courses" },
-                { icon: "\u26A1", label: "Jusqu'à 3 mois d'électricité" },
-                { icon: "\u2708\uFE0F", label: "Un week-end d'évasion" },
-                { icon: "\uD83C\uDF7D\uFE0F", label: "Plusieurs repas au restaurant" },
-              ].map((item, i) => (
+                "Réduction directe de votre impôt",
+                "Optimisations fiscales activables immédiatement",
+                "Économies potentielles les prochaines années",
+                "Amélioration de votre efficacité fiscale",
+              ].map((label, i) => (
                 <span
                   key={i}
                   className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3.5 py-1.5 text-xs text-foreground/80"
                 >
-                  <span aria-hidden="true">{item.icon}</span>
-                  {item.label}
+                  <CheckCircle2 className="h-3 w-3 shrink-0 text-accent" />
+                  {label}
                 </span>
               ))}
             </div>
