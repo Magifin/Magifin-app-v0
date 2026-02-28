@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { StepSituation } from "@/components/wizard/step-situation"
+import { StepRevenu } from "@/components/wizard/step-revenu"
 import { StepChildren } from "@/components/wizard/step-children"
 import { StepChildcare } from "@/components/wizard/step-childcare"
 import { StepServices } from "@/components/wizard/step-services"
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button"
 
 export interface WizardData {
   situation: string
+  revenuTranche: string
   childrenCount: number
   childrenAges: number[]
   childcareCost: number
@@ -26,6 +28,7 @@ export interface WizardData {
 
 const STEPS = [
   "Situation du ménage",
+  "Tranche de revenus",
   "Enfants",
   "Frais de garde",
   "Titres-services",
@@ -34,6 +37,7 @@ const STEPS = [
 
 const defaultData: WizardData = {
   situation: "",
+  revenuTranche: "",
   childrenCount: 0,
   childrenAges: [],
   childcareCost: 0,
@@ -59,6 +63,7 @@ export default function WizardPage() {
     } else {
       const params = new URLSearchParams()
       params.set("situation", data.situation)
+      params.set("revenuTranche", data.revenuTranche)
       params.set("children", String(data.childrenCount))
       params.set("childcare", String(data.childcareCost))
       params.set("hasChildcare", String(data.hasChildcare))
@@ -81,12 +86,14 @@ export default function WizardPage() {
       case 0:
         return data.situation !== ""
       case 1:
-        return true
+        return data.revenuTranche !== ""
       case 2:
         return true
       case 3:
         return true
       case 4:
+        return true
+      case 5:
         return true
       default:
         return false
@@ -98,12 +105,14 @@ export default function WizardPage() {
       case 0:
         return <StepSituation data={data} updateData={updateData} />
       case 1:
-        return <StepChildren data={data} updateData={updateData} />
+        return <StepRevenu data={data} updateData={updateData} />
       case 2:
-        return <StepChildcare data={data} updateData={updateData} />
+        return <StepChildren data={data} updateData={updateData} />
       case 3:
-        return <StepServices data={data} updateData={updateData} />
+        return <StepChildcare data={data} updateData={updateData} />
       case 4:
+        return <StepServices data={data} updateData={updateData} />
+      case 5:
         return <StepPension data={data} updateData={updateData} />
       default:
         return null
