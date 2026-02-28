@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
+  Home,
   LayoutDashboard,
   Calculator,
   FileText,
@@ -13,6 +14,11 @@ import {
 } from "lucide-react"
 
 const navItems = [
+  {
+    label: "Accueil",
+    href: "/",
+    icon: Home,
+  },
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -46,7 +52,7 @@ export function DashboardSidebar() {
   return (
     <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-5">
+      <Link href="/" className="flex items-center gap-2 px-6 py-5 transition-opacity hover:opacity-80">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
           <span className="text-sm font-bold text-sidebar-primary-foreground">
             M
@@ -55,14 +61,14 @@ export function DashboardSidebar() {
         <span className="font-[family-name:var(--font-heading)] text-xl font-bold tracking-tight text-sidebar-foreground">
           Magifin
         </span>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href))
+            (item.href !== "/dashboard" && item.href !== "/" && pathname.startsWith(item.href))
           return (
             <Link
               key={item.href}

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
+  Home,
   LayoutDashboard,
   Calculator,
   FileText,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react"
 
 const navItems = [
+  { label: "Accueil", href: "/", icon: Home },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Fiscalite", href: "/dashboard/optimisation", icon: Calculator },
   { label: "Documents", href: "/dashboard/documents", icon: FileText },
@@ -25,21 +27,21 @@ export function DashboardMobileNav() {
   return (
     <div className="border-b border-border/50 lg:hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3">
+      <Link href="/" className="flex items-center gap-2 px-4 py-3 transition-opacity hover:opacity-80">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
           <span className="text-xs font-bold text-primary-foreground">M</span>
         </div>
         <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
           Magifin
         </span>
-      </div>
+      </Link>
 
       {/* Nav tabs */}
       <nav className="flex overflow-x-auto px-2 pb-2">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href))
+            (item.href !== "/dashboard" && item.href !== "/" && pathname.startsWith(item.href))
           return (
             <Link
               key={item.href}
