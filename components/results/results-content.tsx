@@ -306,8 +306,8 @@ export function ResultsContent() {
               {"Créez votre espace gratuit pour débloquer toutes vos optimisations fiscales."}
             </p>
             <Button size="sm" className="mt-4 w-full" asChild>
-              <Link href="/dashboard">
-{"Créer mon espace Magifin"}
+              <Link href="/onboarding">
+                {"Créer mon espace Magifin"}
                 <ArrowRight className="ml-2 h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -317,7 +317,7 @@ export function ResultsContent() {
         {/* CTA */}
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <Button size="lg" className="h-12 px-8 text-base" asChild>
-            <Link href="/dashboard">
+            <Link href="/onboarding">
               {"Créer mon espace Magifin"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
