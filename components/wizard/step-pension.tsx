@@ -4,6 +4,7 @@ import type { WizardData } from "@/app/wizard/page"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { PiggyBank, XCircle } from "lucide-react"
+import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
   data: WizardData
@@ -13,6 +14,7 @@ interface StepProps {
 export function StepPension({ data, updateData }: StepProps) {
   return (
     <div>
+      <MagiHint message="L\u2019\u00E9pargne pension est l\u2019une des optimisations fiscales les plus fr\u00E9quentes en Belgique." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         {"Avez-vous une épargne pension ?"}
       </h2>

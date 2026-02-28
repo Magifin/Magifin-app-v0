@@ -3,6 +3,7 @@
 import type { WizardData } from "@/app/wizard/page"
 import { cn } from "@/lib/utils"
 import { Banknote } from "lucide-react"
+import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
   data: WizardData
@@ -35,6 +36,7 @@ const tranches = [
 export function StepRevenu({ data, updateData }: StepProps) {
   return (
     <div>
+      <MagiHint message="Votre tranche de revenus nous aide \u00E0 cibler les d\u00E9ductions les plus pertinentes pour votre profil." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         {"Dans quelle tranche de revenus vous situez-vous ?"}
       </h2>

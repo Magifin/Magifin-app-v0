@@ -4,6 +4,7 @@ import type { WizardData } from "@/app/wizard/page"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Minus, Plus, X } from "lucide-react"
+import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
   data: WizardData
@@ -43,6 +44,7 @@ export function StepChildren({ data, updateData }: StepProps) {
 
   return (
     <div>
+      <MagiHint message="Les enfants \u00E0 charge ouvrent souvent droit \u00E0 des avantages fiscaux importants." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         {"Combien d\u2019enfants avez-vous à charge ?"}
       </h2>

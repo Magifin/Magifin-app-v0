@@ -4,6 +4,7 @@ import type { WizardData } from "@/app/wizard/page"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Baby, XCircle } from "lucide-react"
+import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
   data: WizardData
@@ -13,6 +14,7 @@ interface StepProps {
 export function StepChildcare({ data, updateData }: StepProps) {
   return (
     <div>
+      <MagiHint message="Les frais de garde sont souvent oubli\u00E9s dans la d\u00E9claration. Ils peuvent pourtant r\u00E9duire votre imp\u00F4t." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         {"Avez-vous des frais de garde d\u2019enfants ?"}
       </h2>

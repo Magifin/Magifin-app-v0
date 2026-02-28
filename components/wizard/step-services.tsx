@@ -4,6 +4,7 @@ import type { WizardData } from "@/app/wizard/page"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Home, XCircle } from "lucide-react"
+import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
   data: WizardData
@@ -13,6 +14,7 @@ interface StepProps {
 export function StepServices({ data, updateData }: StepProps) {
   return (
     <div>
+      <MagiHint message="Les titres-services sont un avantage fiscal tr\u00E8s r\u00E9pandu en Belgique, m\u00EAme pour de petits montants." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         Utilisez-vous des titres-services ?
       </h2>

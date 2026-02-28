@@ -3,6 +3,7 @@
 import type { WizardData } from "@/app/wizard/page"
 import { cn } from "@/lib/utils"
 import { User, Users, Heart } from "lucide-react"
+import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
   data: WizardData
@@ -33,6 +34,7 @@ const situations = [
 export function StepSituation({ data, updateData }: StepProps) {
   return (
     <div>
+      <MagiHint message="Je vais vous poser quelques questions rapides pour estimer vos optimisations fiscales. Cela prend moins de 2 minutes." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         Quelle est votre situation familiale ?
       </h2>
