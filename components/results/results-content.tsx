@@ -102,44 +102,52 @@ export function ResultsContent() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border/50 px-6 py-4">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <Link
-            href="/wizard"
-            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Modifier mes réponses
-          </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/wizard"
+              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Modifier mes réponses
+            </Link>
+            <span className="text-border">|</span>
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Accueil
+            </Link>
+          </div>
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
               <span className="text-xs font-bold text-primary-foreground">M</span>
             </div>
             <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
               Magifin
             </span>
-          </div>
-          <div className="w-16" />
+          </Link>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
         {/* Hero estimate */}
-        <div className="mb-12 text-center">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-accent">
+        <div className="mb-16 flex flex-col items-center text-center">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-accent">
             Votre estimation
           </p>
           <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
             {"Vous pourriez récupérer entre"}
           </h1>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <span className="font-[family-name:var(--font-heading)] text-5xl font-bold text-primary sm:text-6xl">
-              {result.minGain}{"\u00A0€"}
+          <div className="mt-6 flex items-baseline justify-center gap-3 sm:gap-4">
+            <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
+              {result.minGain}{"\u00A0\u20AC"}
             </span>
-            <span className="text-2xl text-muted-foreground">et</span>
-            <span className="font-[family-name:var(--font-heading)] text-5xl font-bold text-primary sm:text-6xl">
-              {result.maxGain}{"\u00A0€"}
+            <span className="text-xl font-medium text-muted-foreground sm:text-2xl">et</span>
+            <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
+              {result.maxGain}{"\u00A0\u20AC"}
             </span>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-muted-foreground">
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
         </div>
