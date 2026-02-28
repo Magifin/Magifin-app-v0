@@ -10,6 +10,7 @@ import {
   TrendingUp,
   ListChecks,
   FileText,
+  Lock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -139,7 +140,7 @@ export function ResultsContent() {
         </div>
 
         {/* Results sections */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Optimisations */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-3">
@@ -151,7 +152,7 @@ export function ResultsContent() {
               </h2>
             </div>
             <ul className="flex flex-col gap-3">
-              {result.optimisations.map((item, i) => (
+              {result.optimisations.slice(0, 2).map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                   <span className="text-sm text-card-foreground">{item}</span>
@@ -206,6 +207,47 @@ export function ResultsContent() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Locked optimisations */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <Lock className="h-5 w-5" />
+              </div>
+              <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+                {"Optimisations supplémentaires disponibles"}
+              </h2>
+            </div>
+            <ul className="flex flex-col gap-3">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
+                <span className="select-none text-sm text-muted-foreground/40 blur-[5px]" aria-hidden="true">
+                  {"Déduction pour investissement immobilier"}
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
+                <span className="select-none text-sm text-muted-foreground/40 blur-[5px]" aria-hidden="true">
+                  {"Crédit d\u2019impôt pour dons et libéralités"}
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
+                <span className="select-none text-sm text-muted-foreground/40 blur-[5px]" aria-hidden="true">
+                  {"Réduction pour frais professionnels réels"}
+                </span>
+              </li>
+            </ul>
+            <p className="mt-5 text-sm text-muted-foreground">
+              {"Créez votre espace gratuit pour débloquer toutes vos optimisations fiscales."}
+            </p>
+            <Button size="sm" className="mt-4 w-full" asChild>
+              <Link href="/dashboard">
+                {"Débloquer mes optimisations"}
+                <ArrowRight className="ml-2 h-3.5 w-3.5" />
+              </Link>
+            </Button>
           </div>
         </div>
 
