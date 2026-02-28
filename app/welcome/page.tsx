@@ -24,9 +24,9 @@ const recommendations = [
   {
     icon: TrendingUp,
     category: "Epargne & Investissement",
-    title: "Optimisation future",
-    text: "Des recommandations personnalisees seront bientot disponibles.",
-    cta: "Bientot disponible",
+    title: "Plan d'investissement",
+    text: "Définissez vos objectifs et recevez des recommandations adaptées.",
+    cta: "Construire mon plan",
     href: "#",
     disabled: true,
   },
