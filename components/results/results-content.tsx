@@ -43,9 +43,8 @@ function calculateEstimate(params: URLSearchParams) {
     const childcareDeduction = Math.min(childcareCost, 16.4 * 250) * 0.45
     minGain += childcareDeduction * 0.7
     maxGain += childcareDeduction
-    optimisations.push("Frais de garde d\u2019enfants déductibles")
+    optimisations.push("Frais de garde d'enfants déductibles")
     documents.push("Attestations fiscales des crèches / gardiennes")
-    actions.push("Demander les attestations de garde (formulaire 281.86)")
   }
 
   // Titres-services
@@ -69,16 +68,22 @@ function calculateEstimate(params: URLSearchParams) {
     documents.push("Attestation 281.60 de votre banque")
   }
 
-  // Add baseline for missed common deductions
+  // Ensure at least 2 optimisation items
+  const fallbacks = [
+    "Vérification de l'épargne pension (plafonds et taux)",
+    "Vérification des réductions titres-services",
+  ]
   if (optimisations.length === 0) {
     minGain = 100
     maxGain = 400
-    optimisations.push("Analyse complète de votre profil recommandée")
-    actions.push("Créer votre espace pour une analyse approfondie")
+    optimisations.push(fallbacks[0], fallbacks[1])
+  } else if (optimisations.length === 1) {
+    optimisations.push(fallbacks[0])
   }
 
-  actions.push("Vérifier vos documents avant la déclaration")
-  actions.push("Créer votre espace Magifin pour un suivi complet")
+  actions.push("Créez votre espace pour débloquer l'analyse complète")
+  actions.push("Ajoutez vos attestations si nécessaire")
+  actions.push("Vérifiez votre déclaration avant envoi")
 
   return {
     minGain: Math.round(minGain),
@@ -219,24 +224,18 @@ export function ResultsContent() {
                 {"Optimisations supplémentaires disponibles"}
               </h2>
             </div>
-            <ul className="flex flex-col gap-3">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
-                <span className="select-none text-sm text-muted-foreground/40 blur-[5px]" aria-hidden="true">
-                  {"Déduction pour investissement immobilier"}
-                </span>
+            <ul className="flex flex-col gap-3" aria-hidden="true">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground/30" />
+                <div className="h-4 w-3/4 rounded bg-muted-foreground/10 blur-[3px]" />
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
-                <span className="select-none text-sm text-muted-foreground/40 blur-[5px]" aria-hidden="true">
-                  {"Crédit d\u2019impôt pour dons et libéralités"}
-                </span>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground/30" />
+                <div className="h-4 w-2/3 rounded bg-muted-foreground/10 blur-[3px]" />
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
-                <span className="select-none text-sm text-muted-foreground/40 blur-[5px]" aria-hidden="true">
-                  {"Réduction pour frais professionnels réels"}
-                </span>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground/30" />
+                <div className="h-4 w-4/5 rounded bg-muted-foreground/10 blur-[3px]" />
               </li>
             </ul>
             <p className="mt-5 text-sm text-muted-foreground">
@@ -244,7 +243,7 @@ export function ResultsContent() {
             </p>
             <Button size="sm" className="mt-4 w-full" asChild>
               <Link href="/dashboard">
-                {"Débloquer mes optimisations"}
+{"Créer mon espace Magifin"}
                 <ArrowRight className="ml-2 h-3.5 w-3.5" />
               </Link>
             </Button>

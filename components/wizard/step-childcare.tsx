@@ -14,12 +14,12 @@ interface StepProps {
 export function StepChildcare({ data, updateData }: StepProps) {
   return (
     <div>
-      <MagiHint message="Les frais de garde sont souvent oubli\u00E9s dans la d\u00E9claration. Ils peuvent pourtant r\u00E9duire votre imp\u00F4t." />
+      <MagiHint message="Les frais de garde sont souvent oubliés dans la déclaration. Ils peuvent pourtant réduire votre impôt." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        {"Avez-vous des frais de garde d\u2019enfants ?"}
+{"Avez-vous des frais de garde d'enfants ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Les frais de garde d\u2019enfants de moins de 14 ans sont déductibles à hauteur de 16,40\u00A0€/jour."}
+{"Les frais de garde d'enfants de moins de 14 ans sont déductibles à hauteur de 16,40\u00A0\u20AC/jour."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -45,7 +45,7 @@ export function StepChildcare({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J\u2019ai des frais de garde"}
+{"J'ai des frais de garde"}
             </p>
           </div>
         </button>

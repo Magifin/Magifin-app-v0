@@ -14,12 +14,12 @@ interface StepProps {
 export function StepServices({ data, updateData }: StepProps) {
   return (
     <div>
-      <MagiHint message="Les titres-services sont un avantage fiscal tr\u00E8s r\u00E9pandu en Belgique, m\u00EAme pour de petits montants." />
+      <MagiHint message="Les titres-services sont un avantage fiscal très répandu en Belgique, même pour de petits montants." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         Utilisez-vous des titres-services ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Les titres-services (aide ménagère) donnent droit à une réduction d\u2019impôt."}
+{"Les titres-services (aide ménagère) donnent droit à une réduction d'impôt."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -45,7 +45,7 @@ export function StepServices({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J\u2019utilise des titres-services"}
+{"J'utilise des titres-services"}
             </p>
           </div>
         </button>

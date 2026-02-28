@@ -13,35 +13,35 @@ interface StepProps {
 const tranches = [
   {
     value: "less-25k",
-    label: "Moins de 25 000 \u20AC",
-    description: "Revenu annuel brut inf\u00E9rieur \u00E0 25 000 \u20AC",
+    label: "Moins de 25\u00A0000\u00A0\u20AC",
+    description: "Revenu annuel brut inférieur à 25\u00A0000\u00A0\u20AC",
   },
   {
     value: "25k-50k",
-    label: "25 000 \u20AC \u2013 50 000 \u20AC",
-    description: "Revenu annuel brut entre 25 000 \u20AC et 50 000 \u20AC",
+    label: "25\u00A0000\u00A0\u20AC \u2013 50\u00A0000\u00A0\u20AC",
+    description: "Revenu annuel brut entre 25\u00A0000\u00A0\u20AC et 50\u00A0000\u00A0\u20AC",
   },
   {
     value: "50k-75k",
-    label: "50 000 \u20AC \u2013 75 000 \u20AC",
-    description: "Revenu annuel brut entre 50 000 \u20AC et 75 000 \u20AC",
+    label: "50\u00A0000\u00A0\u20AC \u2013 75\u00A0000\u00A0\u20AC",
+    description: "Revenu annuel brut entre 50\u00A0000\u00A0\u20AC et 75\u00A0000\u00A0\u20AC",
   },
   {
     value: "more-75k",
-    label: "Plus de 75 000 \u20AC",
-    description: "Revenu annuel brut sup\u00E9rieur \u00E0 75 000 \u20AC",
+    label: "Plus de 75\u00A0000\u00A0\u20AC",
+    description: "Revenu annuel brut supérieur à 75\u00A0000\u00A0\u20AC",
   },
 ]
 
 export function StepRevenu({ data, updateData }: StepProps) {
   return (
     <div>
-      <MagiHint message="Votre tranche de revenus nous aide \u00E0 cibler les d\u00E9ductions les plus pertinentes pour votre profil." />
+      <MagiHint message="Votre tranche de revenus nous aide à cibler les déductions les plus pertinentes pour votre profil." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         {"Dans quelle tranche de revenus vous situez-vous ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Cette information nous permet d\u2019affiner vos optimisations fiscales."}
+{"Cette information nous permet d'affiner vos optimisations fiscales."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3">

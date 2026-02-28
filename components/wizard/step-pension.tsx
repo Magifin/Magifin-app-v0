@@ -14,12 +14,12 @@ interface StepProps {
 export function StepPension({ data, updateData }: StepProps) {
   return (
     <div>
-      <MagiHint message="L\u2019\u00E9pargne pension est l\u2019une des optimisations fiscales les plus fr\u00E9quentes en Belgique." />
+      <MagiHint message="L'épargne pension est l'une des optimisations fiscales les plus fréquentes en Belgique." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
         {"Avez-vous une épargne pension ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"L\u2019épargne pension vous donne droit à une réduction d\u2019impôt de 30\u00A0% (max 1.020\u00A0€) ou 25\u00A0% (max 1.310\u00A0€)."}
+{"L'épargne pension vous donne droit à une réduction d'impôt de 30\u00A0% (max 1.020\u00A0\u20AC) ou 25\u00A0% (max 1.310\u00A0\u20AC)."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -45,7 +45,7 @@ export function StepPension({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J\u2019ai une épargne pension"}
+{"J'ai une épargne pension"}
             </p>
           </div>
         </button>
@@ -74,7 +74,7 @@ export function StepPension({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Non</p>
             <p className="text-sm text-muted-foreground">
-              {"Pas d\u2019épargne pension"}
+{"Pas d'épargne pension"}
             </p>
           </div>
         </button>
@@ -102,7 +102,7 @@ export function StepPension({ data, updateData }: StepProps) {
             <span className="text-sm text-muted-foreground">{"€ / an"}</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {"Plafond\u00A0: 1.020\u00A0€ (réduction de 30\u00A0%) ou 1.310\u00A0€ (réduction de 25\u00A0%)."}
+{"Plafond\u00A0: 1.020\u00A0\u20AC (réduction de 30\u00A0%) ou 1.310\u00A0\u20AC (réduction de 25\u00A0%)."}
           </p>
         </div>
       )}

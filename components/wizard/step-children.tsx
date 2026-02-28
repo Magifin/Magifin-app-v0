@@ -44,9 +44,9 @@ export function StepChildren({ data, updateData }: StepProps) {
 
   return (
     <div>
-      <MagiHint message="Les enfants \u00E0 charge ouvrent souvent droit \u00E0 des avantages fiscaux importants." />
+      <MagiHint message="Les enfants à charge ouvrent souvent droit à des avantages fiscaux importants." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        {"Combien d\u2019enfants avez-vous à charge ?"}
+{"Combien d'enfants avez-vous à charge ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
         {"Les enfants à charge ouvrent droit à des déductions fiscales."}
