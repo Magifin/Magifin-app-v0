@@ -220,6 +220,9 @@ export function ResultsContent() {
           <p className="text-sm text-muted-foreground">
             Gratuit. Sans engagement. Suivi complet de votre optimisation.
           </p>
+          <p className="mt-4 max-w-lg text-xs leading-relaxed text-muted-foreground/70">
+            {"Estimation indicative basée sur les informations fournies. Magifin ne remplace pas un conseiller fiscal. Vérifiez toujours votre déclaration avant envoi."}
+          </p>
         </div>
       </main>
     </div>

@@ -33,7 +33,11 @@ export function Hero() {
           </Button>
         </div>
 
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+        <p className="mt-6 max-w-lg text-xs leading-relaxed text-muted-foreground/70">
+          {"Estimation indicative basée sur les informations fournies. Magifin ne remplace pas un conseiller fiscal. Vérifiez toujours votre déclaration avant envoi."}
+        </p>
+
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
           <TrustBadge icon={<Shield className="h-4 w-4" />} label="Conforme RGPD" />
           <TrustBadge icon={<Lock className="h-4 w-4" />} label="Données sécurisées" />
           <TrustBadge icon={<Sparkles className="h-4 w-4" />} label="Optimisation intelligente" />
