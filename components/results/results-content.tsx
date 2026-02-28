@@ -184,6 +184,30 @@ export function ResultsContent() {
           </div>
         </div>
 
+        {/* Reasoning explanation */}
+        <div className="mb-12 mx-auto w-full max-w-2xl rounded-xl border border-border/60 bg-muted/30 px-6 py-5">
+          <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            {"Pourquoi cette estimation ?"}
+          </p>
+          <p className="text-center text-sm leading-relaxed text-foreground/80">
+            {"Selon vos réponses, certaines optimisations fiscales pertinentes semblent applicables à votre situation. Voici les leviers identifiés\u00A0:"}
+          </p>
+          <ul className="mt-3 flex flex-col gap-2">
+            {result.optimisations.slice(0, 2).map((item, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                <span className="text-sm text-foreground/80">{item}</span>
+              </li>
+            ))}
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground">
+                {"D'autres déductions pourraient s'appliquer après analyse complète"}
+              </span>
+            </li>
+          </ul>
+        </div>
+
         {/* Results sections */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Optimisations */}
