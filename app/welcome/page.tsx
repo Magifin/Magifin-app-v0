@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, ShieldCheck, TrendingUp, Lock, FileText } from "lucide-react"
+import { ArrowRight, ShieldCheck, TrendingUp, Lock, FileText, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const recommendations = [
@@ -11,15 +11,17 @@ const recommendations = [
     cta: "Completer mon analyse",
     href: "/dashboard",
     disabled: false,
+    external: false,
   },
   {
     icon: ShieldCheck,
     category: "Assurance",
     title: "Protection financiere a optimiser",
     text: "Certaines assurances peuvent ameliorer votre protection et votre fiscalite.",
-    cta: "Verifier mes assurances",
-    href: "/dashboard",
+    cta: "Analyser mes assurances",
+    href: "https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=welcome&utm_campaign=insurance",
     disabled: false,
+    external: true,
   },
   {
     icon: TrendingUp,
@@ -29,6 +31,7 @@ const recommendations = [
     cta: "Construire mon plan",
     href: "#",
     disabled: true,
+    external: false,
   },
 ]
 
@@ -127,6 +130,17 @@ export default function WelcomePage() {
                   <span className="inline-flex h-9 items-center justify-center rounded-md bg-muted px-4 text-xs font-medium text-muted-foreground">
                     {rec.cta}
                   </span>
+                ) : rec.external ? (
+                  <Button size="sm" variant="outline" className="w-full" asChild>
+                    <a
+                      href={rec.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {rec.cta}
+                      <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                    </a>
+                  </Button>
                 ) : (
                   <Button size="sm" variant="outline" className="w-full" asChild>
                     <Link href={rec.href}>

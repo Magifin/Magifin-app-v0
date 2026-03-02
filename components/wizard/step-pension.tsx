@@ -3,7 +3,7 @@
 import type { WizardData } from "@/app/wizard/page"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { PiggyBank, XCircle } from "lucide-react"
+import { PiggyBank, XCircle, ShieldCheck, ExternalLink } from "lucide-react"
 import { MagiHint } from "@/components/wizard/magi-hint"
 
 interface StepProps {
@@ -79,6 +79,29 @@ export function StepPension({ data, updateData }: StepProps) {
           </div>
         </button>
       </div>
+
+      {data.epargnesPension === false && (
+        <div className="mt-6 rounded-xl border border-border/60 bg-muted/30 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-accent" />
+            <p className="text-sm font-semibold text-foreground">
+              {"Optimisez aussi vos assurances"}
+            </p>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {"Une assurance épargne pension peut parfois réduire votre impôt et améliorer votre protection."}
+          </p>
+          <a
+            href="https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=wizard&utm_campaign=insurance_nudge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            {"Analyser mes assurances"}
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      )}
 
       {data.epargnesPension && (
         <div className="mt-8">

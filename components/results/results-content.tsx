@@ -7,7 +7,8 @@ import {
   CheckCircle2,
   ArrowLeft,
   TrendingUp,
-  Lock,
+  ShieldCheck,
+  ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -171,14 +172,14 @@ export function ResultsContent() {
 
         {/* Cards */}
         <div className="grid gap-6 sm:grid-cols-2">
-          {/* Optimisations */}
+          {/* Left: Unlock optimisations */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                {"Optimisations détectées"}
+                {"Débloquer toutes mes optimisations"}
               </h2>
             </div>
             <ul className="flex flex-col gap-3">
@@ -188,52 +189,53 @@ export function ResultsContent() {
                   <span className="text-sm text-card-foreground">{item}</span>
                 </li>
               ))}
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
+                <span className="text-sm text-muted-foreground">
+                  {"D'autres optimisations peuvent s'appliquer"}
+                </span>
+              </li>
             </ul>
+            <Button size="sm" className="mt-5 w-full" asChild>
+              <Link href="/onboarding">
+                {"Créer mon espace Magifin"}
+                <ArrowRight className="ml-2 h-3.5 w-3.5" />
+              </Link>
+            </Button>
           </div>
 
-          {/* Locked optimisations */}
+          {/* Right: Assurance partner */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <Lock className="h-5 w-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                <ShieldCheck className="h-5 w-5" />
               </div>
               <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                {"Optimisations supplémentaires disponibles"}
+                {"Optimisez vos assurances"}
               </h2>
             </div>
-            <ul className="flex flex-col gap-3" aria-hidden="true">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground/30" />
-                <div className="h-4 w-3/4 rounded bg-muted-foreground/10 blur-[3px]" />
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground/30" />
-                <div className="h-4 w-2/3 rounded bg-muted-foreground/10 blur-[3px]" />
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground/30" />
-                <div className="h-4 w-4/5 rounded bg-muted-foreground/10 blur-[3px]" />
-              </li>
-            </ul>
-            <p className="mt-5 text-sm text-muted-foreground">
-              {"Créez votre espace gratuit pour débloquer toutes vos optimisations fiscales."}
+            <p className="text-sm leading-relaxed text-card-foreground">
+              {"Certaines assurances peuvent améliorer votre protection financière tout en réduisant votre charge fiscale."}
             </p>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              {"Vérifiez si des optimisations supplémentaires sont possibles dans votre déclaration."}
+            </p>
+            <Button size="sm" variant="outline" className="mt-5 w-full" asChild>
+              <a
+                href="https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=results&utm_campaign=insurance"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {"Analyser mes assurances"}
+                <ExternalLink className="ml-2 h-3.5 w-3.5" />
+              </a>
+            </Button>
           </div>
         </div>
 
-        {/* Secondary CTA */}
+        {/* Disclaimer */}
         <div className="mt-12 flex flex-col items-center gap-3 text-center">
-          <Link
-            href="/onboarding"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
-          >
-            {"Créer mon espace Magifin"}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-          <p className="text-xs text-muted-foreground">
-            Gratuit. Sans engagement. Suivi complet de votre optimisation.
-          </p>
-          <p className="mt-3 max-w-lg text-xs leading-relaxed text-muted-foreground/70">
+          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground/70">
             {"Estimation indicative basée sur les informations fournies. Magifin ne remplace pas un conseiller fiscal. Vérifiez toujours votre déclaration avant envoi."}
           </p>
         </div>
