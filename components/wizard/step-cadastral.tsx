@@ -1,32 +1,32 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { Baby, XCircle } from "lucide-react"
+import { FileText, XCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { MagiHint } from "@/components/wizard/magi-hint"
 import type { YesNo } from "@/lib/wizard-store"
 
-interface StepChildcareProps {
-  hasChildcare: YesNo
-  childcareCost: number
+interface StepCadastralProps {
+  hasCadastralIncome: YesNo
+  cadastralIncome: number | null
   onHasChange: (value: YesNo) => void
-  onCostChange: (value: number) => void
+  onAmountChange: (value: number | null) => void
 }
 
-export function StepChildcare({
-  hasChildcare,
-  childcareCost,
+export function StepCadastral({
+  hasCadastralIncome,
+  cadastralIncome,
   onHasChange,
-  onCostChange,
-}: StepChildcareProps) {
+  onAmountChange,
+}: StepCadastralProps) {
   return (
     <div>
-      <MagiHint message="Les frais de garde sont souvent oubliés dans la déclaration. Ils peuvent pourtant réduire votre impôt." />
+      <MagiHint message="Le revenu cadastral (RC) figure sur votre avertissement-extrait de rôle ou sur MyMinfin." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        {"Avez-vous des frais de garde d'enfants ?"}
+        Connaissez-vous votre revenu cadastral ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Les frais de garde d'enfants de moins de 14 ans sont déductibles à hauteur de 16,40\u00A0\u20AC/jour."}
+        {"Le revenu cadastral (RC) est utilisé pour calculer votre précompte immobilier."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -34,7 +34,7 @@ export function StepChildcare({
           onClick={() => onHasChange("Oui")}
           className={cn(
             "flex flex-1 items-center gap-4 rounded-xl border p-5 transition-all",
-            hasChildcare === "Oui"
+            hasCadastralIncome === "Oui"
               ? "border-primary bg-primary/5 shadow-sm"
               : "border-border bg-card hover:border-primary/30"
           )}
@@ -42,17 +42,17 @@ export function StepChildcare({
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              hasChildcare === "Oui"
+              hasCadastralIncome === "Oui"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
           >
-            <Baby className="h-5 w-5" />
+            <FileText className="h-5 w-5" />
           </div>
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J'ai des frais de garde"}
+              {"Je connais mon RC"}
             </p>
           </div>
         </button>
@@ -60,11 +60,11 @@ export function StepChildcare({
         <button
           onClick={() => {
             onHasChange("Non")
-            onCostChange(0)
+            onAmountChange(null)
           }}
           className={cn(
             "flex flex-1 items-center gap-4 rounded-xl border p-5 transition-all",
-            hasChildcare === "Non"
+            hasCadastralIncome === "Non"
               ? "border-primary bg-primary/5 shadow-sm"
               : "border-border bg-card hover:border-primary/30"
           )}
@@ -72,7 +72,7 @@ export function StepChildcare({
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              hasChildcare === "Non"
+              hasCadastralIncome === "Non"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
@@ -82,30 +82,32 @@ export function StepChildcare({
           <div className="text-left">
             <p className="font-semibold text-foreground">Non</p>
             <p className="text-sm text-muted-foreground">
-              Pas de frais de garde
+              {"Je ne le connais pas"}
             </p>
           </div>
         </button>
       </div>
 
-      {hasChildcare === "Oui" && (
+      {hasCadastralIncome === "Oui" && (
         <div className="mt-8">
           <label className="mb-2 block text-sm font-medium text-foreground">
-            Montant annuel des frais de garde
+            {"Revenu cadastral non indexé"}
           </label>
           <div className="flex items-center gap-2">
             <Input
               type="number"
               min={0}
-              value={childcareCost || ""}
-              onChange={(e) => onCostChange(parseInt(e.target.value) || 0)}
-              placeholder="Ex: 2400"
+              value={cadastralIncome ?? ""}
+              onChange={(e) =>
+                onAmountChange(e.target.value ? parseInt(e.target.value) : null)
+              }
+              placeholder="Ex: 1200"
               className="w-40"
             />
             <span className="text-sm text-muted-foreground">{"€ / an"}</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {"Crèches, gardiennes, plaines de vacances, activités extrascolaires..."}
+            {"Ce montant figure sur votre avertissement-extrait de rôle."}
           </p>
         </div>
       )}

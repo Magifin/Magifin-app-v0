@@ -1,35 +1,25 @@
-import Link from "next/link"
-import { ArrowRight, Calculator, TrendingUp, CheckCircle2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
 
-const deductions = [
-  {
-    category: "Enfants à charge",
-    amount: "320\u00A0€ – 480\u00A0€",
-    status: "active" as const,
-    description: "2 enfants à charge, déduction automatique.",
-  },
-  {
-    category: "Frais de garde",
-    amount: "180\u00A0€ – 270\u00A0€",
-    status: "active" as const,
-    description: "Crèche et garderie, attestation reçue.",
-  },
-  {
-    category: "Titres-services",
-    amount: "200\u00A0€ – 300\u00A0€",
-    status: "pending" as const,
-    description: "150 titres achetés, attestation en attente.",
-  },
-  {
-    category: "Épargne pension",
-    amount: "147\u00A0€ – 154\u00A0€",
-    status: "pending" as const,
-    description: "Versement de 512\u00A0€, attestation manquante.",
-  },
-]
+import Link from "next/link"
+import { Calculator, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useWizard } from "@/lib/wizard-store"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 
 export default function OptimisationPage() {
+  const { state } = useWizard()
+  const { answers, completedStepIds } = state
+
+  const hasWizardData = completedStepIds.length > 0
+  const result = computeOptimizationsFromAnswers(answers)
+  const availableItems = result.items.filter((i) => i.available)
+
+  // Format amount range for display
+  const formatAmount = (min: number, max: number) => {
+    if (min === max) return `${min}\u00A0\u20AC`
+    return `${min}\u00A0\u20AC \u2013 ${max}\u00A0\u20AC`
+  }
+
   return (
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -44,61 +34,107 @@ export default function OptimisationPage() {
         <Button asChild>
           <Link href="/wizard">
             <Calculator className="mr-2 h-4 w-4" />
-            Refaire une analyse
+            {hasWizardData ? "Mettre à jour" : "Analyser ma situation"}
           </Link>
         </Button>
       </div>
 
-      {/* Summary */}
-      <div className="mb-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <TrendingUp className="h-5 w-5 text-accent" />
-          <span className="text-sm font-medium text-muted-foreground">
-            {"Gain total estimé"}
-          </span>
-        </div>
-        <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
-          {"847\u00A0€ – 1.204\u00A0€"}
-        </p>
-      </div>
-
-      {/* Deduction list */}
-      <div className="flex flex-col gap-4">
-        {deductions.map((d) => (
-          <div
-            key={d.category}
-            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-card-foreground">
-                  {d.category}
-                </p>
-                <span
-                  className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                    d.status === "active"
-                      ? "bg-accent/10 text-accent"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {d.status === "active" ? "Confirmé" : "En attente"}
-                </span>
-              </div>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {d.description}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                {d.amount}
-              </p>
-            </div>
+      {!hasWizardData ? (
+        // Empty state - no wizard data yet
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <AlertCircle className="h-6 w-6 text-muted-foreground" />
           </div>
-        ))}
-      </div>
+          <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+            {"Aucune analyse effectuée"}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {"Répondez au questionnaire pour découvrir vos optimisations fiscales potentielles."}
+          </p>
+          <Button className="mt-6" asChild>
+            <Link href="/wizard">
+              <Calculator className="mr-2 h-4 w-4" />
+              {"Commencer l'analyse"}
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Summary */}
+          <div className="mb-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp className="h-5 w-5 text-accent" />
+              <span className="text-sm font-medium text-muted-foreground">
+                {"Gain total estimé"}
+              </span>
+            </div>
+            <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
+              {formatAmount(result.totalMin, result.totalMax)}
+            </p>
+            {!result.isFullySupported && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {"Estimation partielle. Calculs optimisés pour Wallonie / salarié bientôt disponibles pour votre profil."}
+              </p>
+            )}
+          </div>
+
+          {/* Notes */}
+          {result.notes.length > 0 && (
+            <div className="mb-6 rounded-xl border border-border/60 bg-muted/30 p-4">
+              {result.notes.map((note, i) => (
+                <p key={i} className="text-sm text-muted-foreground">
+                  {note}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* Deduction list */}
+          <div className="flex flex-col gap-4">
+            {availableItems.map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-card-foreground">
+                      {item.title}
+                    </p>
+                    <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                      {"Disponible"}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {item.reason}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+                    {formatAmount(item.amountMin, item.amountMax)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {availableItems.length === 0 && (
+            <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+              <p className="text-muted-foreground">
+                {"Aucune optimisation détectée. Complétez le questionnaire pour affiner l'analyse."}
+              </p>
+              <Button variant="outline" className="mt-4" asChild>
+                <Link href="/wizard">
+                  {"Compléter le questionnaire"}
+                </Link>
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

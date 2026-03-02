@@ -1,60 +1,48 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { User, Users, Heart, UserPlus } from "lucide-react"
+import { Briefcase, Building2 } from "lucide-react"
 import { MagiHint } from "@/components/wizard/magi-hint"
-import type { HouseholdSituation } from "@/lib/wizard-store"
+import type { Status } from "@/lib/wizard-store"
 
-interface StepSituationProps {
-  value: HouseholdSituation
-  onChange: (value: HouseholdSituation) => void
+interface StepStatusProps {
+  value: Status
+  onChange: (value: Status) => void
 }
 
-const situations: {
-  value: HouseholdSituation
+const statuses: {
+  value: Status
   label: string
   description: string
-  icon: typeof User
+  icon: typeof Briefcase
 }[] = [
   {
-    value: "Isole",
-    label: "Isolé(e)",
-    description: "Vous vivez seul(e)",
-    icon: User,
+    value: "Salarie",
+    label: "Salarié(e)",
+    description: "Vous êtes employé(e) ou ouvrier/ère",
+    icon: Briefcase,
   },
   {
-    value: "Couple",
-    label: "En couple (un revenu)",
-    description: "Marié(e) ou cohabitant(e) légal(e), un seul revenu",
-    icon: Users,
-  },
-  {
-    value: "CoupleDeuxRevenus",
-    label: "En couple (deux revenus)",
-    description: "Marié(e) ou cohabitant(e) légal(e), deux revenus",
-    icon: UserPlus,
-  },
-  {
-    value: "Cohabitant",
-    label: "Cohabitation de fait",
-    description: "Vous vivez avec votre partenaire sans statut légal",
-    icon: Heart,
+    value: "Independant",
+    label: "Indépendant(e)",
+    description: "Vous êtes travailleur indépendant ou gérant de société",
+    icon: Building2,
   },
 ]
 
-export function StepSituation({ value, onChange }: StepSituationProps) {
+export function StepStatus({ value, onChange }: StepStatusProps) {
   return (
     <div>
-      <MagiHint message="Je vais vous poser quelques questions rapides pour estimer vos optimisations fiscales. Cela prend moins de 2 minutes." />
+      <MagiHint message="Votre statut professionnel influence les déductions auxquelles vous avez droit." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        Quelle est votre situation familiale ?
+        Quel est votre statut professionnel ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"Sélectionnez la situation qui correspond à votre ménage."}
+        {"Sélectionnez votre statut principal."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3">
-        {situations.map((s) => (
+        {statuses.map((s) => (
           <button
             key={s.value}
             onClick={() => onChange(s.value)}

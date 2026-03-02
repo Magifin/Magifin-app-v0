@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, DM_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { WizardProvider } from '@/lib/wizard-store'
 import './globals.css'
 
 const inter = Inter({
@@ -51,7 +52,9 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.variable} ${dmSans.variable} font-sans antialiased`}>
-        {children}
+        <WizardProvider>
+          {children}
+        </WizardProvider>
         <Analytics />
       </body>
     </html>

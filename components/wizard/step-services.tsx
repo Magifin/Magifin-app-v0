@@ -1,17 +1,24 @@
 "use client"
 
-import type { WizardData } from "@/app/wizard/page"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { Home, XCircle } from "lucide-react"
 import { MagiHint } from "@/components/wizard/magi-hint"
+import type { YesNo } from "@/lib/wizard-store"
 
-interface StepProps {
-  data: WizardData
-  updateData: (updates: Partial<WizardData>) => void
+interface StepServicesProps {
+  hasServices: YesNo
+  servicesAmount: number
+  onHasChange: (value: YesNo) => void
+  onAmountChange: (value: number) => void
 }
 
-export function StepServices({ data, updateData }: StepProps) {
+export function StepServices({
+  hasServices,
+  servicesAmount,
+  onHasChange,
+  onAmountChange,
+}: StepServicesProps) {
   return (
     <div>
       <MagiHint message="Les titres-services sont un avantage fiscal très répandu en Belgique, même pour de petits montants." />
@@ -19,15 +26,15 @@ export function StepServices({ data, updateData }: StepProps) {
         Utilisez-vous des titres-services ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-{"Les titres-services (aide ménagère) donnent droit à une réduction d'impôt."}
+        {"Les titres-services (aide ménagère) donnent droit à une réduction d'impôt."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <button
-          onClick={() => updateData({ titresServices: true })}
+          onClick={() => onHasChange("Oui")}
           className={cn(
             "flex flex-1 items-center gap-4 rounded-xl border p-5 transition-all",
-            data.titresServices
+            hasServices === "Oui"
               ? "border-primary bg-primary/5 shadow-sm"
               : "border-border bg-card hover:border-primary/30"
           )}
@@ -35,7 +42,7 @@ export function StepServices({ data, updateData }: StepProps) {
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              data.titresServices
+              hasServices === "Oui"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
@@ -45,18 +52,19 @@ export function StepServices({ data, updateData }: StepProps) {
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-{"J'utilise des titres-services"}
+              {"J'utilise des titres-services"}
             </p>
           </div>
         </button>
 
         <button
-          onClick={() =>
-            updateData({ titresServices: false, titresServicesAmount: 0 })
-          }
+          onClick={() => {
+            onHasChange("Non")
+            onAmountChange(0)
+          }}
           className={cn(
             "flex flex-1 items-center gap-4 rounded-xl border p-5 transition-all",
-            !data.titresServices
+            hasServices === "Non"
               ? "border-primary bg-primary/5 shadow-sm"
               : "border-border bg-card hover:border-primary/30"
           )}
@@ -64,7 +72,7 @@ export function StepServices({ data, updateData }: StepProps) {
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              !data.titresServices
+              hasServices === "Non"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
@@ -80,7 +88,7 @@ export function StepServices({ data, updateData }: StepProps) {
         </button>
       </div>
 
-      {data.titresServices && (
+      {hasServices === "Oui" && (
         <div className="mt-8">
           <label className="mb-2 block text-sm font-medium text-foreground">
             {"Nombre de titres-services achetés par an"}
@@ -89,12 +97,8 @@ export function StepServices({ data, updateData }: StepProps) {
             <Input
               type="number"
               min={0}
-              value={data.titresServicesAmount || ""}
-              onChange={(e) =>
-                updateData({
-                  titresServicesAmount: parseInt(e.target.value) || 0,
-                })
-              }
+              value={servicesAmount || ""}
+              onChange={(e) => onAmountChange(parseInt(e.target.value) || 0)}
               placeholder="Ex: 150"
               className="w-40"
             />
