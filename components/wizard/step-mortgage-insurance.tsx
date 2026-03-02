@@ -1,48 +1,42 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { PiggyBank, XCircle, ShieldCheck, ExternalLink } from "lucide-react"
+import { ShieldCheck, XCircle, ExternalLink } from "lucide-react"
 import { MagiHint } from "@/components/wizard/magi-hint"
 import type { YesNo } from "@/lib/wizard-store"
 import { track } from "@/lib/track"
 
-interface StepPensionProps {
-  hasPension: YesNo
-  pensionAmount: number
-  onHasChange: (value: YesNo) => void
-  onAmountChange: (value: number) => void
+interface StepMortgageInsuranceProps {
+  value: YesNo
+  onChange: (value: YesNo) => void
 }
 
 const PARTNER_URL =
-  "https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=wizard&utm_campaign=pension_savings"
+  "https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=wizard&utm_campaign=mortgage_insurance"
 
-export function StepPension({
-  hasPension,
-  pensionAmount,
-  onHasChange,
-  onAmountChange,
-}: StepPensionProps) {
-  const handleChange = (value: YesNo) => {
-    onHasChange(value)
-    if (value === "Non") {
-      onAmountChange(0)
-      track("wizard_pension_no_clicked")
+export function StepMortgageInsurance({
+  value,
+  onChange,
+}: StepMortgageInsuranceProps) {
+  const handleChange = (newValue: YesNo) => {
+    onChange(newValue)
+    if (newValue === "Non") {
+      track("wizard_mortgage_insurance_no_clicked")
     }
   }
 
   const handleInsuranceCta = () => {
-    track("click_insurance_cta", { source: "pension_step" })
+    track("click_insurance_cta", { source: "mortgage_insurance_step" })
   }
 
   return (
     <div>
-      <MagiHint message="L'épargne pension est l'une des optimisations fiscales les plus fréquentes en Belgique." />
+      <MagiHint message="Certaines assurances liées au prêt peuvent également offrir des avantages fiscaux." />
       <h2 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-        {"Avez-vous une épargne pension ?"}
+        Avez-vous une assurance liée au prêt ?
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"L'épargne pension vous donne droit à une réduction d'impôt de 30\u00A0% (max 1.020\u00A0\u20AC) ou 25\u00A0% (max 1.310\u00A0\u20AC)."}
+        {"Assurance solde restant dû, assurance vie, etc."}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -50,7 +44,7 @@ export function StepPension({
           onClick={() => handleChange("Oui")}
           className={cn(
             "flex flex-1 items-center gap-4 rounded-xl border p-5 transition-all",
-            hasPension === "Oui"
+            value === "Oui"
               ? "border-primary bg-primary/5 shadow-sm"
               : "border-border bg-card hover:border-primary/30"
           )}
@@ -58,17 +52,17 @@ export function StepPension({
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              hasPension === "Oui"
+              value === "Oui"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
           >
-            <PiggyBank className="h-5 w-5" />
+            <ShieldCheck className="h-5 w-5" />
           </div>
           <div className="text-left">
             <p className="font-semibold text-foreground">Oui</p>
             <p className="text-sm text-muted-foreground">
-              {"J'ai une épargne pension"}
+              {"J'ai une assurance liée au prêt"}
             </p>
           </div>
         </button>
@@ -77,7 +71,7 @@ export function StepPension({
           onClick={() => handleChange("Non")}
           className={cn(
             "flex flex-1 items-center gap-4 rounded-xl border p-5 transition-all",
-            hasPension === "Non"
+            value === "Non"
               ? "border-primary bg-primary/5 shadow-sm"
               : "border-border bg-card hover:border-primary/30"
           )}
@@ -85,7 +79,7 @@ export function StepPension({
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              hasPension === "Non"
+              value === "Non"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
             )}
@@ -95,22 +89,22 @@ export function StepPension({
           <div className="text-left">
             <p className="font-semibold text-foreground">Non</p>
             <p className="text-sm text-muted-foreground">
-              {"Pas d'épargne pension"}
+              {"Pas d'assurance liée au prêt"}
             </p>
           </div>
         </button>
       </div>
 
-      {hasPension === "Non" && (
+      {value === "Non" && (
         <div className="mt-6 rounded-xl border border-border/60 bg-muted/30 p-4">
           <div className="mb-2 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-accent" />
             <p className="text-sm font-semibold text-foreground">
-              {"Astuce Magi"}
+              {"Optimisez vos assurances"}
             </p>
           </div>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {"Une épargne pension peut réduire votre impôt. Vous pouvez aussi optimiser vos assurances pour aller plus loin."}
+            {"Certaines assurances liées au logement peuvent renforcer votre protection et optimiser votre déclaration."}
           </p>
           <a
             href={PARTNER_URL}
@@ -119,32 +113,9 @@ export function StepPension({
             onClick={handleInsuranceCta}
             className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
           >
-            {"Optimiser mes assurance(s)"}
+            {"Analyser mes assurances liées au prêt"}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
-        </div>
-      )}
-
-      {hasPension === "Oui" && (
-        <div className="mt-8">
-          <label className="mb-2 block text-sm font-medium text-foreground">
-            {"Montant annuel versé"}
-          </label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min={0}
-              max={1310}
-              value={pensionAmount || ""}
-              onChange={(e) => onAmountChange(parseInt(e.target.value) || 0)}
-              placeholder="Ex: 990"
-              className="w-40"
-            />
-            <span className="text-sm text-muted-foreground">{"€ / an"}</span>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {"Plafond\u00A0: 1.020\u00A0\u20AC (réduction de 30\u00A0%) ou 1.310\u00A0\u20AC (réduction de 25\u00A0%)."}
-          </p>
         </div>
       )}
     </div>

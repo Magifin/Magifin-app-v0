@@ -1,123 +1,218 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
+import { StepRegion } from "@/components/wizard/step-region"
+import { StepStatus } from "@/components/wizard/step-status"
 import { StepSituation } from "@/components/wizard/step-situation"
 import { StepRevenu } from "@/components/wizard/step-revenu"
 import { StepChildren } from "@/components/wizard/step-children"
 import { StepChildcare } from "@/components/wizard/step-childcare"
 import { StepServices } from "@/components/wizard/step-services"
 import { StepPension } from "@/components/wizard/step-pension"
-import { Button } from "@/components/ui/button"
-
-export interface WizardData {
-  situation: string
-  revenuTranche: string
-  childrenCount: number
-  childrenAges: number[]
-  childcareCost: number
-  hasChildcare: boolean
-  titresServices: boolean
-  titresServicesAmount: number
-  epargnesPension: boolean
-  epargnesPensionAmount: number
-}
-
-const STEPS = [
-  "Situation du ménage",
-  "Tranche de revenus",
-  "Enfants",
-  "Frais de garde",
-  "Titres-services",
-  "Épargne pension",
-]
-
-const defaultData: WizardData = {
-  situation: "",
-  revenuTranche: "",
-  childrenCount: 0,
-  childrenAges: [],
-  childcareCost: 0,
-  hasChildcare: false,
-  titresServices: false,
-  titresServicesAmount: 0,
-  epargnesPension: false,
-  epargnesPensionAmount: 0,
-}
+import { StepHousing } from "@/components/wizard/step-housing"
+import { StepPropertyUse } from "@/components/wizard/step-property-use"
+import { StepCadastral } from "@/components/wizard/step-cadastral"
+import { StepMortgage } from "@/components/wizard/step-mortgage"
+import { StepMortgageInsurance } from "@/components/wizard/step-mortgage-insurance"
+import {
+  useWizard,
+  getAvailableSteps,
+  getStepIndex,
+  getNextStepId,
+  getPreviousStepId,
+} from "@/lib/wizard-store"
+import { track } from "@/lib/track"
 
 export default function WizardPage() {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(0)
-  const [data, setData] = useState<WizardData>(defaultData)
+  const { state, setAnswer, goToStep, markStepComplete } = useWizard()
+  const { answers, currentStepId, completedStepIds } = state
 
-  const updateData = (updates: Partial<WizardData>) => {
-    setData((prev) => ({ ...prev, ...updates }))
-  }
+  const availableSteps = getAvailableSteps(answers)
+  const currentIndex = getStepIndex(currentStepId, answers)
+  const totalSteps = availableSteps.length
 
-  const next = () => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep((s) => s + 1)
-    } else {
-      const params = new URLSearchParams()
-      params.set("situation", data.situation)
-      params.set("revenuTranche", data.revenuTranche)
-      params.set("children", String(data.childrenCount))
-      params.set("childcare", String(data.childcareCost))
-      params.set("hasChildcare", String(data.hasChildcare))
-      params.set("titresServices", String(data.titresServices))
-      params.set("titresServicesAmount", String(data.titresServicesAmount))
-      params.set("epargnesPension", String(data.epargnesPension))
-      params.set("epargnesPensionAmount", String(data.epargnesPensionAmount))
-      router.push(`/results?${params.toString()}`)
+  // Track wizard start
+  useEffect(() => {
+    if (completedStepIds.length === 0) {
+      track("wizard_started")
     }
-  }
-
-  const back = () => {
-    if (currentStep > 0) {
-      setCurrentStep((s) => s - 1)
-    }
-  }
+  }, [completedStepIds.length])
 
   const canProceed = (): boolean => {
-    switch (currentStep) {
-      case 0:
-        return data.situation !== ""
-      case 1:
-        return data.revenuTranche !== ""
-      case 2:
-        return true
-      case 3:
-        return true
-      case 4:
-        return true
-      case 5:
-        return true
+    switch (currentStepId) {
+      case "region":
+        return answers.region !== null
+      case "status":
+        return answers.status !== null
+      case "situation":
+        return answers.householdSituation !== null
+      case "revenu":
+        return answers.incomeBracket !== null
+      case "children":
+        return true // 0 is valid
+      case "childcare":
+        return answers.childcare !== null
+      case "services":
+        return answers.serviceVouchers !== null
+      case "pension":
+        return answers.pensionSaving !== null
+      case "housing":
+        return answers.housingStatus !== null
+      case "propertyUse":
+        return answers.propertyUse !== null
+      case "cadastral":
+        return answers.hasCadastralIncome !== null
+      case "mortgage":
+        return answers.hasMortgagePayments !== null
+      case "mortgageInsurance":
+        return answers.mortgageInsuranceYesNo !== null
       default:
         return false
     }
   }
 
+  const handleNext = () => {
+    markStepComplete(currentStepId)
+    const nextStepId = getNextStepId(currentStepId, answers)
+
+    if (nextStepId) {
+      goToStep(nextStepId)
+    } else {
+      // Wizard complete
+      track("wizard_completed")
+      router.push("/results")
+    }
+  }
+
+  const handleBack = () => {
+    const prevStepId = getPreviousStepId(currentStepId, answers)
+    if (prevStepId) {
+      goToStep(prevStepId)
+    }
+  }
+
+  const handleStepClick = (stepId: string) => {
+    track("wizard_step_clicked", { stepId })
+    goToStep(stepId)
+  }
+
   const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return <StepSituation data={data} updateData={updateData} />
-      case 1:
-        return <StepRevenu data={data} updateData={updateData} />
-      case 2:
-        return <StepChildren data={data} updateData={updateData} />
-      case 3:
-        return <StepChildcare data={data} updateData={updateData} />
-      case 4:
-        return <StepServices data={data} updateData={updateData} />
-      case 5:
-        return <StepPension data={data} updateData={updateData} />
+    switch (currentStepId) {
+      case "region":
+        return (
+          <StepRegion
+            value={answers.region}
+            onChange={(v) => setAnswer("region", v)}
+          />
+        )
+      case "status":
+        return (
+          <StepStatus
+            value={answers.status}
+            onChange={(v) => setAnswer("status", v)}
+          />
+        )
+      case "situation":
+        return (
+          <StepSituation
+            value={answers.householdSituation}
+            onChange={(v) => setAnswer("householdSituation", v)}
+          />
+        )
+      case "revenu":
+        return (
+          <StepRevenu
+            value={answers.incomeBracket}
+            onChange={(v) => setAnswer("incomeBracket", v)}
+          />
+        )
+      case "children":
+        return (
+          <StepChildren
+            value={answers.children}
+            onChange={(v) => setAnswer("children", v)}
+          />
+        )
+      case "childcare":
+        return (
+          <StepChildcare
+            hasChildcare={answers.childcare}
+            childcareCost={answers.childcareCost}
+            onHasChange={(v) => setAnswer("childcare", v)}
+            onCostChange={(v) => setAnswer("childcareCost", v)}
+          />
+        )
+      case "services":
+        return (
+          <StepServices
+            hasServices={answers.serviceVouchers}
+            servicesAmount={answers.serviceVouchersAmount}
+            onHasChange={(v) => setAnswer("serviceVouchers", v)}
+            onAmountChange={(v) => setAnswer("serviceVouchersAmount", v)}
+          />
+        )
+      case "pension":
+        return (
+          <StepPension
+            hasPension={answers.pensionSaving}
+            pensionAmount={answers.pensionSavingAmount}
+            onHasChange={(v) => setAnswer("pensionSaving", v)}
+            onAmountChange={(v) => setAnswer("pensionSavingAmount", v)}
+          />
+        )
+      case "housing":
+        return (
+          <StepHousing
+            value={answers.housingStatus}
+            onChange={(v) => setAnswer("housingStatus", v)}
+          />
+        )
+      case "propertyUse":
+        return (
+          <StepPropertyUse
+            value={answers.propertyUse}
+            onChange={(v) => setAnswer("propertyUse", v)}
+          />
+        )
+      case "cadastral":
+        return (
+          <StepCadastral
+            hasCadastralIncome={answers.hasCadastralIncome}
+            cadastralIncome={answers.cadastralIncome}
+            onHasChange={(v) => setAnswer("hasCadastralIncome", v)}
+            onAmountChange={(v) => setAnswer("cadastralIncome", v)}
+          />
+        )
+      case "mortgage":
+        return (
+          <StepMortgage
+            hasMortgagePayments={answers.hasMortgagePayments}
+            mortgageInterest={answers.mortgageInterest}
+            mortgageCapital={answers.mortgageCapital}
+            onHasChange={(v) => setAnswer("hasMortgagePayments", v)}
+            onInterestChange={(v) => setAnswer("mortgageInterest", v)}
+            onCapitalChange={(v) => setAnswer("mortgageCapital", v)}
+          />
+        )
+      case "mortgageInsurance":
+        return (
+          <StepMortgageInsurance
+            value={answers.mortgageInsuranceYesNo}
+            onChange={(v) => setAnswer("mortgageInsuranceYesNo", v)}
+          />
+        )
       default:
         return null
     }
   }
+
+  const isFirstStep = currentIndex === 0
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -142,22 +237,32 @@ export default function WizardPage() {
         </div>
       </header>
 
-      <WizardProgress steps={STEPS} currentStep={currentStep} />
+      <WizardProgress
+        steps={availableSteps}
+        currentStepId={currentStepId}
+        completedStepIds={completedStepIds}
+        onStepClick={handleStepClick}
+      />
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10">
+        {/* Step indicator */}
+        <p className="mb-6 text-center text-sm text-muted-foreground">
+          {"Étape"} {currentIndex + 1} {"sur"} {totalSteps}
+        </p>
+
         <div className="flex-1">{renderStep()}</div>
 
-        <div className="flex items-center justify-between border-t border-border/50 pt-6 mt-10">
+        <div className="mt-10 flex items-center justify-between border-t border-border/50 pt-6">
           <Button
             variant="ghost"
-            onClick={back}
-            disabled={currentStep === 0}
+            onClick={handleBack}
+            disabled={isFirstStep}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             {"Précédent"}
           </Button>
-          <Button onClick={next} disabled={!canProceed()}>
-            {currentStep === STEPS.length - 1 ? "Voir les résultats" : "Suivant"}
+          <Button onClick={handleNext} disabled={!canProceed()}>
+            {currentIndex === totalSteps - 1 ? "Voir les résultats" : "Suivant"}
           </Button>
         </div>
       </div>
