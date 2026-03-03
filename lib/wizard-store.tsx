@@ -52,17 +52,12 @@ export interface WizardAnswers {
   mortgageCapital: number | null
   hasMortgagePayments: YesNo
   mortgageInsuranceYesNo: YesNo
-  mortgageInsuranceType: string | null
-  mortgageInsuranceAmount: number | null
+  mortgageInsuranceCategory: MortgageInsuranceCategory
+  mortgageInsuranceAnnualPremium: number | null
+  mortgageInsuranceLinkedToLoan: boolean | null
 }
 
-export type MortgageInsuranceType =
-  | "SoldeRestantDu"
-  | "IncendieHabitation"
-  | "ResponsabiliteCivile"
-  | "ProtectionJuridique"
-  | "Autre"
-  | null
+export type MortgageInsuranceCategory = "solde_restant_du" | "other" | null
 
 export interface WizardState {
   answers: WizardAnswers
@@ -144,8 +139,9 @@ const defaultAnswers: WizardAnswers = {
   mortgageCapital: null,
   hasMortgagePayments: null,
   mortgageInsuranceYesNo: null,
-  mortgageInsuranceType: null,
-  mortgageInsuranceAmount: null,
+  mortgageInsuranceCategory: null,
+  mortgageInsuranceAnnualPremium: null,
+  mortgageInsuranceLinkedToLoan: null,
 }
 
 const defaultState: WizardState = {

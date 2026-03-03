@@ -34,11 +34,8 @@ export function ResultsContent() {
 
   const availableItems = results.items.filter((i) => i.available)
 
-  // Determine how many items to show clearly vs blurred
-  const TEASER_COUNT = 3
-  const teaserItems = availableItems.slice(0, TEASER_COUNT)
-  const gatedItems = availableItems.slice(TEASER_COUNT)
-  const hasGatedItems = gatedItems.length > 0 && !isLoggedIn
+  // Gate condition: user must have created an account
+  const isUnlocked = isLoggedIn
 
   const handleModifyAnswers = () => {
     const availableSteps = getAvailableSteps(answers)
@@ -99,7 +96,7 @@ export function ResultsContent() {
       </header>
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
-        {/* Hero estimate */}
+        {/* Hero estimate - totals always visible */}
         <div className="mb-14 flex flex-col items-center text-center">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             {user?.firstName ? `${user.firstName}, Magi a analysé votre situation` : "Magi a analysé votre situation"}
@@ -124,7 +121,7 @@ export function ResultsContent() {
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
 
-          {!isLoggedIn && (
+          {!isUnlocked && (
             <>
               <Button
                 size="lg"
@@ -143,7 +140,7 @@ export function ResultsContent() {
             </>
           )}
 
-          {isLoggedIn && (
+          {isUnlocked && (
             <Button
               size="lg"
               className="mt-8 h-12 px-8 text-base"
@@ -205,7 +202,7 @@ export function ResultsContent() {
                 {"Précision complète bientôt disponible pour votre région / statut."}
               </p>
             )}
-            {!isLoggedIn && (
+            {!isUnlocked && (
               <Button
                 size="sm"
                 className="mt-5 w-full"
@@ -261,101 +258,76 @@ export function ResultsContent() {
             <h3 className="mb-4 font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
               {"Détail de vos optimisations"}
             </h3>
-            
-            {/* Teaser items (always visible) */}
-            <div className="flex flex-col gap-3">
-              {teaserItems.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                    <div>
-                      <p className="font-medium text-card-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.reason}</p>
-                    </div>
+
+            {/* Locked panel - shown when NOT unlocked */}
+            {!isUnlocked && (
+              <div className="mb-4 rounded-xl border border-border bg-card p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <Lock className="h-5 w-5" />
                   </div>
-                  <p className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
-                    {formatMoneyRange(item.amountMin, item.amountMax)}
-                  </p>
-                </div>
-              ))}
-
-              {/* If logged in, show all items */}
-              {isLoggedIn && gatedItems.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                    <div>
-                      <p className="font-medium text-card-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.reason}</p>
-                    </div>
-                  </div>
-                  <p className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
-                    {formatMoneyRange(item.amountMin, item.amountMax)}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Gated/blurred section for non-logged-in users */}
-            {hasGatedItems && (
-              <div className="relative mt-3">
-                {/* Blurred items preview */}
-                <div className="pointer-events-none select-none blur-sm">
-                  {gatedItems.slice(0, 2).map((item, idx) => (
-                    <div
-                      key={`blurred-${idx}`}
-                      className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                        <div>
-                          <p className="font-medium text-card-foreground">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">{item.reason}</p>
-                        </div>
-                      </div>
-                      <p className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
-                        {formatMoneyRange(item.amountMin, item.amountMax)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Overlay CTA */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="rounded-2xl border border-border bg-card/95 p-6 text-center shadow-lg backdrop-blur-sm">
-                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
-                      <Lock className="h-5 w-5" />
-                    </div>
+                  <div className="flex-1">
                     <h4 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
                       {"Débloquez le détail complet"}
                     </h4>
-                    <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-                      {"Créez votre espace pour voir toutes vos optimisations, documents requis et prochaines actions."}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {"Accédez aux montants précis, documents requis et prochaines actions."}
                     </p>
-                    <Button
-                      size="sm"
-                      className="mt-4"
-                      asChild
-                      onClick={handleCreateSpace}
-                    >
-                      <Link href="/create-account">
-                        {"Créer mon espace Magifin"}
-                        <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {"Gratuit · Sans engagement · 5 minutes"}
-                    </p>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Button
+                        size="sm"
+                        asChild
+                        onClick={handleCreateSpace}
+                      >
+                        <Link href="/create-account">
+                          {"Créer mon espace Magifin"}
+                          <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        {"Gratuit · Sans engagement · 5 minutes"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
+
+            {/* Items list */}
+            <div className="flex flex-col gap-3">
+              {availableItems.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
+                    <div>
+                      {/* Title always visible */}
+                      <p className="font-medium text-card-foreground">{item.title}</p>
+                      {/* Description: show real text if unlocked, placeholder if not */}
+                      {isUnlocked ? (
+                        <p className="text-xs text-muted-foreground">{item.reason}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground/60 italic">
+                          {"Détails disponibles dans votre espace Magifin"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {/* Amount: show real value if unlocked, placeholder if not */}
+                  {isUnlocked ? (
+                    <p className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
+                      {formatMoneyRange(item.amountMin, item.amountMax)}
+                    </p>
+                  ) : (
+                    <p className="font-[family-name:var(--font-heading)] font-semibold text-muted-foreground/50">
+                      {"— —"}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

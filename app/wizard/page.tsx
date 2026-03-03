@@ -224,11 +224,13 @@ export default function WizardPage() {
         return (
           <StepMortgageInsurance
             value={answers.mortgageInsuranceYesNo}
-            insuranceType={answers.mortgageInsuranceType}
-            insuranceAmount={answers.mortgageInsuranceAmount}
+            category={answers.mortgageInsuranceCategory}
+            annualPremium={answers.mortgageInsuranceAnnualPremium}
+            linkedToLoan={answers.mortgageInsuranceLinkedToLoan}
             onChange={(v) => setAnswer("mortgageInsuranceYesNo", v)}
-            onTypeChange={(v) => setAnswer("mortgageInsuranceType", v)}
-            onAmountChange={(v) => setAnswer("mortgageInsuranceAmount", v)}
+            onCategoryChange={(v) => setAnswer("mortgageInsuranceCategory", v)}
+            onAnnualPremiumChange={(v) => setAnswer("mortgageInsuranceAnnualPremium", v)}
+            onLinkedToLoanChange={(v) => setAnswer("mortgageInsuranceLinkedToLoan", v)}
           />
         )
       default:
