@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, DM_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Suspense } from 'react'
 import { WizardProvider } from '@/lib/wizard-store'
 import './globals.css'
 
@@ -55,7 +56,9 @@ export default function RootLayout({
         <WizardProvider>
           {children}
         </WizardProvider>
-        <Analytics />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
       </body>
     </html>
   )
