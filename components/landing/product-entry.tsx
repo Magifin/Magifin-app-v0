@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { ArrowRight, Calculator, PiggyBank, ShieldCheck, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { track } from "@/lib/track"
+
+const PARTNER_URL = "https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=cta&utm_campaign=homepage_pillar"
 
 const products = [
   {
@@ -20,7 +21,7 @@ const products = [
     description:
       "Comparez les meilleures offres d'assurance et trouvez la couverture idéale au meilleur prix grâce à notre réseau de partenaires.",
     icon: ShieldCheck,
-    href: "https://www.assurances-maron.be/devis-epargne-pension",
+    href: PARTNER_URL,
     cta: "Comparer mes assurances",
     active: true,
     external: true,
@@ -38,10 +39,6 @@ const products = [
 ]
 
 export function ProductEntry() {
-  const handleInsuranceCta = () => {
-    track("click_insurance_cta", { source: "homepage_pillar" })
-  }
-
   return (
     <section id="products" className="px-6 py-24">
       <div className="mx-auto max-w-6xl">
@@ -98,7 +95,6 @@ export function ProductEntry() {
                       href={product.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={handleInsuranceCta}
                     >
                       {product.cta}
                       <ExternalLink className="ml-2 h-4 w-4" />

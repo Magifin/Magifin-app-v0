@@ -38,7 +38,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://www.assurances-maron.be/devis-epargne-pension"
+                  href="https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=footer&utm_campaign=insurance"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground"
