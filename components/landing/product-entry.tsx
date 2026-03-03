@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, Calculator, PiggyBank, ShieldCheck, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { track } from "@/lib/track"
 
 const products = [
   {
@@ -14,6 +15,17 @@ const products = [
     active: true,
   },
   {
+    id: "insurance-comparison",
+    title: "Comparaison & Courtage d'Assurances",
+    description:
+      "Comparez les meilleures offres d'assurance et trouvez la couverture idéale au meilleur prix grâce à notre réseau de partenaires.",
+    icon: ShieldCheck,
+    href: "https://www.assurances-maron.be/devis-epargne-pension",
+    cta: "Comparer mes assurances",
+    active: true,
+    external: true,
+  },
+  {
     id: "personal-finance",
     title: "Outils de Finance Personnelle",
     description:
@@ -23,23 +35,13 @@ const products = [
     cta: "Bientôt disponible",
     active: false,
   },
-  {
-    id: "insurance-comparison",
-    title: "Comparaison & Courtage d'Assurances",
-    description:
-      "Comparez les meilleures offres d'assurance et trouvez la couverture idéale au meilleur prix grâce à notre réseau de partenaires.",
-    icon: ShieldCheck,
-    href: "#",
-    cta: "Bientôt disponible",
-    active: false,
-    partnerCta: {
-      label: "Comparer mes assurances",
-      href: "https://www.assurances-maron.be/devis-epargne-pension",
-    },
-  },
 ]
 
 export function ProductEntry() {
+  const handleInsuranceCta = () => {
+    track("click_insurance_cta", { source: "homepage_pillar" })
+  }
+
   return (
     <section id="products" className="px-6 py-24">
       <div className="mx-auto max-w-6xl">
@@ -90,40 +92,35 @@ export function ProductEntry() {
                 </p>
               </div>
               {product.active ? (
-                <Button className="w-full" size="lg" asChild>
-                  <Link href={product.href}>
-                    {product.cta}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    variant="outline"
-                    disabled
-                  >
-                    {product.cta}
-                  </Button>
-                  {product.partnerCta && (
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      variant="secondary"
-                      asChild
+                product.external ? (
+                  <Button className="w-full" size="lg" asChild>
+                    <a
+                      href={product.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleInsuranceCta}
                     >
-                      <a
-                        href={product.partnerCta.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {product.partnerCta.label}
-                        <ExternalLink className="ml-2 h-4 w-4" />
-                      </a>
-                    </Button>
-                  )}
-                </div>
+                      {product.cta}
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                ) : (
+                  <Button className="w-full" size="lg" asChild>
+                    <Link href={product.href}>
+                      {product.cta}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                )
+              ) : (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  variant="outline"
+                  disabled
+                >
+                  {product.cta}
+                </Button>
               )}
             </div>
           ))}
