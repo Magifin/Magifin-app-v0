@@ -1,3 +1,5 @@
+"use client"
+
 import {
   TrendingUp,
   CheckCircle2,
@@ -8,6 +10,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useUser } from "@/lib/user-store"
+import { useOptimizations } from "@/lib/useOptimizations"
+import { formatMoneyRange } from "@/lib/formatMoney"
 
 const checklistItems = [
   { label: "Compléter le questionnaire fiscal", done: true },
@@ -37,11 +42,17 @@ const nextActions = [
 ]
 
 export default function DashboardPage() {
+  const { user } = useUser()
+  const { results, hasWizardData } = useOptimizations()
+
+  // Use user's first name or default to generic greeting
+  const greeting = user?.firstName ? `Bonjour, ${user.firstName}` : "Bonjour"
+
   return (
     <div>
       <div className="mb-8">
         <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-          Bonjour, Jean
+          {greeting}
         </h1>
         <p className="mt-1 text-muted-foreground">
           {"Voici un aperçu de votre optimisation fiscale."}
@@ -58,19 +69,20 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-[family-name:var(--font-heading)] text-4xl font-bold text-primary sm:text-5xl">
-                {"847\u00A0€"}
-              </span>
-              <span className="text-lg text-muted-foreground">
-                {"– 1.204\u00A0€"}
+                {hasWizardData
+                  ? formatMoneyRange(results.totalMin, results.totalMax)
+                  : "---"}
               </span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              {"Estimation basée sur votre profil actuel"}
+              {hasWizardData
+                ? "Estimation basée sur votre profil actuel"
+                : "Complétez le questionnaire pour voir votre estimation"}
             </p>
           </div>
           <Button asChild>
             <Link href="/wizard">
-              {"Mettre à jour"}
+              {hasWizardData ? "Mettre à jour" : "Commencer"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

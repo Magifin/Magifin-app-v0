@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { StepRegion } from "@/components/wizard/step-region"
@@ -26,11 +26,14 @@ import {
   getNextStepId,
   getPreviousStepId,
 } from "@/lib/wizard-store"
+import { useUser } from "@/lib/user-store"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { track } from "@/lib/track"
 
 export default function WizardPage() {
   const router = useRouter()
   const { state, setAnswer, goToStep, markStepComplete } = useWizard()
+  const { user } = useUser()
   const { answers, currentStepId, completedStepIds } = state
 
   const availableSteps = getAvailableSteps(answers)
@@ -43,6 +46,18 @@ export default function WizardPage() {
       track("wizard_started")
     }
   }, [completedStepIds.length])
+
+  // Check if required steps are complete for "View Results"
+  const canViewResults = useMemo(() => {
+    // Minimum required steps to show meaningful results
+    const requiredStepIds = ["region", "status", "situation", "revenu"]
+    return requiredStepIds.every((id) => completedStepIds.includes(id))
+  }, [completedStepIds])
+
+  // Get isFullySupported for tracking
+  const isFullySupported = useMemo(() => {
+    return computeOptimizationsFromAnswers(answers).isFullySupported
+  }, [answers])
 
   const canProceed = (): boolean => {
     switch (currentStepId) {
@@ -100,6 +115,11 @@ export default function WizardPage() {
   const handleStepClick = (stepId: string) => {
     track("wizard_step_clicked", { stepId })
     goToStep(stepId)
+  }
+
+  const handleViewResults = () => {
+    track("wizard_view_results_clicked", { stepId: currentStepId, isFullySupported })
+    router.push("/results")
   }
 
   const renderStep = () => {
@@ -204,7 +224,11 @@ export default function WizardPage() {
         return (
           <StepMortgageInsurance
             value={answers.mortgageInsuranceYesNo}
+            insuranceType={answers.mortgageInsuranceType}
+            insuranceAmount={answers.mortgageInsuranceAmount}
             onChange={(v) => setAnswer("mortgageInsuranceYesNo", v)}
+            onTypeChange={(v) => setAnswer("mortgageInsuranceType", v)}
+            onAmountChange={(v) => setAnswer("mortgageInsuranceAmount", v)}
           />
         )
       default:
@@ -213,6 +237,7 @@ export default function WizardPage() {
   }
 
   const isFirstStep = currentIndex === 0
+  const isLastStep = currentIndex === totalSteps - 1
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -245,25 +270,50 @@ export default function WizardPage() {
       />
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10">
-        {/* Step indicator */}
-        <p className="mb-6 text-center text-sm text-muted-foreground">
-          {"Étape"} {currentIndex + 1} {"sur"} {totalSteps}
-        </p>
+        {/* Step indicator with optional greeting */}
+        <div className="mb-6 text-center">
+          {user?.firstName && (
+            <p className="mb-1 text-sm text-muted-foreground">
+              Bonjour, {user.firstName}
+            </p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            {"Étape"} {currentIndex + 1} {"sur"} {totalSteps}
+          </p>
+        </div>
 
         <div className="flex-1">{renderStep()}</div>
 
-        <div className="mt-10 flex items-center justify-between border-t border-border/50 pt-6">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            disabled={isFirstStep}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {"Précédent"}
-          </Button>
-          <Button onClick={handleNext} disabled={!canProceed()}>
-            {currentIndex === totalSteps - 1 ? "Voir les résultats" : "Suivant"}
-          </Button>
+        <div className="mt-10 flex flex-col gap-3 border-t border-border/50 pt-6">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={handleBack}
+              disabled={isFirstStep}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {"Précédent"}
+            </Button>
+            <Button onClick={handleNext} disabled={!canProceed()}>
+              {isLastStep ? "Voir les résultats" : "Suivant"}
+            </Button>
+          </div>
+
+          {/* Persistent "Voir mes résultats" CTA */}
+          {!isLastStep && (
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleViewResults}
+                disabled={!canViewResults}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                {"Voir mes résultats"}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

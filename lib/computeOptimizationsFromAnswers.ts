@@ -34,8 +34,14 @@ export function computeOptimizationsFromAnswers(
 
   if (answers.status && answers.status !== "Salarie") {
     isFullySupported = false
+    const statusLabels: Record<string, string> = {
+      Independant: "indépendants",
+      Retraite: "retraités",
+      Etudiant: "étudiants",
+    }
+    const label = statusLabels[answers.status] || "votre statut"
     notes.push(
-      "Les calculs actuels sont optimisés pour les salariés. Support indépendant bientôt disponible."
+      `Les calculs actuels sont optimisés pour les salariés. Support complet pour ${label} bientôt disponible.`
     )
   }
 
@@ -185,6 +191,29 @@ export function computeOptimizationsFromAnswers(
           "Avantage fiscal sur les intérêts et capital remboursés (selon la date du prêt).",
       })
     }
+  }
+
+  // Mortgage insurance deduction
+  if (
+    answers.housingStatus === "ProprietaireAvecPret" &&
+    answers.mortgageInsuranceYesNo === "Oui" &&
+    answers.mortgageInsuranceAmount !== null &&
+    answers.mortgageInsuranceAmount > 0
+  ) {
+    // Placeholder heuristic: ~15-25% of annual premium can provide tax benefit
+    const annualAmount = answers.mortgageInsuranceAmount
+    const minBenefit = annualAmount * 0.15
+    const maxBenefit = annualAmount * 0.25
+
+    items.push({
+      key: "mortgage_insurance",
+      title: "Assurance liée au prêt hypothécaire",
+      amountMin: Math.round(minBenefit),
+      amountMax: Math.round(maxBenefit),
+      available: true,
+      reason:
+        "Certaines primes d'assurance liées au prêt peuvent offrir un avantage fiscal.",
+    })
   }
 
   // Mortgage insurance gap note

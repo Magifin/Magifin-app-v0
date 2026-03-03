@@ -10,7 +10,7 @@ import {
 
 // === Types ===
 export type Region = "Wallonie" | "Bruxelles" | "Flandre" | null
-export type Status = "Salarie" | "Independant" | null
+export type Status = "Salarie" | "Independant" | "Retraite" | "Etudiant" | null
 export type HouseholdSituation =
   | "Isole"
   | "Couple"
@@ -52,7 +52,17 @@ export interface WizardAnswers {
   mortgageCapital: number | null
   hasMortgagePayments: YesNo
   mortgageInsuranceYesNo: YesNo
+  mortgageInsuranceType: string | null
+  mortgageInsuranceAmount: number | null
 }
+
+export type MortgageInsuranceType =
+  | "SoldeRestantDu"
+  | "IncendieHabitation"
+  | "ResponsabiliteCivile"
+  | "ProtectionJuridique"
+  | "Autre"
+  | null
 
 export interface WizardState {
   answers: WizardAnswers
@@ -134,6 +144,8 @@ const defaultAnswers: WizardAnswers = {
   mortgageCapital: null,
   hasMortgagePayments: null,
   mortgageInsuranceYesNo: null,
+  mortgageInsuranceType: null,
+  mortgageInsuranceAmount: null,
 }
 
 const defaultState: WizardState = {

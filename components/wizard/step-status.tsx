@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Briefcase, Building2 } from "lucide-react"
+import { Briefcase, Building2, Coffee, GraduationCap } from "lucide-react"
 import { MagiHint } from "@/components/wizard/magi-hint"
 import type { Status } from "@/lib/wizard-store"
 
@@ -27,6 +27,18 @@ const statuses: {
     label: "Indépendant(e)",
     description: "Vous êtes travailleur indépendant ou gérant de société",
     icon: Building2,
+  },
+  {
+    value: "Retraite",
+    label: "Retraité(e)",
+    description: "Vous êtes pensionné(e) ou prépensionné(e)",
+    icon: Coffee,
+  },
+  {
+    value: "Etudiant",
+    label: "Étudiant(e)",
+    description: "Vous êtes étudiant(e) ou en formation",
+    icon: GraduationCap,
   },
 ]
 

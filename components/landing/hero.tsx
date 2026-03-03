@@ -1,8 +1,16 @@
+"use client"
+
 import Link from "next/link"
-import { ArrowRight, Shield, Lock, Sparkles } from "lucide-react"
+import { ArrowRight, Shield, Lock, Sparkles, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useUser } from "@/lib/user-store"
 
 export function Hero() {
+  const { isLoggedIn } = useUser()
+
+  // Determine dashboard link destination
+  const dashboardHref = isLoggedIn ? "/dashboard" : "/create-account?from=dashboard"
+
   return (
     <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-20">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent" />
@@ -29,7 +37,10 @@ export function Hero() {
             </Link>
           </Button>
           <Button variant="outline" size="lg" className="h-12 px-8 text-base" asChild>
-            <Link href="#how-it-works">En savoir plus</Link>
+            <Link href={dashboardHref}>
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Accéder au dashboard
+            </Link>
           </Button>
         </div>
 
