@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, Calculator, PiggyBank, ShieldCheck } from "lucide-react"
+import { ArrowRight, Calculator, PiggyBank, ShieldCheck, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const products = [
@@ -32,6 +32,10 @@ const products = [
     href: "#",
     cta: "Bientôt disponible",
     active: false,
+    partnerCta: {
+      label: "Comparer mes assurances",
+      href: "https://www.assurances-maron.be/devis-epargne-pension",
+    },
   },
 ]
 
@@ -41,13 +45,13 @@ export function ProductEntry() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-16 text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-accent">
-            Nos solutions
+            La plateforme Magifin
           </p>
           <h2 className="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl text-balance">
-            Les 3 piliers de Magifin
+            Les 3 piliers de votre optimisation financière
           </h2>
           <p className="mt-4 mx-auto max-w-2xl text-muted-foreground">
-            {"Une suite complète d'outils pour optimiser vos finances personnelles en Belgique."}
+            {"Identifiez vos opportunités fiscales, organisez vos finances et prenez de meilleures décisions au quotidien."}
           </p>
         </div>
 
@@ -93,14 +97,33 @@ export function ProductEntry() {
                   </Link>
                 </Button>
               ) : (
-                <Button
-                  className="w-full"
-                  size="lg"
-                  variant="outline"
-                  disabled
-                >
-                  {product.cta}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    variant="outline"
+                    disabled
+                  >
+                    {product.cta}
+                  </Button>
+                  {product.partnerCta && (
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      variant="secondary"
+                      asChild
+                    >
+                      <a
+                        href={product.partnerCta.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {product.partnerCta.label}
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           ))}
