@@ -9,6 +9,8 @@ export type TrackEvent =
   | "wizard_mortgage_insurance_no_clicked"
   | "wizard_completed"
   | "wizard_started"
+  | "wizard_view_results_clicked"
+  | "account_created"
 
 export function track(eventName: TrackEvent, payload?: Record<string, unknown>) {
   if (typeof window === "undefined") return

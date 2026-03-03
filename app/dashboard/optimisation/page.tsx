@@ -3,22 +3,12 @@
 import Link from "next/link"
 import { Calculator, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useWizard } from "@/lib/wizard-store"
-import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { useOptimizations } from "@/lib/useOptimizations"
+import { formatMoneyRange } from "@/lib/formatMoney"
 
 export default function OptimisationPage() {
-  const { state } = useWizard()
-  const { answers, completedStepIds } = state
-
-  const hasWizardData = completedStepIds.length > 0
-  const result = computeOptimizationsFromAnswers(answers)
-  const availableItems = result.items.filter((i) => i.available)
-
-  // Format amount range for display
-  const formatAmount = (min: number, max: number) => {
-    if (min === max) return `${min}\u00A0\u20AC`
-    return `${min}\u00A0\u20AC \u2013 ${max}\u00A0\u20AC`
-  }
+  const { results, hasWizardData } = useOptimizations()
+  const availableItems = results.items.filter((i) => i.available)
 
   return (
     <div>
@@ -69,9 +59,9 @@ export default function OptimisationPage() {
               </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
-              {formatAmount(result.totalMin, result.totalMax)}
+              {formatMoneyRange(results.totalMin, results.totalMax)}
             </p>
-            {!result.isFullySupported && (
+            {!results.isFullySupported && (
               <p className="mt-2 text-xs text-muted-foreground">
                 {"Estimation partielle. Calculs optimisés pour Wallonie / salarié bientôt disponibles pour votre profil."}
               </p>
@@ -79,9 +69,9 @@ export default function OptimisationPage() {
           </div>
 
           {/* Notes */}
-          {result.notes.length > 0 && (
+          {results.notes.length > 0 && (
             <div className="mb-6 rounded-xl border border-border/60 bg-muted/30 p-4">
-              {result.notes.map((note, i) => (
+              {results.notes.map((note, i) => (
                 <p key={i} className="text-sm text-muted-foreground">
                   {note}
                 </p>
@@ -114,7 +104,7 @@ export default function OptimisationPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                    {formatAmount(item.amountMin, item.amountMax)}
+                    {formatMoneyRange(item.amountMin, item.amountMax)}
                   </p>
                 </div>
               </div>

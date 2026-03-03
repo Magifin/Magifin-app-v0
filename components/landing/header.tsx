@@ -4,9 +4,14 @@ import Link from "next/link"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useUser } from "@/lib/user-store"
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { isLoggedIn } = useUser()
+
+  // Determine dashboard link destination
+  const dashboardHref = isLoggedIn ? "/dashboard" : "/create-account?from=dashboard"
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -43,7 +48,7 @@ export function Header() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/dashboard">Se connecter</Link>
+            <Link href="/create-account">Se connecter</Link>
           </Button>
           <Button size="sm" asChild>
             <Link href="/wizard">Commencer</Link>
@@ -89,7 +94,7 @@ export function Header() {
             </Link>
             <div className="flex flex-col gap-2 pt-2">
               <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard">Se connecter</Link>
+                <Link href="/create-account">Se connecter</Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="/wizard">Commencer</Link>
