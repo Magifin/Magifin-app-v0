@@ -94,8 +94,14 @@ export default function OptimisationPage() {
                     <p className="font-semibold text-card-foreground">
                       {item.title}
                     </p>
-                    <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-                      {"Disponible"}
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                      item.precision === "confirmed" 
+                        ? "bg-accent/10 text-accent" 
+                        : item.precision === "estimated"
+                        ? "bg-amber-500/10 text-amber-600"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {item.precision === "confirmed" ? "Confirmé" : item.precision === "estimated" ? "Estimé" : "Conseil"}
                     </span>
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">

@@ -1,11 +1,22 @@
 import type { WizardAnswers } from "./wizard-store"
 
+export type OptimizationPrecision = "confirmed" | "estimated" | "advisory"
+export type OptimizationCategory =
+  | "mortgage"
+  | "pension"
+  | "insurance"
+  | "family"
+  | "housing"
+  | "other"
+
 export interface OptimizationItem {
   key: string
   title: string
+  category: OptimizationCategory
   amountMin: number
   amountMax: number
   available: boolean
+  precision: OptimizationPrecision
   reason: string
 }
 
@@ -17,6 +28,16 @@ export interface OptimizationResult {
   isFullySupported: boolean
 }
 
+/**
+ * Magifin Fiscal Engine v1
+ *
+ * Tiered precision model:
+ * - LEVEL 1 (confirmed): Fully supported fiscal logic for Wallonie + Salarié + Propriétaire avec prêt
+ * - LEVEL 2 (estimated): Realistic heuristics for common deductions
+ * - LEVEL 3 (advisory): Non-fiscal monetisation opportunities
+ *
+ * Totals = sum of items where available === true AND precision !== "advisory"
+ */
 export function computeOptimizationsFromAnswers(
   answers: WizardAnswers
 ): OptimizationResult {
@@ -24,15 +45,20 @@ export function computeOptimizationsFromAnswers(
   const notes: string[] = []
   let isFullySupported = true
 
-  // Check region and status support
-  if (answers.region && answers.region !== "Wallonie") {
+  // === SUPPORT CHECK ===
+  // Full support: Wallonie + Salarié + Propriétaire avec prêt
+  const isWallonie = answers.region === "Wallonie"
+  const isSalarie = answers.status === "Salarie"
+  const isProprietaireAvecPret = answers.housingStatus === "ProprietaireAvecPret"
+
+  if (answers.region && !isWallonie) {
     isFullySupported = false
     notes.push(
-      `Calculs optimisés pour la Wallonie. Pour ${answers.region}, certaines spécificités régionales peuvent varier.`
+      "Simulation complète bientôt disponible pour votre région. Les estimations actuelles sont basées sur le régime wallon."
     )
   }
 
-  if (answers.status && answers.status !== "Salarie") {
+  if (answers.status && !isSalarie) {
     isFullySupported = false
     const statusLabels: Record<string, string> = {
       Independant: "indépendants",
@@ -41,62 +67,40 @@ export function computeOptimizationsFromAnswers(
     }
     const label = statusLabels[answers.status] || "votre statut"
     notes.push(
-      `Les calculs actuels sont optimisés pour les salariés. Support complet pour ${label} bientôt disponible.`
+      `Simulation complète bientôt disponible pour ${label}. Les estimations sont basées sur le régime salarié.`
     )
   }
 
-  // Children deduction
-  if (answers.children > 0) {
-    const basePerChild = 50
-    const minAmount = answers.children * basePerChild * 0.8
-    const maxAmount = answers.children * basePerChild * 1.2
+  // === LEVEL 1: CONFIRMED OPTIMISATIONS ===
+  // Apply with full precision when Wallonie + Salarié + Propriétaire avec prêt
 
-    items.push({
-      key: "children",
-      title: `Déduction pour ${answers.children} enfant(s) à charge`,
-      amountMin: Math.round(minAmount),
-      amountMax: Math.round(maxAmount),
-      available: true,
-      reason: "Déduction automatique basée sur le nombre d'enfants à charge.",
-    })
+  // 1. Mortgage deduction (Prêt hypothécaire)
+  if (
+    answers.housingStatus === "ProprietaireAvecPret" &&
+    answers.hasMortgagePayments === "Oui"
+  ) {
+    const interest = answers.mortgageInterest ?? 0
+    const capital = answers.mortgageCapital ?? 0
+    const base = interest + capital
+
+    if (base > 0) {
+      const amountMin = Math.round(base * 0.25)
+      const amountMax = Math.round(base * 0.40)
+
+      items.push({
+        key: "mortgage_deduction",
+        title: "Déduction liée au prêt hypothécaire",
+        category: "mortgage",
+        amountMin,
+        amountMax,
+        available: true,
+        precision: isWallonie && isSalarie ? "confirmed" : "estimated",
+        reason: "Déduction estimée basée sur remboursement déclaré.",
+      })
+    }
   }
 
-  // Childcare deduction
-  if (answers.childcare === "Oui" && answers.childcareCost > 0) {
-    // Max 16.4€/day × 250 days = 4100€, 45% deductible
-    const maxDeductible = Math.min(answers.childcareCost, 4100)
-    const deduction = maxDeductible * 0.45
-    const minAmount = deduction * 0.7
-    const maxAmount = deduction
-
-    items.push({
-      key: "childcare",
-      title: "Frais de garde d'enfants déductibles",
-      amountMin: Math.round(minAmount),
-      amountMax: Math.round(maxAmount),
-      available: true,
-      reason: "Déduction jusqu'à 45% des frais de garde (max 16,40€/jour).",
-    })
-  }
-
-  // Service vouchers (titres-services)
-  if (answers.serviceVouchers === "Oui" && answers.serviceVouchersAmount > 0) {
-    // Each voucher costs ~9€, 30% reduction
-    const reduction = answers.serviceVouchersAmount * 9 * 0.3
-    const minAmount = reduction * 0.9
-    const maxAmount = reduction
-
-    items.push({
-      key: "serviceVouchers",
-      title: "Réduction pour titres-services",
-      amountMin: Math.round(minAmount),
-      amountMax: Math.round(maxAmount),
-      available: true,
-      reason: "Réduction fiscale de 30% sur les titres-services achetés.",
-    })
-  }
-
-  // Pension saving
+  // 2. Pension saving
   if (answers.pensionSaving === "Oui" && answers.pensionSavingAmount > 0) {
     // 30% reduction up to 1020€, or 25% up to 1310€
     let reduction: number
@@ -105,95 +109,33 @@ export function computeOptimizationsFromAnswers(
     } else {
       reduction = Math.min(answers.pensionSavingAmount, 1310) * 0.25
     }
-    const minAmount = reduction * 0.9
-    const maxAmount = reduction
 
     items.push({
-      key: "pensionSaving",
+      key: "pension_saving",
       title: "Réduction pour épargne pension",
-      amountMin: Math.round(minAmount),
-      amountMax: Math.round(maxAmount),
+      category: "pension",
+      amountMin: Math.round(reduction * 0.9),
+      amountMax: Math.round(reduction),
       available: true,
+      precision: "confirmed",
       reason: "Réduction de 30% (max 1.020€) ou 25% (max 1.310€).",
     })
   } else if (answers.pensionSaving === "Non") {
-    // Suggest pension saving optimization
+    // Suggest pension saving optimization - user doesn't have one yet
     items.push({
-      key: "pensionSuggestion",
+      key: "pension_suggestion",
       title: "Potentiel épargne pension",
+      category: "pension",
       amountMin: 250,
-      amountMax: 390,
+      amountMax: 320,
       available: true,
+      precision: "confirmed",
       reason:
-        "Une épargne pension pourrait vous faire économiser jusqu'à 390€/an.",
+        "Une épargne pension pourrait vous faire économiser jusqu'à 320€/an.",
     })
   }
 
-  // Housing - Cadastral income impact
-  if (
-    (answers.housingStatus === "ProprietaireAvecPret" ||
-      answers.housingStatus === "ProprietaireSansPret") &&
-    answers.hasCadastralIncome === "Oui" &&
-    answers.cadastralIncome !== null &&
-    answers.cadastralIncome > 0
-  ) {
-    // Impact depends on property use and region
-    const rcIndexed = answers.cadastralIncome * 1.8 // rough indexation
-    let impactMin = 0
-    let impactMax = 0
-
-    if (answers.propertyUse === "HabitationPropreUnique") {
-      // Wallonia: exemption on first ~1.500€ RC (indexed)
-      if (answers.region === "Wallonie") {
-        const exemption = Math.min(rcIndexed, 2700) * 0.25
-        impactMin = Math.round(exemption * 0.8)
-        impactMax = Math.round(exemption)
-      }
-    }
-
-    if (impactMax > 0) {
-      items.push({
-        key: "cadastralIncome",
-        title: "Logement: impact revenu cadastral",
-        amountMin: impactMin,
-        amountMax: impactMax,
-        available: true,
-        reason:
-          "Exonération partielle du RC pour habitation propre et unique.",
-      })
-    }
-  }
-
-  // Mortgage interest and capital deduction
-  if (
-    answers.housingStatus === "ProprietaireAvecPret" &&
-    answers.hasMortgagePayments === "Oui"
-  ) {
-    const interest = answers.mortgageInterest ?? 0
-    const capital = answers.mortgageCapital ?? 0
-    const total = interest + capital
-
-    if (total > 0) {
-      // Wallonia regional bonus for primary residence loans (before 2016)
-      // Simplified: ~30% of payments up to certain limits
-      const maxDeductible = Math.min(total, 3000)
-      const deduction = maxDeductible * 0.3
-      const minAmount = deduction * 0.7
-      const maxAmount = deduction
-
-      items.push({
-        key: "mortgage",
-        title: "Déduction prêt hypothécaire",
-        amountMin: Math.round(minAmount),
-        amountMax: Math.round(maxAmount),
-        available: true,
-        reason:
-          "Avantage fiscal sur les intérêts et capital remboursés (selon la date du prêt).",
-      })
-    }
-  }
-
-  // Mortgage insurance deduction - ONLY for solde restant dû
+  // 3. Assurance solde restant dû (SRD)
   if (
     answers.housingStatus === "ProprietaireAvecPret" &&
     answers.mortgageInsuranceYesNo === "Oui" &&
@@ -201,69 +143,192 @@ export function computeOptimizationsFromAnswers(
     answers.mortgageInsuranceAnnualPremium !== null &&
     answers.mortgageInsuranceAnnualPremium > 0
   ) {
-    // Solde restant dû: ~15-25% of annual premium can provide tax benefit
-    const annualAmount = answers.mortgageInsuranceAnnualPremium
-    const minBenefit = annualAmount * 0.15
-    const maxBenefit = annualAmount * 0.25
+    const premium = answers.mortgageInsuranceAnnualPremium
+    const amountMin = Math.round(premium * 0.20)
+    const amountMax = Math.round(premium * 0.30)
 
     items.push({
-      key: "mortgage_insurance",
+      key: "srd_insurance",
       title: "Assurance solde restant dû",
-      amountMin: Math.round(minBenefit),
-      amountMax: Math.round(maxBenefit),
+      category: "insurance",
+      amountMin,
+      amountMax,
       available: true,
+      precision: isWallonie && isSalarie ? "confirmed" : "estimated",
       reason:
-        "Les primes d'assurance solde restant dû peuvent offrir un avantage fiscal.",
+        "Certaines primes liées au crédit peuvent ouvrir un avantage fiscal selon le régime régional.",
     })
   }
 
-  // Note for "other" insurance category (no fiscal impact, just informational)
+  // === LEVEL 2: ESTIMATED REALISTIC OPTIMISATIONS ===
+
+  // 4. Children impact
+  if (answers.children > 0) {
+    let amountMin: number
+    let amountMax: number
+
+    if (answers.children === 1) {
+      amountMin = 150
+      amountMax = 250
+    } else if (answers.children === 2) {
+      amountMin = 400
+      amountMax = 650
+    } else {
+      // 3+ children
+      amountMin = 800
+      amountMax = 1200
+    }
+
+    items.push({
+      key: "children",
+      title: `Avantage pour ${answers.children} enfant(s) à charge`,
+      category: "family",
+      amountMin,
+      amountMax,
+      available: true,
+      precision: "estimated",
+      reason: "Impact fiscal estimé lié aux personnes à charge.",
+    })
+  }
+
+  // 5. Childcare expenses
+  if (answers.childcare === "Oui") {
+    let amountMin = 200
+    let amountMax = 600
+
+    // If cost is provided, calculate more precisely
+    if (answers.childcareCost > 0) {
+      const maxDeductible = Math.min(answers.childcareCost, 4100)
+      const deduction = maxDeductible * 0.45
+      amountMin = Math.round(deduction * 0.7)
+      amountMax = Math.round(deduction)
+    }
+
+    items.push({
+      key: "childcare",
+      title: "Frais de garde d'enfants",
+      category: "family",
+      amountMin,
+      amountMax,
+      available: true,
+      precision: "estimated",
+      reason: "Déduction estimée pour frais de garde (max 45% des frais).",
+    })
+  }
+
+  // 6. Titres-services
+  if (answers.serviceVouchers === "Oui") {
+    let amountMin = 120
+    let amountMax = 240
+
+    // If amount is provided, calculate more precisely
+    if (answers.serviceVouchersAmount > 0) {
+      const reduction = answers.serviceVouchersAmount * 9 * 0.3
+      amountMin = Math.round(reduction * 0.9)
+      amountMax = Math.round(reduction)
+    }
+
+    items.push({
+      key: "service_vouchers",
+      title: "Réduction titres-services",
+      category: "other",
+      amountMin,
+      amountMax,
+      available: true,
+      precision: "estimated",
+      reason: "Réduction estimée liée aux titres-services déclarés.",
+    })
+  }
+
+  // Housing - Cadastral income impact (estimated)
   if (
-    answers.housingStatus === "ProprietaireAvecPret" &&
+    (answers.housingStatus === "ProprietaireAvecPret" ||
+      answers.housingStatus === "ProprietaireSansPret") &&
+    answers.hasCadastralIncome === "Oui" &&
+    answers.cadastralIncome !== null &&
+    answers.cadastralIncome > 0 &&
+    answers.propertyUse === "HabitationPropreUnique" &&
+    isWallonie
+  ) {
+    const rcIndexed = answers.cadastralIncome * 1.8
+    const exemption = Math.min(rcIndexed, 2700) * 0.25
+    const amountMin = Math.round(exemption * 0.8)
+    const amountMax = Math.round(exemption)
+
+    if (amountMax > 0) {
+      items.push({
+        key: "cadastral_income",
+        title: "Exonération revenu cadastral",
+        category: "housing",
+        amountMin,
+        amountMax,
+        available: true,
+        precision: "estimated",
+        reason: "Exonération partielle du RC pour habitation propre et unique.",
+      })
+    }
+  }
+
+  // === LEVEL 3: ADVISORY (NON-FISCAL) ===
+  // For other insurance types when user has housing
+
+  if (
+    (answers.housingStatus === "ProprietaireAvecPret" ||
+      answers.housingStatus === "ProprietaireSansPret") &&
     answers.mortgageInsuranceYesNo === "Oui" &&
     answers.mortgageInsuranceCategory === "other"
   ) {
-    notes.push(
-      "Votre assurance habitation améliore votre protection, mais n'offre pas d'avantage fiscal direct."
-    )
+    items.push({
+      key: "other_insurance_advisory",
+      title: "Optimisation assurance habitation",
+      category: "insurance",
+      amountMin: 0,
+      amountMax: 0,
+      available: false,
+      precision: "advisory",
+      reason:
+        "Optimisation de couverture possible sans avantage fiscal direct.",
+    })
   }
 
-  // Mortgage insurance gap note
+  // Advisory note for missing mortgage insurance
   if (
     answers.housingStatus === "ProprietaireAvecPret" &&
     answers.mortgageInsuranceYesNo === "Non"
   ) {
     notes.push(
-      "Certaines assurances liées au logement peuvent renforcer votre protection financière."
+      "Une assurance solde restant dû pourrait offrir une protection ET un avantage fiscal."
     )
   }
 
-  // Calculate totals
-  const availableItems = items.filter((i) => i.available)
-  let totalMin = availableItems.reduce((sum, i) => sum + i.amountMin, 0)
-  let totalMax = availableItems.reduce((sum, i) => sum + i.amountMax, 0)
+  // === TOTALS COMPUTATION ===
+  // Sum only items where available === true AND precision !== "advisory"
+  const fiscalItems = items.filter(
+    (item) => item.available && item.precision !== "advisory"
+  )
+
+  let totalMin = fiscalItems.reduce((sum, item) => sum + item.amountMin, 0)
+  let totalMax = fiscalItems.reduce((sum, item) => sum + item.amountMax, 0)
 
   // If no optimizations found, provide baseline estimates
-  if (items.length === 0) {
+  if (fiscalItems.length === 0) {
+    items.push({
+      key: "baseline_analysis",
+      title: "Analyse des réductions standards",
+      category: "other",
+      amountMin: 100,
+      amountMax: 300,
+      available: true,
+      precision: "estimated",
+      reason: "Estimation basée sur votre profil fiscal général.",
+    })
     totalMin = 100
-    totalMax = 400
-    items.push({
-      key: "baseline1",
-      title: "Vérification des réductions standards",
-      amountMin: 50,
-      amountMax: 200,
-      available: true,
-      reason: "Analyse des déductions fiscales courantes.",
-    })
-    items.push({
-      key: "baseline2",
-      title: "Optimisations potentielles",
-      amountMin: 50,
-      amountMax: 200,
-      available: true,
-      reason: "Identification des opportunités d'économies.",
-    })
+    totalMax = 300
   }
+
+  // Round totals once
+  totalMin = Math.round(totalMin)
+  totalMax = Math.round(totalMax)
 
   return {
     totalMin,
