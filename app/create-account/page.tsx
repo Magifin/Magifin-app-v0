@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, User, Sparkles } from "lucide-react"
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { useUser } from "@/lib/user-store"
 import { track } from "@/lib/track"
 
-export default function CreateAccountPage() {
+function CreateAccountForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setUser } = useUser()
@@ -148,6 +148,25 @@ export default function CreateAccountPage() {
           {"Gratuit · Sans engagement · Vos données restent privées"}
         </p>
       </main>
+    </div>
+  )
+}
+
+export default function CreateAccountPage() {
+  return (
+    <Suspense fallback={<CreateAccountFallback />}>
+      <CreateAccountForm />
+    </Suspense>
+  )
+}
+
+function CreateAccountFallback() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary animate-pulse">
+        <Sparkles className="h-8 w-8" />
+      </div>
+      <p className="mt-4 text-muted-foreground">Chargement...</p>
     </div>
   )
 }
