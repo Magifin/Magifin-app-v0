@@ -193,27 +193,39 @@ export function computeOptimizationsFromAnswers(
     }
   }
 
-  // Mortgage insurance deduction
+  // Mortgage insurance deduction - ONLY for solde restant dû
   if (
     answers.housingStatus === "ProprietaireAvecPret" &&
     answers.mortgageInsuranceYesNo === "Oui" &&
-    answers.mortgageInsuranceAmount !== null &&
-    answers.mortgageInsuranceAmount > 0
+    answers.mortgageInsuranceCategory === "solde_restant_du" &&
+    answers.mortgageInsuranceAnnualPremium !== null &&
+    answers.mortgageInsuranceAnnualPremium > 0
   ) {
-    // Placeholder heuristic: ~15-25% of annual premium can provide tax benefit
-    const annualAmount = answers.mortgageInsuranceAmount
+    // Solde restant dû: ~15-25% of annual premium can provide tax benefit
+    const annualAmount = answers.mortgageInsuranceAnnualPremium
     const minBenefit = annualAmount * 0.15
     const maxBenefit = annualAmount * 0.25
 
     items.push({
       key: "mortgage_insurance",
-      title: "Assurance liée au prêt hypothécaire",
+      title: "Assurance solde restant dû",
       amountMin: Math.round(minBenefit),
       amountMax: Math.round(maxBenefit),
       available: true,
       reason:
-        "Certaines primes d'assurance liées au prêt peuvent offrir un avantage fiscal.",
+        "Les primes d'assurance solde restant dû peuvent offrir un avantage fiscal.",
     })
+  }
+
+  // Note for "other" insurance category (no fiscal impact, just informational)
+  if (
+    answers.housingStatus === "ProprietaireAvecPret" &&
+    answers.mortgageInsuranceYesNo === "Oui" &&
+    answers.mortgageInsuranceCategory === "other"
+  ) {
+    notes.push(
+      "Votre assurance habitation améliore votre protection, mais n'offre pas d'avantage fiscal direct."
+    )
   }
 
   // Mortgage insurance gap note
@@ -222,7 +234,7 @@ export function computeOptimizationsFromAnswers(
     answers.mortgageInsuranceYesNo === "Non"
   ) {
     notes.push(
-      "Certaines assurances liées au logement peuvent renforcer votre protection et optimiser votre déclaration."
+      "Certaines assurances liées au logement peuvent renforcer votre protection financière."
     )
   }
 
