@@ -239,11 +239,11 @@ export function StepMortgageInsurance({
               <div className="mb-2 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-accent" />
                 <p className="text-sm font-semibold text-foreground">
-                  {"Optimisez votre couverture habitation"}
+                  {"Optimisez vos assurances liées à votre logement"}
                 </p>
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {"Certaines assurances améliorent votre protection financière, même sans avantage fiscal direct."}
+                {"Comparez vos assurances et vérifiez gratuitement si vous pouvez améliorer votre couverture ou réduire vos coûts."}
               </p>
               <a
                 href={PARTNER_URL}
@@ -252,7 +252,7 @@ export function StepMortgageInsurance({
                 onClick={handleInsuranceCta}
                 className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
               >
-                {"Analyser mes assurances logement"}
+                {"Analyser mes assurances"}
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </div>
@@ -266,11 +266,11 @@ export function StepMortgageInsurance({
           <div className="mb-2 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-accent" />
             <p className="text-sm font-semibold text-foreground">
-              {"Optimisez votre couverture habitation"}
+              {"Optimisez vos assurances liées à votre logement"}
             </p>
           </div>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {"Certaines assurances améliorent votre protection financière, même sans avantage fiscal direct."}
+            {"Comparez vos assurances et vérifiez gratuitement si vous pouvez améliorer votre couverture ou réduire vos coûts."}
           </p>
           <a
             href={PARTNER_URL}
@@ -279,7 +279,7 @@ export function StepMortgageInsurance({
             onClick={handleInsuranceCta}
             className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
           >
-            {"Analyser mes assurances logement"}
+            {"Analyser mes assurances"}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>

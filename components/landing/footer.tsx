@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border/50 bg-card px-6 py-16">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-12 md:flex-row md:justify-between">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="max-w-xs">
             <div className="flex items-center gap-2">
@@ -16,56 +16,90 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {"La plateforme d\u2019optimisation financière intelligente pour les contribuables belges."}
+              {"La plateforme d'optimisation financière intelligente pour les contribuables belges."}
             </p>
           </div>
 
-          {/* Links */}
-          <div className="flex flex-wrap gap-12">
-            <div>
-              <h4 className="mb-4 text-sm font-semibold text-card-foreground">
-                Produit
-              </h4>
-              <ul className="flex flex-col gap-3">
-                <li>
-                  <Link href="/wizard" className="text-sm text-muted-foreground hover:text-foreground">
-                    Optimisation fiscale
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard/assistant" className="text-sm text-muted-foreground hover:text-foreground">
-                    Assistant IA
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-4 text-sm font-semibold text-card-foreground">
-                {"Légal"}
-              </h4>
-              <ul className="flex flex-col gap-3">
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
-                    {"Politique de confidentialité"}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
-                    {"Conditions d\u2019utilisation"}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
-                    RGPD
-                  </Link>
-                </li>
-              </ul>
-            </div>
+          {/* Column 1 — Produits */}
+          <div>
+            <h4 className="mb-4 text-sm font-semibold text-card-foreground">
+              Produits
+            </h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <Link href="/wizard" className="text-sm text-muted-foreground hover:text-foreground">
+                  Optimisation fiscale
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+                  Finance personnelle
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=footer&utm_campaign=insurance"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Assurances
+                </a>
+              </li>
+              <li>
+                <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+                  Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 2 — Ressources */}
+          <div>
+            <h4 className="mb-4 text-sm font-semibold text-card-foreground">
+              Ressources
+            </h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <Link href="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground">
+                  Comment ça marche
+                </Link>
+              </li>
+              <li>
+                <Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+                  {"Sécurité & données"}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3 — Légal */}
+          <div>
+            <h4 className="mb-4 text-sm font-semibold text-card-foreground">
+              {"Légal"}
+            </h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+                  {"Politique de confidentialité"}
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+                  {"Conditions d'utilisation"}
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+                  RGPD
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
 
