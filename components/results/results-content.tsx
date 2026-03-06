@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -10,6 +11,7 @@ import {
   ExternalLink,
   Edit3,
   Lock,
+  Calculator,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +23,8 @@ import { useOptimizations } from "@/lib/useOptimizations"
 import { useUser } from "@/lib/user-store"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
+import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
+import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 const PARTNER_URL =
   "https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=results&utm_campaign=insurance"
@@ -31,6 +35,34 @@ export function ResultsContent() {
   const { answers, completedStepIds } = state
   const { results } = useOptimizations()
   const { user, isLoggedIn } = useUser()
+
+  const [taxResult, setTaxResult] = useState<TaxResult | null>(null)
+  const [taxLoading, setTaxLoading] = useState(false)
+  const [taxError, setTaxError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const input = mapAnswersToTaxInput(answers)
+    if (!input) return
+
+    setTaxLoading(true)
+    setTaxError(null)
+
+    fetch("/api/tax/compute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
+          setTaxResult(data.result as TaxResult)
+        } else {
+          setTaxError(data.error ?? "Erreur de calcul")
+        }
+      })
+      .catch(() => setTaxError("Impossible de calculer l'impôt"))
+      .finally(() => setTaxLoading(false))
+  }, [answers])
 
   const availableItems = results.items.filter((i) => i.available)
 
@@ -250,6 +282,64 @@ export function ResultsContent() {
               </a>
             </Button>
           </div>
+        </div>
+
+        {/* Tax Computation Card */}
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+              <Calculator className="h-5 w-5" />
+            </div>
+            <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+              {"Calcul d\u2019impôt estimé"}
+            </h2>
+          </div>
+
+          {taxLoading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Calcul en cours...
+            </div>
+          )}
+
+          {taxError && !taxLoading && (
+            <p className="text-sm text-destructive">{taxError}</p>
+          )}
+
+          {taxResult && !taxLoading && (
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+              <div>
+                <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
+                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                  {formatMoney(taxResult.taxableIncome)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Déductions appliquées</dt>
+                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+                  -{formatMoney(taxResult.deductionsApplied)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                  {formatMoney(taxResult.estimatedTax)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Taux effectif</dt>
+                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                  {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
+                </dd>
+              </div>
+            </dl>
+          )}
+
+          {!taxResult && !taxLoading && !taxError && (
+            <p className="text-sm text-muted-foreground">
+              {"Complétez au moins votre région et votre tranche de revenus pour obtenir le calcul."}
+            </p>
+          )}
         </div>
 
         {/* Optimization items breakdown */}
