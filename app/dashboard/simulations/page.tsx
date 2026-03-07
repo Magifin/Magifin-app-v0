@@ -138,21 +138,6 @@ export default function SimulationsPage() {
     }
   }, [authLoading, user, router])
 
-  // Show spinner only while checking auth
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    )
-  }
-
-  // If not authenticated, don't render content - let redirect handle it
-  if (!user) {
-    return null
-  }
-  }, [authLoading, user, router])
-
   // Timeout fallback: if still loading after 2 seconds, force initialized state
   useEffect(() => {
     if (isLoading && !initialized) {
@@ -164,10 +149,21 @@ export default function SimulationsPage() {
     }
   }, [isLoading, initialized])
 
-  if (authLoading || !user) {
+  // Show auth spinner while checking auth
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  // If not authenticated, show redirect message while redirect processes
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent mb-4" />
+        <p className="text-muted-foreground">Redirection en cours...</p>
       </div>
     )
   }
