@@ -25,14 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
-    
-    if (data) {
-      setProfile(data as Profile)
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single()
+      
+      if (data) {
+        setProfile(data as Profile)
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching profile:", error)
     }
   }, [supabase])
 
@@ -50,24 +54,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session from browser storage or cookies
     const initializeAuth = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession()
-      
-      if (initialSession) {
-        setSession(initialSession)
-        setUser(initialSession.user)
-        await fetchProfile(initialSession.user.id)
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error("[v0] Error getting session:", error)
+          setIsLoading(false)
+          return
+        }
+
+        if (initialSession) {
+          setSession(initialSession)
+          setUser(initialSession.user)
+          await fetchProfile(initialSession.user.id)
+        }
+        
+        setIsLoading(false)
+      } catch (error) {
+        console.error("[v0] Error initializing auth:", error)
+        setIsLoading(false)
       }
-      
-      setIsLoading(false)
     }
 
     initializeAuth()
 
-    // Listen for auth changes
+    // Listen for auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        console.log("[v0] Auth state changed:", event, !!newSession)
         setSession(newSession)
         setUser(newSession?.user ?? null)
         

@@ -46,6 +46,15 @@ export function ResultsContent() {
   const [taxLoading, setTaxLoading] = useState(false)
   const [taxError, setTaxError] = useState<string | null>(null)
 
+  // Debug: Log auth state changes
+  useEffect(() => {
+    console.log("[v0] Results page - Auth state:", {
+      authUser: !!authUser,
+      authLoading,
+      isAuthenticated: !!authUser,
+    })
+  }, [authUser, authLoading])
+
   useEffect(() => {
     const input = mapAnswersToTaxInput(answers)
     if (!input) return
@@ -74,6 +83,8 @@ export function ResultsContent() {
 
   // Gate condition: user must have created an account (local or Supabase auth)
   const isUnlocked = isLoggedIn
+  // isAuthenticated should be true once auth is initialized with a valid user
+  // During initialization, authLoading is true, so we don't show the save button yet
   const isAuthenticated = !!authUser
 
   const handleModifyAnswers = () => {
@@ -130,8 +141,12 @@ export function ResultsContent() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+            {/* Loading state while auth initializes */}
+            {authLoading && (
+              <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            )}
             {/* Save button for authenticated users */}
-            {isAuthenticated && taxResult && (
+            {!authLoading && isAuthenticated && taxResult && (
               <SaveSimulationDialog
                 wizardAnswers={answers}
                 taxResult={taxResult}
@@ -145,7 +160,7 @@ export function ResultsContent() {
               />
             )}
             {/* Login link for unauthenticated users */}
-            {!isAuthenticated && !authLoading && (
+            {!authLoading && !isAuthenticated && (
               <Link
                 href="/auth/login"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
