@@ -59,6 +59,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession()
         
+        console.log("[v0] AuthProvider: Initial session check", {
+          hasSession: !!initialSession,
+          userId: initialSession?.user?.id,
+          error: error?.message,
+        })
+        
         if (error) {
           console.error("[v0] Error getting session:", error)
           setIsLoading(false)
@@ -83,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log("[v0] Auth state changed:", event, !!newSession)
+        console.log("[v0] Auth state changed:", event, !!newSession?.user)
         setSession(newSession)
         setUser(newSession?.user ?? null)
         

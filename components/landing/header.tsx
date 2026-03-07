@@ -12,9 +12,9 @@ export function Header() {
   const { isLoggedIn } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
 
-  // Check both local auth (create-account flow) and Supabase auth
-  const isAuthenticated = isLoggedIn || !!authUser
-  const dashboardHref = isAuthenticated ? "/dashboard" : "/create-account?from=dashboard"
+  // Prefer Supabase auth, fallback to local auth for anonymous users
+  const isAuthenticated = !!authUser || isLoggedIn
+  const showDashboardLink = !!authUser  // Only show if truly authenticated with Supabase
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -55,7 +55,7 @@ export function Header() {
               <Link href="/auth/login">Se connecter</Link>
             </Button>
           )}
-          {isAuthenticated && (
+          {showDashboardLink && (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/dashboard">Mon tableau de bord</Link>
             </Button>
@@ -108,7 +108,7 @@ export function Header() {
                   <Link href="/auth/login">Se connecter</Link>
                 </Button>
               )}
-              {isAuthenticated && (
+              {showDashboardLink && (
                 <Button variant="outline" size="sm" asChild>
                   <Link href="/dashboard">Mon tableau de bord</Link>
                 </Button>

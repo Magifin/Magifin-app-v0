@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { useUser } from "@/lib/user-store"
 import {
   Home,
   LayoutDashboard,
@@ -58,11 +57,10 @@ export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user: authUser, profile, signOut, isLoading: authLoading } = useAuth()
-  const { user: localUser } = useUser()
 
-  // Use auth profile name, fallback to local user
-  const displayName = profile?.first_name || localUser?.firstName || "Utilisateur"
-  const displayEmail = authUser?.email || localUser?.email || ""
+  // Use auth profile name
+  const displayName = profile?.first_name || "Utilisateur"
+  const displayEmail = authUser?.email || ""
   const initials = displayName
     .split(" ")
     .map((n) => n[0])

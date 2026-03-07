@@ -3,13 +3,14 @@
 import Link from "next/link"
 import { ArrowRight, Shield, Lock, Sparkles, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useUser } from "@/lib/user-store"
+import { useAuth } from "@/lib/auth-context"
 
 export function Hero() {
-  const { isLoggedIn } = useUser()
+  const { user: authUser, isLoading: authLoading } = useAuth()
 
-  // Determine dashboard link destination
-  const dashboardHref = isLoggedIn ? "/dashboard" : "/create-account?from=dashboard"
+  // Determine dashboard link destination - only show dashboard if authenticated
+  const dashboardHref = !!authUser ? "/dashboard" : "/wizard"
+  const dashboardLabel = !!authUser ? "Voir mon tableau de bord" : "Estimer mes impôts"
 
   return (
     <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-20">
@@ -39,7 +40,7 @@ export function Hero() {
           <Button variant="outline" size="lg" className="h-12 px-8 text-base" asChild>
             <Link href={dashboardHref}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
-              Accéder au dashboard
+              {dashboardLabel}
             </Link>
           </Button>
         </div>

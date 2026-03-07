@@ -38,7 +38,6 @@ export function ResultsContent() {
   const { state, goToStep } = useWizard()
   const { answers, completedStepIds } = state
   const { results } = useOptimizations()
-  const { user, isLoggedIn } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const [savedSuccess, setSavedSuccess] = useState(false)
 
@@ -72,10 +71,8 @@ export function ResultsContent() {
 
   const availableItems = results.items.filter((i) => i.available)
 
-  // Gate condition: user must have created an account (local or Supabase auth)
-  const isUnlocked = isLoggedIn
-  // isAuthenticated should be true once auth is initialized with a valid user
-  // During initialization, authLoading is true, so we don't show the save button yet
+  // Gate condition: only Supabase authenticated users can persist simulations
+  const isUnlocked = !!authUser && !authLoading
   const isAuthenticated = !!authUser
 
   const handleModifyAnswers = () => {
