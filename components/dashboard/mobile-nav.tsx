@@ -10,11 +10,13 @@ import {
   FileText,
   MessageCircle,
   User,
+  FolderOpen,
 } from "lucide-react"
 
 const navItems = [
   { label: "Accueil", href: "/", icon: Home },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Simulations", href: "/dashboard/simulations", icon: FolderOpen },
   { label: "Fiscalite", href: "/dashboard/optimisation", icon: Calculator },
   { label: "Documents", href: "/dashboard/documents", icon: FileText },
   { label: "Assistant", href: "/dashboard/assistant", icon: MessageCircle },

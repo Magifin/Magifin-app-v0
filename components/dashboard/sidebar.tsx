@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
 import {
   Home,
   LayoutDashboard,
@@ -11,6 +13,7 @@ import {
   MessageCircle,
   User,
   LogOut,
+  FolderOpen,
 } from "lucide-react"
 
 const navItems = [
@@ -23,6 +26,11 @@ const navItems = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    label: "Mes simulations",
+    href: "/dashboard/simulations",
+    icon: FolderOpen,
   },
   {
     label: "Optimisation fiscale",
@@ -48,6 +56,39 @@ const navItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user: authUser, profile, signOut, isLoading: authLoading } = useAuth()
+  const [authInitialized, setAuthInitialized] = useState(false)
+
+  // Ensure auth initializes within reasonable time
+  useEffect(() => {
+    if (!authLoading) {
+      setAuthInitialized(true)
+    }
+    
+    const timeout = setTimeout(() => {
+      if (!authInitialized) {
+        setAuthInitialized(true)
+      }
+    }, 2000)
+    
+    return () => clearTimeout(timeout)
+  }, [authLoading, authInitialized])
+
+  // Use auth profile name
+  const displayName = profile?.first_name || "Utilisateur"
+  const displayEmail = authUser?.email || ""
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push("/")
+  }
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
@@ -89,25 +130,49 @@ export function DashboardSidebar() {
 
       {/* User section */}
       <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
-            JD
+        {authLoading && !authInitialized ? (
+          <div className="flex items-center justify-center py-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-sidebar-primary border-t-transparent" />
           </div>
-          <div className="flex-1 truncate">
-            <p className="text-sm font-medium text-sidebar-foreground">
-              Jean Dupont
-            </p>
-            <p className="truncate text-xs text-sidebar-foreground/60">
-              jean@example.com
-            </p>
+        ) : authUser ? (
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
+              {initials || "U"}
+            </div>
+            <div className="flex-1 truncate">
+              <p className="text-sm font-medium text-sidebar-foreground">
+                {displayName}
+              </p>
+              {displayEmail && (
+                <p className="truncate text-xs text-sidebar-foreground/60">
+                  {displayEmail}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="text-sidebar-foreground/50 transition-colors hover:text-sidebar-foreground"
+              aria-label="Se déconnecter"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            className="text-sidebar-foreground/50 transition-colors hover:text-sidebar-foreground"
-            aria-label="Se déconnecter"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <Link
+              href="/auth/login"
+              className="flex items-center justify-center gap-2 rounded-lg bg-sidebar-accent px-3 py-2 text-sm font-medium text-sidebar-accent-foreground transition-colors hover:bg-sidebar-accent/80"
+            >
+              Se connecter
+            </Link>
+            <Link
+              href="/auth/sign-up"
+              className="flex items-center justify-center gap-2 rounded-lg border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50"
+            >
+              Créer un compte
+            </Link>
+          </div>
+        )}
       </div>
     </aside>
   )
