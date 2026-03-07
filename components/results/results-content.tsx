@@ -14,6 +14,7 @@ import {
   Calculator,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   useWizard,
   getLastCompletedStepId,
@@ -307,37 +308,87 @@ export function ResultsContent() {
           )}
 
           {taxResult && !taxLoading && (
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-              <div>
-                <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
-                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                  {formatMoney(taxResult.taxableIncome)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Déductions appliquées</dt>
-                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-                  -{formatMoney(taxResult.deductionsApplied)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
-                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                  {formatMoney(taxResult.estimatedTax)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Taux effectif</dt>
-                <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                  {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
-                </dd>
-              </div>
-            </dl>
+            <div className="space-y-6">
+              {/* Tax breakdown */}
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                    {formatMoney(taxResult.taxableIncome)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Déductions appliquées</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+                    -{formatMoney(taxResult.deductionsApplied)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                    {formatMoney(taxResult.estimatedTax)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Taux effectif</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                    {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
+                  </dd>
+                </div>
+              </dl>
+
+              {/* Withholding and balance summary */}
+              {(taxResult.taxesAlreadyPaid > 0 || taxResult.refundOrBalance !== 0) && (
+                <div className="border-t border-border pt-4">
+                  <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="rounded-lg bg-muted/30 p-4">
+                      <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
+                      <dd className="font-[family-name:var(--font-heading)] text-xl font-semibold text-card-foreground">
+                        {formatMoney(taxResult.taxesAlreadyPaid)}
+                      </dd>
+                    </div>
+                    <div
+                      className={cn(
+                        "rounded-lg p-4",
+                        taxResult.refundOrBalance >= 0
+                          ? "bg-accent/10"
+                          : "bg-destructive/10"
+                      )}
+                    >
+                      <dt
+                        className={cn(
+                          "text-xs mb-1",
+                          taxResult.refundOrBalance >= 0
+                            ? "text-accent"
+                            : "text-destructive"
+                        )}
+                      >
+                        {taxResult.refundOrBalance >= 0
+                          ? "Remboursement estimé"
+                          : "Montant encore dû"}
+                      </dt>
+                      <dd
+                        className={cn(
+                          "font-[family-name:var(--font-heading)] text-xl font-semibold",
+                          taxResult.refundOrBalance >= 0
+                            ? "text-accent"
+                            : "text-destructive"
+                        )}
+                      >
+                        {taxResult.refundOrBalance >= 0
+                          ? formatMoney(taxResult.refundOrBalance)
+                          : "−" + formatMoney(Math.abs(taxResult.refundOrBalance))}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+            </div>
           )}
 
           {!taxResult && !taxLoading && !taxError && (
             <p className="text-sm text-muted-foreground">
-              {"Complétez au moins votre région et votre tranche de revenus pour obtenir le calcul."}
+              {"Complétez au moins votre région et votre revenu pour obtenir le calcul."}
             </p>
           )}
         </div>

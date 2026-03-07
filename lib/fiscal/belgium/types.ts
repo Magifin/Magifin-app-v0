@@ -19,6 +19,7 @@ import type { BelgiumRegion } from "./rules/brackets"
  *   dependents: 2,
  *   pensionContribution: 990,
  *   donations: 100,
+ *   taxesAlreadyPaid: 8000,
  * }
  * ```
  */
@@ -33,6 +34,8 @@ export interface TaxInput extends BaseTaxInput {
   pensionContribution?: number
   /** Annual charitable donations */
   donations?: number
+  /** Taxes already paid at source (precompte, withholding, etc.) */
+  taxesAlreadyPaid?: number
 }
 
 /**
@@ -50,4 +53,8 @@ export interface TaxResult extends BaseTaxResult {
   deductionsApplied: number
   /** Effective tax rate (estimatedTax / taxableIncome) */
   effectiveTaxRate: number
+  /** Taxes already paid at source */
+  taxesAlreadyPaid: number
+  /** Balance: positive = refund, negative = still owed */
+  refundOrBalance: number
 }

@@ -24,6 +24,10 @@ export type IncomeBracket =
   | "50000-80000"
   | "80000+"
   | null
+
+// New fields for exact income input
+export type AnnualGrossIncome = number
+export type TaxesAlreadyPaid = number
 export type HousingStatus =
   | "Locataire"
   | "ProprietaireAvecPret"
@@ -37,6 +41,8 @@ export interface WizardAnswers {
   status: Status
   householdSituation: HouseholdSituation
   incomeBracket: IncomeBracket
+  annualGrossIncome: AnnualGrossIncome
+  taxesAlreadyPaid: TaxesAlreadyPaid
   children: number
   childcare: YesNo
   childcareCost: number
@@ -124,6 +130,8 @@ const defaultAnswers: WizardAnswers = {
   status: null,
   householdSituation: null,
   incomeBracket: null,
+  annualGrossIncome: 0,
+  taxesAlreadyPaid: 0,
   children: 0,
   childcare: null,
   childcareCost: 0,

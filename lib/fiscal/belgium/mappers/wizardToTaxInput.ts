@@ -13,6 +13,7 @@ import type { BelgiumRegion } from "../rules/brackets"
  * 
  * Since wizard collects income ranges, we use midpoints for calculation.
  * This introduces some estimation error but provides reasonable approximations.
+ * Only used when user selects a bracket instead of exact income.
  */
 const INCOME_BRACKET_MIDPOINTS: Record<string, number> = {
   "0-20000": 10000,
@@ -34,12 +35,15 @@ const REGION_MAP: Record<string, BelgiumRegion> = {
 /**
  * Maps wizard answers to TaxInput for the fiscal engine
  * 
+ * Prioritizes exact income input over bracket selection.
+ * Falls back to bracket midpoint if no exact income is provided.
+ * 
  * @param answers - Wizard form answers
  * @returns TaxInput if minimum required fields are present, null otherwise
  */
 export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | null {
   // Validate minimum required fields
-  if (!answers.region || !answers.incomeBracket) {
+  if (!answers.region) {
     return null
   }
 
@@ -49,8 +53,19 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
     return null
   }
 
-  // Map income bracket to midpoint value
-  const salaryIncome = INCOME_BRACKET_MIDPOINTS[answers.incomeBracket] ?? 0
+  // Prioritize exact income over bracket; require one of them
+  let salaryIncome: number
+  if (answers.annualGrossIncome && answers.annualGrossIncome > 0) {
+    salaryIncome = answers.annualGrossIncome
+  } else if (answers.incomeBracket) {
+    salaryIncome = INCOME_BRACKET_MIDPOINTS[answers.incomeBracket] ?? 0
+  } else {
+    return null
+  }
+
+  if (salaryIncome <= 0) {
+    return null
+  }
 
   // Map dependents (children)
   const dependents = answers.children ?? 0
@@ -61,11 +76,15 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
       ? answers.pensionSavingAmount
       : 0
 
+  // Map taxes already paid
+  const taxesAlreadyPaid = answers.taxesAlreadyPaid > 0 ? answers.taxesAlreadyPaid : 0
+
   return {
     region,
     salaryIncome,
     dependents,
     pensionContribution,
+    taxesAlreadyPaid,
   }
 }
 

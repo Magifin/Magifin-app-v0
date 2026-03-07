@@ -68,7 +68,8 @@ export default function WizardPage() {
       case "situation":
         return answers.householdSituation !== null
       case "revenu":
-        return answers.incomeBracket !== null
+        // Allow proceeding with either bracket selection OR exact income input
+        return answers.incomeBracket !== null || answers.annualGrossIncome > 0
       case "children":
         return true // 0 is valid
       case "childcare":
@@ -148,8 +149,12 @@ export default function WizardPage() {
       case "revenu":
         return (
           <StepRevenu
-            value={answers.incomeBracket}
-            onChange={(v) => setAnswer("incomeBracket", v)}
+            incomeBracket={answers.incomeBracket}
+            annualGrossIncome={answers.annualGrossIncome}
+            taxesAlreadyPaid={answers.taxesAlreadyPaid}
+            onIncomeBracketChange={(v) => setAnswer("incomeBracket", v)}
+            onAnnualGrossIncomeChange={(v) => setAnswer("annualGrossIncome", v)}
+            onTaxesAlreadyPaidChange={(v) => setAnswer("taxesAlreadyPaid", v)}
           />
         )
       case "children":
