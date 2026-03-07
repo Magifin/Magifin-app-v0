@@ -32,6 +32,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   const dependents = clampNonNegative(input.dependents)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
+  const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
   // Calculate all deductions
   const deductionResult = calculateAllDeductions({
@@ -49,11 +50,17 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   // Calculate effective rate
   const effectiveTaxRate = calculateEffectiveRate(estimatedTax, taxableIncome)
 
+  // Calculate refund or balance owed
+  // Positive = refund to recover, negative = still owe
+  const refundOrBalance = taxesAlreadyPaid - estimatedTax
+
   return {
     taxableIncome,
     estimatedTax,
     deductionsApplied: deductionResult.totalDeductions,
     effectiveTaxRate,
+    taxesAlreadyPaid,
+    refundOrBalance,
   }
 }
 
