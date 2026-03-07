@@ -182,7 +182,7 @@ export function ResultsContent() {
         {/* Hero estimate - totals always visible */}
         <div className="mb-14 flex flex-col items-center text-center">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {user?.firstName ? `${user.firstName}, Magi a analysé votre situation` : "Magi a analysé votre situation"}
+            Magi a analysé votre situation
           </p>
 
           <p className="mb-3 mt-6 text-sm font-semibold uppercase tracking-widest text-accent">
