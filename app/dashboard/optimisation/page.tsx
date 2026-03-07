@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Calculator, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react"
+import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
@@ -12,6 +12,15 @@ export default function OptimisationPage() {
 
   return (
     <div>
+      {/* Back navigation */}
+      <Link
+        href="/results"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Voir mes résultats
+      </Link>
+
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
