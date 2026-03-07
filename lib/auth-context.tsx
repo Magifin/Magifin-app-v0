@@ -34,9 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data) {
         setProfile(data as Profile)
+      } else {
+        setProfile(null)
       }
     } catch (error) {
       console.error("[v0] Error fetching profile:", error)
+      setProfile(null)
     }
   }, [supabase])
 
@@ -54,16 +57,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   useEffect(() => {
-    // Get initial session from browser storage or cookies
+    // Track if component is mounted to prevent state updates after unmount
+    let isMounted = true
+
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession()
         
-        console.log("[v0] AuthProvider: Initial session check", {
-          hasSession: !!initialSession,
-          userId: initialSession?.user?.id,
-          error: error?.message,
-        })
+        if (!isMounted) return
         
         if (error) {
           console.error("[v0] Error getting session:", error)
@@ -71,16 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        if (initialSession) {
+        if (initialSession?.user) {
           setSession(initialSession)
           setUser(initialSession.user)
           await fetchProfile(initialSession.user.id)
         }
         
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       } catch (error) {
         console.error("[v0] Error initializing auth:", error)
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
@@ -89,7 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log("[v0] Auth state changed:", event, !!newSession?.user)
+        if (!isMounted) return
+        
         setSession(newSession)
         setUser(newSession?.user ?? null)
         
@@ -106,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => {
+      isMounted = false
       subscription.unsubscribe()
     }
   }, [supabase, fetchProfile])

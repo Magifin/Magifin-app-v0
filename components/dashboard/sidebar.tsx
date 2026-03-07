@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import {
@@ -57,6 +58,22 @@ export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user: authUser, profile, signOut, isLoading: authLoading } = useAuth()
+  const [authInitialized, setAuthInitialized] = useState(false)
+
+  // Ensure auth initializes within reasonable time
+  useEffect(() => {
+    if (!authLoading) {
+      setAuthInitialized(true)
+    }
+    
+    const timeout = setTimeout(() => {
+      if (!authInitialized) {
+        setAuthInitialized(true)
+      }
+    }, 2000)
+    
+    return () => clearTimeout(timeout)
+  }, [authLoading, authInitialized])
 
   // Use auth profile name
   const displayName = profile?.first_name || "Utilisateur"
@@ -113,7 +130,7 @@ export function DashboardSidebar() {
 
       {/* User section */}
       <div className="border-t border-sidebar-border p-4">
-        {authLoading ? (
+        {authLoading && !authInitialized ? (
           <div className="flex items-center justify-center py-2">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-sidebar-primary border-t-transparent" />
           </div>

@@ -9,12 +9,28 @@ import { useAuth } from "@/lib/auth-context"
 export default function ProfilPage() {
   const router = useRouter()
   const { user: authUser, profile, isLoading, refreshProfile } = useAuth()
+  const [authInitialized, setAuthInitialized] = useState(false)
   
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  // Ensure auth initializes within reasonable time
+  useEffect(() => {
+    if (!isLoading) {
+      setAuthInitialized(true)
+    }
+    
+    const timeout = setTimeout(() => {
+      if (!authInitialized) {
+        setAuthInitialized(true)
+      }
+    }, 2000)
+    
+    return () => clearTimeout(timeout)
+  }, [isLoading, authInitialized])
 
   // Initialize form with user data
   useEffect(() => {
@@ -66,7 +82,7 @@ export default function ProfilPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading && !authInitialized) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

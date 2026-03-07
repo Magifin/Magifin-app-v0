@@ -40,10 +40,26 @@ export function ResultsContent() {
   const { results } = useOptimizations()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const [authInitialized, setAuthInitialized] = useState(false)
 
   const [taxResult, setTaxResult] = useState<TaxResult | null>(null)
   const [taxLoading, setTaxLoading] = useState(false)
   const [taxError, setTaxError] = useState<string | null>(null)
+
+  // Ensure auth initializes within reasonable time (max 2 seconds)
+  useEffect(() => {
+    if (!authLoading) {
+      setAuthInitialized(true)
+    }
+    
+    const timeout = setTimeout(() => {
+      if (!authInitialized) {
+        setAuthInitialized(true)
+      }
+    }, 2000)
+    
+    return () => clearTimeout(timeout)
+  }, [authLoading, authInitialized])
 
   useEffect(() => {
     const input = mapAnswersToTaxInput(answers)
@@ -129,12 +145,12 @@ export function ResultsContent() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            {/* Loading state while auth initializes */}
-            {authLoading && (
+            {/* Loading state while auth initializes - but resolve after 2 seconds */}
+            {authLoading && !authInitialized && (
               <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             )}
             {/* Save button for authenticated users */}
-            {!authLoading && isAuthenticated && taxResult && (
+            {authInitialized && !!authUser && taxResult && (
               <SaveSimulationDialog
                 wizardAnswers={answers}
                 taxResult={taxResult}
@@ -148,7 +164,7 @@ export function ResultsContent() {
               />
             )}
             {/* Login link for unauthenticated users */}
-            {!authLoading && !isAuthenticated && (
+            {authInitialized && !authUser && (
               <Link
                 href="/auth/login"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
