@@ -1,0 +1,125 @@
+/**
+ * Belgium Fiscal Engine
+ * 
+ * Main entry point for Belgium tax computations.
+ * Orchestrates calculators and rules to produce tax results.
+ */
+
+import type { TaxInput, TaxResult } from "./types"
+import type { BelgiumRegion } from "./rules/brackets"
+import type { DetailedTaxResult } from "@/lib/fiscal/core/types"
+import { clampNonNegative } from "@/lib/fiscal/core/validation"
+import { createResultBuilder } from "@/lib/fiscal/core/result"
+import { calculateTotalIncomeTax } from "./calculators/incomeTax"
+import { calculateAllDeductions } from "./calculators/deductions"
+import { calculateEffectiveRate } from "./calculators/effectiveRate"
+import { ENGINE_VERSION } from "./rules/assumptions"
+
+/**
+ * Compute Belgium tax with basic result
+ * 
+ * This is the main computation function that maintains backwards compatibility
+ * with the existing API contract.
+ * 
+ * @param input - Tax computation input
+ * @returns Tax computation result
+ */
+export function computeBelgiumTax(input: TaxInput): TaxResult {
+  const region: BelgiumRegion = input.region
+
+  // Sanitize inputs
+  const salaryIncome = clampNonNegative(input.salaryIncome)
+  const dependents = clampNonNegative(input.dependents)
+  const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
+  const donations = clampNonNegative(input.donations ?? 0)
+
+  // Calculate all deductions
+  const deductionResult = calculateAllDeductions({
+    pensionContribution,
+    donations,
+    dependents,
+  })
+
+  // Calculate taxable income
+  const taxableIncome = clampNonNegative(salaryIncome - deductionResult.totalDeductions)
+
+  // Calculate income tax (federal + regional)
+  const { totalTax: estimatedTax } = calculateTotalIncomeTax(taxableIncome, region)
+
+  // Calculate effective rate
+  const effectiveTaxRate = calculateEffectiveRate(estimatedTax, taxableIncome)
+
+  return {
+    taxableIncome,
+    estimatedTax,
+    deductionsApplied: deductionResult.totalDeductions,
+    effectiveTaxRate,
+  }
+}
+
+/**
+ * Compute Belgium tax with detailed breakdown
+ * 
+ * Extended computation that provides full deduction breakdown and
+ * optimization suggestions. Use this for detailed analysis views.
+ * 
+ * @param input - Tax computation input
+ * @returns Detailed tax computation result
+ */
+export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
+  const region: BelgiumRegion = input.region
+
+  // Sanitize inputs
+  const salaryIncome = clampNonNegative(input.salaryIncome)
+  const dependents = clampNonNegative(input.dependents)
+  const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
+  const donations = clampNonNegative(input.donations ?? 0)
+
+  // Calculate all deductions with breakdown
+  const deductionResult = calculateAllDeductions({
+    pensionContribution,
+    donations,
+    dependents,
+  })
+
+  // Calculate taxable income
+  const taxableIncome = clampNonNegative(salaryIncome - deductionResult.totalDeductions)
+
+  // Calculate income tax with breakdown
+  const { federalTax, regionalSurcharge, totalTax } = calculateTotalIncomeTax(
+    taxableIncome,
+    region
+  )
+
+  // Build detailed result
+  const builder = createResultBuilder()
+    .setTaxableIncome(taxableIncome)
+    .setEstimatedTax(totalTax)
+    .setDeductionsApplied(deductionResult.totalDeductions)
+
+  // Add each deduction to the breakdown
+  for (const deduction of deductionResult.appliedDeductions) {
+    builder.addDeduction(deduction)
+  }
+
+  return builder.buildDetailed()
+}
+
+/**
+ * Get engine version and metadata
+ */
+export function getEngineInfo(): {
+  version: string
+  country: string
+  supportedFiscalYears: number[]
+} {
+  return {
+    version: ENGINE_VERSION,
+    country: "BE",
+    supportedFiscalYears: [2024],
+  }
+}
+
+// Re-export types for convenience
+export type { TaxInput, TaxResult } from "./types"
+export type { BelgiumRegion } from "./rules/brackets"
