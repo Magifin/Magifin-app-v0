@@ -1,0 +1,343 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  FileText,
+  Calendar,
+  Trash2,
+  ArrowRight,
+  Plus,
+  AlertCircle,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useAuth } from "@/lib/auth-context"
+import { getDefaultTaxYear } from "@/lib/supabase/types"
+import { cn } from "@/lib/utils"
+
+interface SimulationListItem {
+  id: string
+  tax_year: number
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+  tax_result: {
+    taxableIncome: number
+    estimatedTax: number
+    effectiveTaxRate: number
+    refundOrBalance?: number
+  }
+}
+
+export default function SimulationsPage() {
+  const router = useRouter()
+  const { user, isLoading: authLoading } = useAuth()
+
+  const [simulations, setSimulations] = useState<SimulationListItem[]>([])
+  const [availableYears, setAvailableYears] = useState<number[]>([])
+  const [selectedYear, setSelectedYear] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch available years
+  const fetchYears = useCallback(async () => {
+    try {
+      const res = await fetch("/api/simulations/years")
+      const data = await res.json()
+      if (res.ok && data.years) {
+        setAvailableYears(data.years)
+        // Default to first available year or current year
+        if (data.years.length > 0 && selectedYear === null) {
+          setSelectedYear(data.years[0])
+        } else if (data.years.length === 0) {
+          setSelectedYear(getDefaultTaxYear())
+        }
+      }
+    } catch {
+      // Silently fail - will use default year
+    }
+  }, [selectedYear])
+
+  // Fetch simulations for selected year
+  const fetchSimulations = useCallback(async () => {
+    if (!selectedYear) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch(`/api/simulations/list?tax_year=${selectedYear}`)
+      const data = await res.json()
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push("/auth/login?redirect=/dashboard/simulations")
+          return
+        }
+        setError(data.error || "Erreur lors du chargement")
+        return
+      }
+
+      setSimulations(data.simulations || [])
+    } catch {
+      setError("Erreur de connexion")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [selectedYear, router])
+
+  // Delete simulation
+  const deleteSimulation = async (id: string) => {
+    try {
+      const res = await fetch(`/api/simulations/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        setSimulations((prev) => prev.filter((s) => s.id !== id))
+        // Refresh years if this was the last simulation for a year
+        fetchYears()
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchYears()
+    }
+  }, [authLoading, user, fetchYears])
+
+  useEffect(() => {
+    if (selectedYear && user) {
+      fetchSimulations()
+    }
+  }, [selectedYear, user, fetchSimulations])
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/auth/login?redirect=/dashboard/simulations")
+    }
+  }, [authLoading, user, router])
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  const formatDate = (dateStr: string) => {
+    return new Intl.DateTimeFormat("fr-BE", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(dateStr))
+  }
+
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat("fr-BE", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Generate year tabs (available years + default year if not present)
+  const yearTabs = [...new Set([...availableYears, getDefaultTaxYear()])].sort(
+    (a, b) => b - a
+  )
+
+  return (
+    <div>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
+            Mes simulations
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            Retrouvez et gérez toutes vos simulations fiscales.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/wizard">
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle simulation
+          </Link>
+        </Button>
+      </div>
+
+      {/* Year filter tabs */}
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+        {yearTabs.map((year) => (
+          <button
+            key={year}
+            onClick={() => setSelectedYear(year)}
+            className={cn(
+              "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+              selectedYear === year
+                ? "border-primary bg-primary/5 text-primary"
+                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
+            )}
+          >
+            <Calendar className="h-4 w-4" />
+            {year}
+          </button>
+        ))}
+      </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !error && simulations.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 py-16 text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+            <FileText className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+            Aucune simulation pour {selectedYear}
+          </h3>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            Créez une nouvelle simulation pour estimer vos économies fiscales.
+          </p>
+          <Button asChild className="mt-6">
+            <Link href="/wizard">
+              <Plus className="mr-2 h-4 w-4" />
+              Créer une simulation
+            </Link>
+          </Button>
+        </div>
+      )}
+
+      {/* Simulations list */}
+      {!isLoading && !error && simulations.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {simulations.map((sim) => (
+            <div
+              key={sim.id}
+              className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/30"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
+                        {sim.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Créée le {formatDate(sim.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                  {sim.description && (
+                    <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                      {sim.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Tax summary */}
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Impôt estimé</p>
+                    <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+                      {formatMoney(sim.tax_result.estimatedTax)}
+                    </p>
+                  </div>
+                  {sim.tax_result.refundOrBalance !== undefined && (
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">
+                        {sim.tax_result.refundOrBalance >= 0
+                          ? "Remboursement"
+                          : "À payer"}
+                      </p>
+                      <p
+                        className={cn(
+                          "font-[family-name:var(--font-heading)] text-lg font-semibold",
+                          sim.tax_result.refundOrBalance >= 0
+                            ? "text-accent"
+                            : "text-destructive"
+                        )}
+                      >
+                        {sim.tax_result.refundOrBalance >= 0
+                          ? formatMoney(sim.tax_result.refundOrBalance)
+                          : formatMoney(Math.abs(sim.tax_result.refundOrBalance))}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/dashboard/simulations/${sim.id}`}>
+                      Voir détails
+                      <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Cette action est irréversible. La simulation sera définitivement supprimée.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteSimulation(sim.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Supprimer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

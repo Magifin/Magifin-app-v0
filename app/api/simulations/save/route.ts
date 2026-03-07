@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+import type { SimulationInsert } from "@/lib/supabase/types"
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Non authentifié. Veuillez vous connecter." },
+      { status: 401 }
+    )
+  }
+
+  // Parse body
+  let body: {
+    tax_year: number
+    name: string
+    description?: string
+    wizard_answers: unknown
+    tax_result: unknown
+  }
+
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: "Corps de requête invalide." },
+      { status: 400 }
+    )
+  }
+
+  // Validate required fields
+  if (!body.tax_year || !body.wizard_answers || !body.tax_result) {
+    return NextResponse.json(
+      { error: "Champs requis manquants: tax_year, wizard_answers, tax_result" },
+      { status: 400 }
+    )
+  }
+
+  // Validate tax_year range
+  if (body.tax_year < 2020 || body.tax_year > 2030) {
+    return NextResponse.json(
+      { error: "Année fiscale invalide (2020-2030)" },
+      { status: 400 }
+    )
+  }
+
+  const simulation: SimulationInsert = {
+    user_id: user.id,
+    tax_year: body.tax_year,
+    name: body.name || "Ma simulation",
+    description: body.description || null,
+    wizard_answers: body.wizard_answers as SimulationInsert["wizard_answers"],
+    tax_result: body.tax_result as SimulationInsert["tax_result"],
+  }
+
+  const { data, error } = await supabase
+    .from("simulations")
+    .insert(simulation)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error saving simulation:", error)
+    return NextResponse.json(
+      { error: "Erreur lors de la sauvegarde de la simulation." },
+      { status: 500 }
+    )
+  }
+
+  return NextResponse.json({ simulation: data }, { status: 201 })
+}

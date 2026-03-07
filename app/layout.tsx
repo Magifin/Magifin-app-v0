@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, DM_Sans } from 'next/font/google'
 import { SafeAnalytics } from '@/components/safe-analytics'
 import { WizardProvider } from '@/lib/wizard-store'
+import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
 
 const inter = Inter({
@@ -52,9 +53,11 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.variable} ${dmSans.variable} font-sans antialiased`}>
-        <WizardProvider>
-          {children}
-        </WizardProvider>
+        <AuthProvider>
+          <WizardProvider>
+            {children}
+          </WizardProvider>
+        </AuthProvider>
         <SafeAnalytics />
       </body>
     </html>

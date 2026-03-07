@@ -12,6 +12,7 @@ import {
   Edit3,
   Lock,
   Calculator,
+  Save,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -22,9 +23,11 @@ import {
 } from "@/lib/wizard-store"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { useUser } from "@/lib/user-store"
+import { useAuth } from "@/lib/auth-context"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
+import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 const PARTNER_URL =
@@ -36,6 +39,8 @@ export function ResultsContent() {
   const { answers, completedStepIds } = state
   const { results } = useOptimizations()
   const { user, isLoggedIn } = useUser()
+  const { user: authUser, isLoading: authLoading } = useAuth()
+  const [savedSuccess, setSavedSuccess] = useState(false)
 
   const [taxResult, setTaxResult] = useState<TaxResult | null>(null)
   const [taxLoading, setTaxLoading] = useState(false)
@@ -67,8 +72,9 @@ export function ResultsContent() {
 
   const availableItems = results.items.filter((i) => i.available)
 
-  // Gate condition: user must have created an account
+  // Gate condition: user must have created an account (local or Supabase auth)
   const isUnlocked = isLoggedIn
+  const isAuthenticated = !!authUser
 
   const handleModifyAnswers = () => {
     const availableSteps = getAvailableSteps(answers)
@@ -89,6 +95,12 @@ export function ResultsContent() {
 
   const handleInsuranceCta = () => {
     track("click_insurance_cta", { source: "results_page" })
+  }
+
+  const handleSimulationSaved = () => {
+    setSavedSuccess(true)
+    track("simulation_saved")
+    setTimeout(() => setSavedSuccess(false), 3000)
   }
 
   // Determine left card title
@@ -117,16 +129,51 @@ export function ResultsContent() {
               Accueil
             </Link>
           </div>
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-              <span className="text-xs font-bold text-primary-foreground">M</span>
-            </div>
-            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
-              Magifin
-            </span>
-          </Link>
+          <div className="flex items-center gap-4">
+            {/* Save button for authenticated users */}
+            {isAuthenticated && taxResult && (
+              <SaveSimulationDialog
+                wizardAnswers={answers}
+                taxResult={taxResult}
+                onSaved={handleSimulationSaved}
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Save className="h-4 w-4" />
+                    <span className="hidden sm:inline">Sauvegarder</span>
+                  </Button>
+                }
+              />
+            )}
+            {/* Login link for unauthenticated users */}
+            {!isAuthenticated && !authLoading && (
+              <Link
+                href="/auth/login"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Se connecter
+              </Link>
+            )}
+            <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+                <span className="text-xs font-bold text-primary-foreground">M</span>
+              </div>
+              <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+                Magifin
+              </span>
+            </Link>
+          </div>
         </div>
       </header>
+
+      {/* Save success toast */}
+      {savedSuccess && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
+          <div className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/10 px-4 py-3 shadow-lg">
+            <CheckCircle2 className="h-4 w-4 text-accent" />
+            <span className="text-sm font-medium text-foreground">Simulation sauvegardée</span>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
         {/* Hero estimate - totals always visible */}
