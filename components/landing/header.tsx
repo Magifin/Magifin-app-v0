@@ -5,13 +5,16 @@ import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@/lib/user-store"
+import { useAuth } from "@/lib/auth-context"
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { isLoggedIn } = useUser()
+  const { user: authUser, isLoading: authLoading } = useAuth()
 
-  // Determine dashboard link destination
-  const dashboardHref = isLoggedIn ? "/dashboard" : "/create-account?from=dashboard"
+  // Check both local auth (create-account flow) and Supabase auth
+  const isAuthenticated = isLoggedIn || !!authUser
+  const dashboardHref = isAuthenticated ? "/dashboard" : "/create-account?from=dashboard"
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -47,9 +50,16 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/create-account">Se connecter</Link>
-          </Button>
+          {!isAuthenticated && !authLoading && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/auth/login">Se connecter</Link>
+            </Button>
+          )}
+          {isAuthenticated && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/dashboard">Mon tableau de bord</Link>
+            </Button>
+          )}
           <Button size="sm" asChild>
             <Link href="/wizard">Commencer</Link>
           </Button>
@@ -93,9 +103,16 @@ export function Header() {
               Optimisation fiscale
             </Link>
             <div className="flex flex-col gap-2 pt-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/create-account">Se connecter</Link>
-              </Button>
+              {!isAuthenticated && !authLoading && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/auth/login">Se connecter</Link>
+                </Button>
+              )}
+              {isAuthenticated && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/dashboard">Mon tableau de bord</Link>
+                </Button>
+              )}
               <Button size="sm" asChild>
                 <Link href="/wizard">Commencer</Link>
               </Button>

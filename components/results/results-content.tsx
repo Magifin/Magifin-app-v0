@@ -46,15 +46,6 @@ export function ResultsContent() {
   const [taxLoading, setTaxLoading] = useState(false)
   const [taxError, setTaxError] = useState<string | null>(null)
 
-  // Debug: Log auth state changes
-  useEffect(() => {
-    console.log("[v0] Results page - Auth state:", {
-      authUser: !!authUser,
-      authLoading,
-      isAuthenticated: !!authUser,
-    })
-  }, [authUser, authLoading])
-
   useEffect(() => {
     const input = mapAnswersToTaxInput(answers)
     if (!input) return
