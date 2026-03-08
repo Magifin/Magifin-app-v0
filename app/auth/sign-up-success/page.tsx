@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Mail, ArrowRight } from "lucide-react"
+import { CheckCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function SignUpSuccessPage() {
@@ -19,27 +19,18 @@ export default function SignUpSuccessPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 py-16">
-        <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-          <Mail className="h-8 w-8" />
+        <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <CheckCircle className="h-8 w-8" />
         </div>
 
         <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl text-center text-balance">
-          Vérifiez votre email
+          Compte créé avec succès
         </h1>
 
         <p className="mt-4 text-center text-muted-foreground max-w-sm">
-          Nous vous avons envoyé un email de confirmation. Cliquez sur le lien pour
-          activer votre compte et accéder à Magifin.
+          Votre compte Magifin a été créé. Vous pouvez maintenant vous connecter
+          pour accéder à toutes les fonctionnalités.
         </p>
-
-        <div className="mt-8 rounded-xl border border-border bg-card p-6 w-full">
-          <h2 className="font-medium text-foreground mb-2">Prochaines étapes</h2>
-          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-            <li>Ouvrez votre boîte email</li>
-            <li>Cliquez sur le lien de confirmation</li>
-            <li>Connectez-vous à votre compte</li>
-          </ol>
-        </div>
 
         <div className="mt-8 flex flex-col gap-3 w-full">
           <Button asChild size="lg" className="w-full">
@@ -49,18 +40,16 @@ export default function SignUpSuccessPage() {
             </Link>
           </Button>
 
+          <Button asChild variant="outline" size="lg" className="w-full">
+            <Link href="/results">
+              Retour aux résultats
+            </Link>
+          </Button>
+
           <Button asChild variant="ghost" size="sm" className="w-full">
             <Link href="/">Retour à l&apos;accueil</Link>
           </Button>
         </div>
-
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          Vous n&apos;avez pas reçu l&apos;email ? Vérifiez vos spams ou{" "}
-          <Link href="/auth/sign-up" className="text-accent hover:underline">
-            réessayez
-          </Link>
-          .
-        </p>
       </main>
     </div>
   )
