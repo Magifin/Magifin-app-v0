@@ -2,8 +2,9 @@
 
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function CreateAccountPage() {
+function CreateAccountRedirect() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -20,5 +21,22 @@ export default function CreateAccountPage() {
       <div className="flex h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       <p className="mt-4 text-muted-foreground">Redirection en cours...</p>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <div className="flex h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <p className="mt-4 text-muted-foreground">Chargement...</p>
+    </div>
+  )
+}
+
+export default function CreateAccountPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CreateAccountRedirect />
+    </Suspense>
   )
 }
