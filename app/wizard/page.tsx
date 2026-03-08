@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, Suspense } from "react"
+import { useEffect, useMemo, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Eye } from "lucide-react"
@@ -37,30 +37,57 @@ function WizardContent() {
   const { user } = useUser()
   const { answers, currentStepId, completedStepIds } = state
 
+  console.log("[v0] WizardContent: render, searchParams ready?", searchParams.size > 0 || searchParams.size === 0)
+
   const availableSteps = getAvailableSteps(answers)
   const currentIndex = getStepIndex(currentStepId, answers)
   const totalSteps = availableSteps.length
 
+  // Track if we've already processed the resume/reset logic
+  const hasProcessedResume = useRef(false)
+
   // Handle resume or reset on mount
+  // IMPORTANT: searchParams might be empty on initial hydration, so we track if we've processed it
   useEffect(() => {
+    // Skip if already processed (e.g., during re-renders or hydration)
+    if (hasProcessedResume.current) {
+      console.log("[v0] WizardContent: already processed resume, skipping")
+      return
+    }
+
+    console.log("[v0] WizardContent: processing resume/reset, searchParams keys:", Array.from(searchParams.keys()))
     const resume = searchParams.get("resume")
+    console.log("[v0] WizardContent: resume param present?", !!resume, "length:", resume?.length)
     
     if (resume) {
       // Resume param present: decode and load those specific answers
       try {
         const decoded = JSON.parse(atob(resume))
+        console.log("[v0] WizardContent: decoded answers keys:", Object.keys(decoded).length)
         loadAnswers(decoded)
+        hasProcessedResume.current = true
         // Clear the URL param to prevent re-loading on subsequent renders
         router.replace("/wizard", { scroll: false })
-      } catch {
+      } catch (e) {
         // If decode fails, continue with default state
+        console.log("[v0] WizardContent: decode error:", e instanceof Error ? e.message : "unknown")
+        hasProcessedResume.current = true
       }
     } else {
       // No resume param: ensure wizard starts clean
       // This prevents hydration of old localStorage state
+      console.log("[v0] WizardContent: no resume, calling resetWizard()")
       resetWizard()
+      hasProcessedResume.current = true
     }
-  }, [])
+  }, [searchParams, loadAnswers, resetWizard, router])
+
+  // Log state after resume/reset effects
+  useEffect(() => {
+    if (hasProcessedResume.current) {
+      console.log("[v0] WizardContent: state after resume/reset, completedStepIds:", completedStepIds.length, "currentStep:", currentStepId)
+    }
+  }, [answers, currentStepId, completedStepIds])
 
   // Track wizard start
   useEffect(() => {
