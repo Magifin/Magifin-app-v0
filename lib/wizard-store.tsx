@@ -244,6 +244,16 @@ function createWizardStore() {
     emit()
   }
 
+  const loadAnswers = (answers: Partial<WizardAnswers>) => {
+    state = {
+      answers: { ...state.answers, ...answers },
+      currentStepId: "region",
+      completedStepIds: [],
+    }
+    persist()
+    emit()
+  }
+
   return {
     getSnapshot,
     getServerSnapshot,
@@ -253,6 +263,7 @@ function createWizardStore() {
     goToStep,
     markStepComplete,
     resetWizard,
+    loadAnswers,
     isHydrated: () => isHydrated,
   }
 }
@@ -323,6 +334,7 @@ interface WizardContextValue {
   goToStep: (stepId: string) => void
   markStepComplete: (stepId: string) => void
   resetWizard: () => void
+  loadAnswers: (answers: Partial<WizardAnswers>) => void
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null)
@@ -358,9 +370,13 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.resetWizard()
   }, [])
 
+  const loadAnswers = useCallback((answers: Partial<WizardAnswers>) => {
+    store.loadAnswers(answers)
+  }, [])
+
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard }}
+      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers }}
     >
       {children}
     </WizardContext.Provider>

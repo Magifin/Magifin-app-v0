@@ -4,17 +4,11 @@ import Link from "next/link"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useUser } from "@/lib/user-store"
 import { useAuth } from "@/lib/auth-context"
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { isLoggedIn } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
-
-  // Prefer Supabase auth, fallback to local auth for anonymous users
-  const isAuthenticated = !!authUser || isLoggedIn
-  const showDashboardLink = !!authUser  // Only show if truly authenticated with Supabase
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -50,19 +44,16 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          {!isAuthenticated && !authLoading && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/auth/login">Se connecter</Link>
-            </Button>
+          {!authUser && !authLoading && (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/auth/login">Se connecter</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/auth/sign-up">Créer un compte</Link>
+              </Button>
+            </>
           )}
-          {showDashboardLink && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/dashboard">Mon tableau de bord</Link>
-            </Button>
-          )}
-          <Button size="sm" asChild>
-            <Link href="/wizard">Commencer</Link>
-          </Button>
         </div>
 
         <button
@@ -103,19 +94,16 @@ export function Header() {
               Optimisation fiscale
             </Link>
             <div className="flex flex-col gap-2 pt-2">
-              {!isAuthenticated && !authLoading && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/auth/login">Se connecter</Link>
-                </Button>
+              {!authUser && !authLoading && (
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/auth/login">Se connecter</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href="/auth/sign-up">Créer un compte</Link>
+                  </Button>
+                </>
               )}
-              {showDashboardLink && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/dashboard">Mon tableau de bord</Link>
-                </Button>
-              )}
-              <Button size="sm" asChild>
-                <Link href="/wizard">Commencer</Link>
-              </Button>
             </div>
           </nav>
         </div>

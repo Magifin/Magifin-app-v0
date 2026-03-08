@@ -97,9 +97,25 @@ export default function SimulationDetailPage({
     }).format(amount)
   }
 
-  if (authLoading || isLoading) {
+  if (authLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-muted-foreground">Redirection en cours...</p>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )
@@ -220,7 +236,7 @@ export default function SimulationDetailPage({
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+            <dt className="text-xs text-muted-foreground">Impôt estim��</dt>
             <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
               {formatMoney(tax_result.estimatedTax)}
             </dd>
@@ -355,9 +371,9 @@ export default function SimulationDetailPage({
           </Link>
         </Button>
         <Button asChild>
-          <Link href="/wizard">
+          <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}`}>
             <Calculator className="mr-2 h-4 w-4" />
-            Créer une nouvelle simulation
+            Mettre à jour cette simulation
           </Link>
         </Button>
       </div>

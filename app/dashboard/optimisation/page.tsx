@@ -67,7 +67,7 @@ export default function OptimisationPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/wizard">
+          <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
             <Calculator className="mr-2 h-4 w-4" />
             {hasData ? "Mettre à jour" : "Analyser ma situation"}
           </Link>

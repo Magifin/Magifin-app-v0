@@ -115,7 +115,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col gap-2">
             <Button asChild>
-              <Link href="/wizard">
+              <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
                 {hasData ? "Mettre à jour" : "Commencer"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
