@@ -1,14 +1,32 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Menu, X, LogOut, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [authInitialized, setAuthInitialized] = useState(false)
   const { user: authUser, profile, isLoading: authLoading, signOut } = useAuth()
+
+  // Ensure auth initializes within reasonable time (max 2 seconds)
+  useEffect(() => {
+    if (!authLoading) {
+      setAuthInitialized(true)
+    } else {
+      setAuthInitialized(false)
+    }
+    
+    const timeout = setTimeout(() => {
+      setAuthInitialized(true)
+    }, 2000)
+    
+    return () => clearTimeout(timeout)
+  }, [authLoading, authUser])
+
+  const isAuthenticated = authInitialized && !!authUser
 
   const handleSignOut = async () => {
     await signOut()
@@ -49,7 +67,7 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          {!authUser && !authLoading && (
+          {!isAuthenticated && (
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/auth/login">Se connecter</Link>
@@ -59,12 +77,12 @@ export function Header() {
               </Button>
             </>
           )}
-          {authUser && !authLoading && (
+          {isAuthenticated && (
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Mon tableau de bord
+                  Tableau de bord
                 </Link>
               </Button>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -113,7 +131,7 @@ export function Header() {
               Optimisation fiscale
             </Link>
             <div className="flex flex-col gap-2 border-t border-border pt-4">
-              {!authUser && !authLoading && (
+              {!isAuthenticated && (
                 <>
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/auth/login">Se connecter</Link>
@@ -123,12 +141,12 @@ export function Header() {
                   </Button>
                 </>
               )}
-              {authUser && !authLoading && (
+              {isAuthenticated && (
                 <>
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/dashboard">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Mon tableau de bord
+                      Tableau de bord
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleSignOut}>

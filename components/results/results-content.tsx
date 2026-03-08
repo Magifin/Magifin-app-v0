@@ -86,22 +86,12 @@ export function ResultsContent() {
 
   const availableItems = results.items.filter((i) => i.available)
 
-  // Gate condition: only Supabase authenticated users can persist simulations
-  // Key: use authInitialized to ensure we show the right CTA based on auth state
-  const isUnlocked = authInitialized && !!authUser && !authLoading
-  const isAuthenticated = !!authUser
+  // Consistent auth check used throughout the app
+  const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    const availableSteps = getAvailableSteps(answers)
-    const lastCompletedId = getLastCompletedStepId(completedStepIds, answers)
-
-    if (lastCompletedId) {
-      goToStep(lastCompletedId)
-    } else if (availableSteps.length > 0) {
-      goToStep(availableSteps[0].id)
-    }
-
-    router.push("/wizard")
+    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(answers))}`
+    router.push(resumeUrl)
   }
 
   const handleCreateSpace = () => {
@@ -222,7 +212,7 @@ export function ResultsContent() {
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
 
-          {!isUnlocked && (
+          {!isAuthenticated && (
             <>
               <Button
                 size="lg"
@@ -241,7 +231,7 @@ export function ResultsContent() {
             </>
           )}
 
-          {isUnlocked && (
+          {isAuthenticated && (
             <div className="mt-8 flex flex-col gap-3">
               <Button
                 size="lg"
@@ -315,7 +305,7 @@ export function ResultsContent() {
                 {"Précision complète bientôt disponible pour votre région / statut."}
               </p>
             )}
-            {!isUnlocked && (
+            {!isAuthenticated && (
               <Button
                 size="sm"
                 className="mt-5 w-full"
@@ -328,7 +318,7 @@ export function ResultsContent() {
                 </Link>
               </Button>
             )}
-            {isUnlocked && (
+            {isAuthenticated && (
               <Button
                 size="sm"
                 className="mt-5 w-full"
