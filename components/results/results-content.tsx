@@ -483,8 +483,8 @@ export function ResultsContent() {
               {"Détail de vos optimisations"}
             </h3>
 
-            {/* Locked panel - shown when NOT unlocked */}
-            {!isUnlocked && (
+            {/* Locked panel - shown when NOT authenticated */}
+            {!isAuthenticated && (
               <div className="mb-4 rounded-xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -530,24 +530,24 @@ export function ResultsContent() {
                       {/* Title always visible */}
                       <p className="font-medium text-card-foreground">{item.title}</p>
                       {/* Description: show real text if unlocked, placeholder if not */}
-                      {isUnlocked ? (
-                        <p className="text-xs text-muted-foreground">{item.reason}</p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground/60 italic">
-                          {"Détails disponibles dans votre espace Magifin"}
-                        </p>
-                      )}
+{isAuthenticated ? (
+                  <p className="text-sm text-muted-foreground">{item.details}</p>
+                ) : (
+                  <p className="text-sm italic text-muted-foreground/60">
+                    {"Détails disponibles après création de votre espace"}
+                  </p>
+                )}
                     </div>
                   </div>
                   {/* Amount: show real value if unlocked, placeholder if not */}
-                  {isUnlocked ? (
-                    <p className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
-                      {formatMoneyRange(item.amountMin, item.amountMax)}
-                    </p>
+{isAuthenticated ? (
+                    <span className="text-sm font-semibold text-accent">
+                      {formatMoneyRange(item.savingsMin, item.savingsMax)}
+                    </span>
                   ) : (
-                    <p className="font-[family-name:var(--font-heading)] font-semibold text-muted-foreground/50">
-                      {"— —"}
-                    </p>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {"Montant masqué"}
+                    </span>
                   )}
                 </div>
               ))}
