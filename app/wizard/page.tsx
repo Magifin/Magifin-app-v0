@@ -41,18 +41,20 @@ function WizardContent() {
   const currentIndex = getStepIndex(currentStepId, answers)
   const totalSteps = availableSteps.length
 
-  // Load resume data from query param if present
+  // Load resume data from query param if present - always reset and load when resuming
   useEffect(() => {
     const resume = searchParams.get("resume")
-    if (resume && completedStepIds.length === 0) {
+    if (resume) {
       try {
         const decoded = JSON.parse(atob(resume))
         loadAnswers(decoded)
+        // Clear the URL param to prevent re-loading on subsequent renders
+        router.replace("/wizard", { scroll: false })
       } catch {
         // ignore parse errors
       }
     }
-  }, [searchParams, completedStepIds.length, loadAnswers])
+  }, [searchParams, loadAnswers, router])
 
   // Track wizard start
   useEffect(() => {

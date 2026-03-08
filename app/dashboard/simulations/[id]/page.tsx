@@ -297,6 +297,35 @@ export default function SimulationDetailPage({
         )}
       </div>
 
+      {/* Optimization Items from saved simulation */}
+      {tax_result.items && tax_result.items.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="mb-4 font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+            Optimisations identifiées
+          </h2>
+          <div className="flex flex-col gap-3">
+            {tax_result.items.filter((item: { available: boolean }) => item.available).map((item: { key: string; label: string; details: string; savingsMin: number; savingsMax: number }) => (
+              <div
+                key={item.key}
+                className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-muted/20 p-4"
+              >
+                <div className="flex-1">
+                  <p className="font-medium text-card-foreground">{item.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.details}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-accent">
+                    {item.savingsMin === item.savingsMax
+                      ? formatMoney(item.savingsMin)
+                      : `${formatMoney(item.savingsMin)} - ${formatMoney(item.savingsMax)}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Wizard Answers Summary */}
       <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="mb-4 font-[family-name:var(--font-heading)] font-bold text-card-foreground">

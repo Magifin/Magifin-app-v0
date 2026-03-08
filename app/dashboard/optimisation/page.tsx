@@ -34,11 +34,20 @@ export default function OptimisationPage() {
 
   // Determine what to show: latest saved simulation or wizard data
   const hasData = latestSimulation || hasWizardData
-  const displayResults = latestSimulation && latestSimulation.tax_result ? {
-    items: latestSimulation.tax_result.items || [],
+  
+  // Build display results from saved simulation OR current wizard session
+  const displayResults = latestSimulation?.tax_result ? {
+    items: (latestSimulation.tax_result.items || []) as Array<{
+      key: string
+      label: string
+      details: string
+      savingsMin: number
+      savingsMax: number
+      available: boolean
+    }>,
     totalMin: latestSimulation.tax_result.refundOrBalance || 0,
     totalMax: latestSimulation.tax_result.refundOrBalance || 0,
-    notes: [],
+    notes: [] as string[],
     isFullySupported: true,
   } : results
 
