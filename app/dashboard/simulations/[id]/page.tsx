@@ -174,7 +174,7 @@ export default function SimulationDetailPage({
           </Link>
           <span className="text-muted-foreground">•</span>
           <Link
-            href="/dashboard/optimisation"
+            href={`/dashboard/optimisation?simulationId=${id}`}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             Optimisation fiscale
@@ -417,7 +417,7 @@ export default function SimulationDetailPage({
       {/* Navigation CTA */}
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Button variant="outline" asChild>
-          <Link href="/dashboard/optimisation">
+          <Link href={`/dashboard/optimisation?simulationId=${id}`}>
             <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
             Voir optimisations
           </Link>

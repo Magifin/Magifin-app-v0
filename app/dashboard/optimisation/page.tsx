@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
@@ -9,35 +10,48 @@ import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
 
 export default function OptimisationPage() {
+  const searchParams = useSearchParams()
+  const simulationId = searchParams.get("simulationId") // Contextual: specific simulation ID
+  
   const { results, hasWizardData } = useOptimizations()
-  const [latestSimulation, setLatestSimulation] = useState<Simulation | null>(null)
+  const [currentSimulation, setCurrentSimulation] = useState<Simulation | null>(null)
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
 
-  // Fetch latest saved simulation
+  // Fetch simulation: contextual (by ID) or global (latest)
   useEffect(() => {
-    const fetchLatestSimulation = async () => {
+    const fetchSimulation = async () => {
       try {
-        const res = await fetch("/api/simulations/list")
-        const data = await res.json()
-        if (res.ok && data.simulations && data.simulations.length > 0) {
-          setLatestSimulation(data.simulations[0])
+        if (simulationId) {
+          // CONTEXTUAL: Fetch specific simulation by ID
+          const res = await fetch(`/api/simulations/${simulationId}`)
+          const data = await res.json()
+          if (res.ok && data.simulation) {
+            setCurrentSimulation(data.simulation)
+          }
+        } else {
+          // GLOBAL: Fetch latest simulation
+          const res = await fetch("/api/simulations/list")
+          const data = await res.json()
+          if (res.ok && data.simulations && data.simulations.length > 0) {
+            setCurrentSimulation(data.simulations[0])
+          }
         }
       } catch (error) {
-        console.error("Error fetching latest simulation:", error)
+        console.error("Error fetching simulation:", error)
       } finally {
         setIsLoadingSimulation(false)
       }
     }
 
-    fetchLatestSimulation()
-  }, [])
+    fetchSimulation()
+  }, [simulationId])
 
   // Determine what to show: latest saved simulation or wizard data
-  const hasData = latestSimulation || hasWizardData
+  const hasData = currentSimulation || hasWizardData
   
   // Build display results from saved simulation OR current wizard session
-  const displayResults = latestSimulation?.tax_result ? {
-    items: (latestSimulation.tax_result.items || []) as Array<{
+  const displayResults = currentSimulation?.tax_result ? {
+    items: (currentSimulation.tax_result.items || []) as Array<{
       key: string
       label: string
       details: string
@@ -45,8 +59,8 @@ export default function OptimisationPage() {
       savingsMax: number
       available: boolean
     }>,
-    totalMin: latestSimulation.tax_result.refundOrBalance || 0,
-    totalMax: latestSimulation.tax_result.refundOrBalance || 0,
+    totalMin: currentSimulation.tax_result.refundOrBalance || 0,
+    totalMax: currentSimulation.tax_result.refundOrBalance || 0,
     notes: [] as string[],
     isFullySupported: true,
   } : results
@@ -70,13 +84,13 @@ export default function OptimisationPage() {
             Optimisation fiscale
           </h1>
           <p className="mt-1 text-muted-foreground">
-            {latestSimulation
-              ? `Détail de vos déductions (simulation du ${new Date(latestSimulation.created_at).toLocaleDateString("fr-BE")})`
+            {currentSimulation
+              ? `Détail de vos déductions (simulation du ${new Date(currentSimulation.created_at).toLocaleDateString("fr-BE")})`
               : "Détail de vos déductions et réductions identifiées."}
           </p>
         </div>
         <Button asChild>
-          <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
+          <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}` : "/wizard"}>
             <Calculator className="mr-2 h-4 w-4" />
             {hasData ? "Mettre à jour" : "Analyser ma situation"}
           </Link>
@@ -115,9 +129,9 @@ export default function OptimisationPage() {
             {"Les détails d'optimisation ne sont pas encore disponibles pour cette simulation. Mettez à jour vos informations pour voir plus d'options."}
           </p>
           <Button className="mt-6" asChild>
-            <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
+            <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}` : "/wizard"}>
               <Calculator className="mr-2 h-4 w-4" />
-              {latestSimulation ? "Mettre à jour cette simulation" : "Commencer l'analyse"}
+              {currentSimulation ? "Mettre à jour cette simulation" : "Commencer l'analyse"}
             </Link>
           </Button>
         </div>
@@ -128,13 +142,13 @@ export default function OptimisationPage() {
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-accent" />
               <span className="text-sm font-medium text-muted-foreground">
-                {latestSimulation ? "Remboursement estimé" : "Gain total estimé"}
+                {currentSimulation ? "Remboursement estimé" : "Gain total estimé"}
               </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
               {formatMoneyRange(displayResults.totalMin, displayResults.totalMax)}
             </p>
-            {!displayResults.isFullySupported && !latestSimulation && (
+            {!displayResults.isFullySupported && !currentSimulation && (
               <p className="mt-2 text-xs text-muted-foreground">
                 {"Estimation partielle. Calculs optimisés pour Wallonie / salarié bientôt disponibles pour votre profil."}
               </p>
@@ -204,10 +218,10 @@ export default function OptimisationPage() {
           )}
 
           {/* View full simulation button */}
-          {latestSimulation && (
+          {currentSimulation && (
             <div className="mt-8 flex justify-center">
               <Button variant="outline" asChild>
-                <Link href={`/dashboard/simulations/${latestSimulation.id}`}>
+                <Link href={`/dashboard/simulations/${currentSimulation.id}`}>
                   <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
                   Voir tous les détails de la simulation
                 </Link>
