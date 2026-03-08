@@ -46,8 +46,9 @@ function LoginForm() {
     }
 
     track("user_logged_in")
+    // Small delay to allow Supabase to fully establish the session
+    await new Promise(resolve => setTimeout(resolve, 100))
     router.push(redirectTo)
-    router.refresh()
   }
 
   const canSubmit = email.trim().length > 0 && password.length >= 6
