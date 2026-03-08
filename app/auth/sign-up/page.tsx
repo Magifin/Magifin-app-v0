@@ -22,7 +22,13 @@ function SignUpForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const redirectTo = searchParams.get("redirect") || "/dashboard"
+  const redirectTo = (() => {
+    const redirect = searchParams.get("redirect")
+    if (redirect) return redirect
+    const from = searchParams.get("from")
+    if (from === "results") return "/results"
+    return "/dashboard"
+  })()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
