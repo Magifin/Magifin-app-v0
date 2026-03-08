@@ -47,18 +47,22 @@ export function ResultsContent() {
 
   // Ensure auth initializes within reasonable time (max 2 seconds)
   useEffect(() => {
+    console.log("[v0] ResultsContent auth state:", { authUser: !!authUser, authLoading, authInitialized })
     if (!authLoading) {
       setAuthInitialized(true)
+      console.log("[v0] Auth loaded, setting authInitialized=true")
+    } else {
+      setAuthInitialized(false)
+      console.log("[v0] Auth still loading")
     }
     
     const timeout = setTimeout(() => {
-      if (!authInitialized) {
-        setAuthInitialized(true)
-      }
+      console.log("[v0] Auth timeout reached, forcing authInitialized=true")
+      setAuthInitialized(true)
     }, 2000)
     
     return () => clearTimeout(timeout)
-  }, [authLoading, authInitialized])
+  }, [authLoading, authUser])
 
   useEffect(() => {
     const input = mapAnswersToTaxInput(answers)
@@ -87,7 +91,8 @@ export function ResultsContent() {
   const availableItems = results.items.filter((i) => i.available)
 
   // Gate condition: only Supabase authenticated users can persist simulations
-  const isUnlocked = !!authUser && !authLoading
+  // Key: use authInitialized to ensure we show the right CTA based on auth state
+  const isUnlocked = authInitialized && !!authUser && !authLoading
   const isAuthenticated = !!authUser
 
   const handleModifyAnswers = () => {
@@ -126,14 +131,23 @@ export function ResultsContent() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border/50 px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:items-center sm:justify-between sm:flex-row">
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <span className="text-sm font-bold text-primary-foreground">M</span>
+            </div>
+            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+              Magifin
+            </span>
+          </Link>
+
           <div className="flex items-center gap-4">
             <button
               onClick={handleModifyAnswers}
               className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Edit3 className="h-4 w-4" />
-              Modifier mes réponses
+              Modifier
             </button>
             <span className="text-border">|</span>
             <Link
@@ -143,10 +157,11 @@ export function ResultsContent() {
               Accueil
             </Link>
           </div>
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-3">
             {/* Loading state while auth initializes - but resolve after 2 seconds */}
             {authLoading && !authInitialized && (
-              <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             )}
             {/* Save button for authenticated users */}
             {authInitialized && !!authUser && taxResult && (
@@ -166,19 +181,11 @@ export function ResultsContent() {
             {authInitialized && !authUser && (
               <Link
                 href="/auth/login"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Se connecter
               </Link>
             )}
-            <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-                <span className="text-xs font-bold text-primary-foreground">M</span>
-              </div>
-              <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
-                Magifin
-              </span>
-            </Link>
           </div>
         </div>
       </header>

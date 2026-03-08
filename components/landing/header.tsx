@@ -2,13 +2,18 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LogOut, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { user: authUser, isLoading: authLoading } = useAuth()
+  const { user: authUser, profile, isLoading: authLoading, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+    setMobileOpen(false)
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -54,6 +59,20 @@ export function Header() {
               </Button>
             </>
           )}
+          {authUser && !authLoading && (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Mon tableau de bord
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Se déconnecter
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -93,7 +112,7 @@ export function Header() {
             >
               Optimisation fiscale
             </Link>
-            <div className="flex flex-col gap-2 pt-2">
+            <div className="flex flex-col gap-2 border-t border-border pt-4">
               {!authUser && !authLoading && (
                 <>
                   <Button variant="outline" size="sm" asChild>
@@ -101,6 +120,20 @@ export function Header() {
                   </Button>
                   <Button size="sm" asChild>
                     <Link href="/auth/sign-up">Créer un compte</Link>
+                  </Button>
+                </>
+              )}
+              {authUser && !authLoading && (
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/dashboard">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Mon tableau de bord
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Se déconnecter
                   </Button>
                 </>
               )}
