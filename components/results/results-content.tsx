@@ -47,17 +47,13 @@ export function ResultsContent() {
 
   // Ensure auth initializes within reasonable time (max 2 seconds)
   useEffect(() => {
-    console.log("[v0] ResultsContent auth state:", { authUser: !!authUser, authLoading, authInitialized })
     if (!authLoading) {
       setAuthInitialized(true)
-      console.log("[v0] Auth loaded, setting authInitialized=true")
     } else {
       setAuthInitialized(false)
-      console.log("[v0] Auth still loading")
     }
     
     const timeout = setTimeout(() => {
-      console.log("[v0] Auth timeout reached, forcing authInitialized=true")
       setAuthInitialized(true)
     }, 2000)
     
@@ -246,16 +242,28 @@ export function ResultsContent() {
           )}
 
           {isUnlocked && (
-            <Button
-              size="lg"
-              className="mt-8 h-12 px-8 text-base"
-              asChild
-            >
-              <Link href="/dashboard">
-                {"Accéder au dashboard"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <div className="mt-8 flex flex-col gap-3">
+              <Button
+                size="lg"
+                className="h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/dashboard">
+                  {"Accéder au tableau de bord"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/dashboard/optimisation">
+                  {"Voir mes optimisations"}
+                </Link>
+              </Button>
+            </div>
           )}
 
           {/* Notes about region/status */}
@@ -316,6 +324,19 @@ export function ResultsContent() {
               >
                 <Link href="/auth/sign-up?from=results">
                   {"Créer mon espace Magifin"}
+                  <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+            {isUnlocked && (
+              <Button
+                size="sm"
+                className="mt-5 w-full"
+                asChild
+                variant="outline"
+              >
+                <Link href="/dashboard/optimisation">
+                  {"Voir mes optimisations"}
                   <ArrowRight className="ml-2 h-3.5 w-3.5" />
                 </Link>
               </Button>

@@ -93,6 +93,25 @@ export default function OptimisationPage() {
             </Link>
           </Button>
         </div>
+      ) : availableItems.length === 0 ? (
+        // Data exists but no optimization items
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <AlertCircle className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+            {"Détails d'optimisation indisponibles"}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {"Les détails d'optimisation ne sont pas encore disponibles pour cette simulation. Mettez à jour vos informations pour voir plus d'options."}
+          </p>
+          <Button className="mt-6" asChild>
+            <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
+              <Calculator className="mr-2 h-4 w-4" />
+              {latestSimulation ? "Mettre à jour cette simulation" : "Commencer l'analyse"}
+            </Link>
+          </Button>
+        </div>
       ) : (
         <>
           {/* Summary */}
