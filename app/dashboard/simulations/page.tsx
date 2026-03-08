@@ -53,22 +53,30 @@ export default function SimulationsPage() {
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
 
+  console.log("[v0] SimulationsPage render: user=", !!user, "authLoading=", authLoading, "selectedYear=", selectedYear, "isLoading=", isLoading, "initialized=", initialized)
+
   // Fetch available years
   const fetchYears = useCallback(async () => {
+    console.log("[v0] fetchYears: starting")
     try {
       const res = await fetch("/api/simulations/years")
+      console.log("[v0] fetchYears: API response status=", res.status)
       const data = await res.json()
+      console.log("[v0] fetchYears: data.years=", data.years)
       if (res.ok && data.years) {
         setAvailableYears(data.years)
         // Default to first available year or current year
         const yearToSelect = data.years.length > 0 ? data.years[0] : getDefaultTaxYear()
+        console.log("[v0] fetchYears: setting selectedYear=", yearToSelect)
         setSelectedYear(yearToSelect)
       } else {
         // No simulations yet - still set default year
+        console.log("[v0] fetchYears: no years, using default")
         setAvailableYears([])
         setSelectedYear(getDefaultTaxYear())
       }
-    } catch {
+    } catch (e) {
+      console.log("[v0] fetchYears: exception=", e instanceof Error ? e.message : "unknown")
       // Silently fail - will use default year
       setSelectedYear(getDefaultTaxYear())
     }
@@ -76,28 +84,43 @@ export default function SimulationsPage() {
 
   // Fetch simulations for selected year
   const fetchSimulations = useCallback(async () => {
-    if (!selectedYear) return
+    if (!selectedYear) {
+      console.log("[v0] fetchSimulations: selectedYear is null, skipping")
+      return
+    }
 
+    console.log("[v0] fetchSimulations: starting with year=", selectedYear)
     setIsLoading(true)
     setError(null)
 
     try {
-      const res = await fetch(`/api/simulations/list?tax_year=${selectedYear}`)
+      const url = `/api/simulations/list?tax_year=${selectedYear}`
+      console.log("[v0] fetchSimulations: fetching from", url)
+      const res = await fetch(url)
+      console.log("[v0] fetchSimulations: API response status=", res.status)
       const data = await res.json()
+      console.log("[v0] fetchSimulations: simulations count=", data.simulations ? data.simulations.length : 0)
 
       if (!res.ok) {
         if (res.status === 401) {
+          console.log("[v0] fetchSimulations: 401, redirecting to login")
           router.push("/auth/login?redirect=/dashboard/simulations")
           return
         }
+        console.log("[v0] fetchSimulations: error response=", data.error)
         setError(data.error || "Erreur lors du chargement")
+        setIsLoading(false)
+        setInitialized(true)
         return
       }
 
+      console.log("[v0] fetchSimulations: success, clearing loading")
       setSimulations(data.simulations || [])
-    } catch {
+      setIsLoading(false)
+      setInitialized(true)
+    } catch (e) {
+      console.log("[v0] fetchSimulations: exception=", e instanceof Error ? e.message : "unknown")
       setError("Erreur de connexion")
-    } finally {
       setIsLoading(false)
       setInitialized(true)
     }
@@ -119,29 +142,36 @@ export default function SimulationsPage() {
 
   // Initialize years and auth check
   useEffect(() => {
+    console.log("[v0] useEffect[auth]: authLoading=", authLoading, "user=", !!user)
     if (!authLoading && user) {
+      console.log("[v0] useEffect[auth]: calling fetchYears")
       fetchYears()
     }
   }, [authLoading, user, fetchYears])
 
-  // Fetch simulations when year is selected
+  // Fetch simulations when year is selected - use minimal dependencies
   useEffect(() => {
+    console.log("[v0] useEffect[year]: selectedYear=", selectedYear, "user=", !!user)
     if (selectedYear !== null && user) {
+      console.log("[v0] useEffect[year]: calling fetchSimulations")
       fetchSimulations()
     }
-  }, [selectedYear, user, fetchSimulations])
+  }, [selectedYear, user])
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
+      console.log("[v0] useEffect[auth-redirect]: redirecting to login")
       router.push("/auth/login?redirect=/dashboard/simulations")
     }
   }, [authLoading, user, router])
 
   // Timeout fallback: if still loading after 2 seconds, force initialized state
   useEffect(() => {
+    console.log("[v0] useEffect[timeout]: isLoading=", isLoading, "initialized=", initialized)
     if (isLoading && !initialized) {
       const timeout = setTimeout(() => {
+        console.log("[v0] useEffect[timeout]: forcing initialized=true after 2s")
         setIsLoading(false)
         setInitialized(true)
       }, 2000)

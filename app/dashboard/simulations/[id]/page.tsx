@@ -40,25 +40,34 @@ export default function SimulationDetailPage({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log("[v0] SimulationDetail: route id =", id)
+    console.log("[v0] SimulationDetail: auth user present =", !!user, "authLoading =", authLoading)
+    
     if (authLoading) return
     if (!user) {
+      console.log("[v0] SimulationDetail: no user, redirecting to login")
       router.push(`/auth/login?redirect=/dashboard/simulations/${id}`)
       return
     }
 
     const fetchSimulation = async () => {
+      console.log("[v0] SimulationDetail: starting fetch for id =", id)
       setIsLoading(true)
       try {
         const res = await fetch(`/api/simulations/${id}`)
+        console.log("[v0] SimulationDetail: API response status =", res.status)
         const data = await res.json()
 
         if (!res.ok) {
+          console.log("[v0] SimulationDetail: API error, setting error =", data.error)
           setError(data.error || "Simulation non trouvée")
           return
         }
 
+        console.log("[v0] SimulationDetail: simulation data null/undefined?", data.simulation == null)
         setSimulation(data.simulation)
-      } catch {
+      } catch (err) {
+        console.log("[v0] SimulationDetail: fetch exception =", err instanceof Error ? err.message : "Unknown error")
         setError("Erreur de connexion")
       } finally {
         setIsLoading(false)
@@ -67,6 +76,20 @@ export default function SimulationDetailPage({
 
     fetchSimulation()
   }, [id, user, authLoading, router])
+
+  // Timeout fallback: if still loading after 2 seconds, force resolution to prevent infinite spinner
+  useEffect(() => {
+    if (isLoading) {
+      console.log("[v0] SimulationDetail: timeout - forcing loading state resolution after 2s")
+      const timeout = setTimeout(() => {
+        setIsLoading(false)
+        if (!simulation && !error) {
+          setError("Délai d'attente dépassé")
+        }
+      }, 2000)
+      return () => clearTimeout(timeout)
+    }
+  }, [isLoading, simulation, error])
 
   const handleDelete = async () => {
     try {
@@ -97,9 +120,25 @@ export default function SimulationDetailPage({
     }).format(amount)
   }
 
-  if (authLoading || isLoading) {
+  if (authLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-muted-foreground">Redirection en cours...</p>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )
@@ -123,15 +162,24 @@ export default function SimulationDetailPage({
 
   return (
     <div>
-      {/* Header */}
+      {/* Header with navigation */}
       <div className="mb-8">
-        <Link
-          href="/dashboard/simulations"
-          className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour aux simulations
-        </Link>
+        <div className="flex items-center gap-2 mb-4">
+          <Link
+            href="/dashboard/simulations"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour aux simulations
+          </Link>
+          <span className="text-muted-foreground">•</span>
+          <Link
+            href="/dashboard/optimisation"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Optimisation fiscale
+          </Link>
+        </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -211,7 +259,7 @@ export default function SimulationDetailPage({
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+            <dt className="text-xs text-muted-foreground">Impôt estim��</dt>
             <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
               {formatMoney(tax_result.estimatedTax)}
             </dd>
@@ -271,6 +319,35 @@ export default function SimulationDetailPage({
           </div>
         )}
       </div>
+
+      {/* Optimization Items from saved simulation */}
+      {tax_result.items && tax_result.items.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="mb-4 font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+            Optimisations identifiées
+          </h2>
+          <div className="flex flex-col gap-3">
+            {tax_result.items.filter((item: { available: boolean }) => item.available).map((item: { key: string; label: string; details: string; savingsMin: number; savingsMax: number }) => (
+              <div
+                key={item.key}
+                className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-muted/20 p-4"
+              >
+                <div className="flex-1">
+                  <p className="font-medium text-card-foreground">{item.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.details}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-accent">
+                    {item.savingsMin === item.savingsMax
+                      ? formatMoney(item.savingsMin)
+                      : `${formatMoney(item.savingsMin)} - ${formatMoney(item.savingsMax)}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Wizard Answers Summary */}
       <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -335,6 +412,22 @@ export default function SimulationDetailPage({
             </div>
           )}
         </dl>
+      </div>
+
+      {/* Navigation CTA */}
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/optimisation">
+            <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
+            Voir optimisations
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}`}>
+            <Calculator className="mr-2 h-4 w-4" />
+            Mettre à jour cette simulation
+          </Link>
+        </Button>
       </div>
     </div>
   )

@@ -1,14 +1,57 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
+import type { Simulation } from "@/lib/supabase/types"
 
 export default function OptimisationPage() {
   const { results, hasWizardData } = useOptimizations()
-  const availableItems = results.items.filter((i) => i.available)
+  const [latestSimulation, setLatestSimulation] = useState<Simulation | null>(null)
+  const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
+
+  // Fetch latest saved simulation
+  useEffect(() => {
+    const fetchLatestSimulation = async () => {
+      try {
+        const res = await fetch("/api/simulations/list")
+        const data = await res.json()
+        if (res.ok && data.simulations && data.simulations.length > 0) {
+          setLatestSimulation(data.simulations[0])
+        }
+      } catch (error) {
+        console.error("Error fetching latest simulation:", error)
+      } finally {
+        setIsLoadingSimulation(false)
+      }
+    }
+
+    fetchLatestSimulation()
+  }, [])
+
+  // Determine what to show: latest saved simulation or wizard data
+  const hasData = latestSimulation || hasWizardData
+  
+  // Build display results from saved simulation OR current wizard session
+  const displayResults = latestSimulation?.tax_result ? {
+    items: (latestSimulation.tax_result.items || []) as Array<{
+      key: string
+      label: string
+      details: string
+      savingsMin: number
+      savingsMax: number
+      available: boolean
+    }>,
+    totalMin: latestSimulation.tax_result.refundOrBalance || 0,
+    totalMax: latestSimulation.tax_result.refundOrBalance || 0,
+    notes: [] as string[],
+    isFullySupported: true,
+  } : results
+
+  const availableItems = displayResults.items.filter((i) => i.available)
 
   return (
     <div>
@@ -27,18 +70,20 @@ export default function OptimisationPage() {
             Optimisation fiscale
           </h1>
           <p className="mt-1 text-muted-foreground">
-            {"Détail de vos déductions et réductions identifiées."}
+            {latestSimulation
+              ? `Détail de vos déductions (simulation du ${new Date(latestSimulation.created_at).toLocaleDateString("fr-BE")})`
+              : "Détail de vos déductions et réductions identifiées."}
           </p>
         </div>
         <Button asChild>
-          <Link href="/wizard">
+          <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
             <Calculator className="mr-2 h-4 w-4" />
-            {hasWizardData ? "Mettre à jour" : "Analyser ma situation"}
+            {hasData ? "Mettre à jour" : "Analyser ma situation"}
           </Link>
         </Button>
       </div>
 
-      {!hasWizardData ? (
+      {!hasData || isLoadingSimulation ? (
         // Empty state - no wizard data yet
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -57,6 +102,25 @@ export default function OptimisationPage() {
             </Link>
           </Button>
         </div>
+      ) : availableItems.length === 0 ? (
+        // Data exists but no optimization items
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <AlertCircle className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+            {"Détails d'optimisation indisponibles"}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {"Les détails d'optimisation ne sont pas encore disponibles pour cette simulation. Mettez à jour vos informations pour voir plus d'options."}
+          </p>
+          <Button className="mt-6" asChild>
+            <Link href={latestSimulation ? `/wizard?resume=${btoa(JSON.stringify(latestSimulation.wizard_answers))}` : "/wizard"}>
+              <Calculator className="mr-2 h-4 w-4" />
+              {latestSimulation ? "Mettre à jour cette simulation" : "Commencer l'analyse"}
+            </Link>
+          </Button>
+        </div>
       ) : (
         <>
           {/* Summary */}
@@ -64,13 +128,13 @@ export default function OptimisationPage() {
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-accent" />
               <span className="text-sm font-medium text-muted-foreground">
-                {"Gain total estimé"}
+                {latestSimulation ? "Remboursement estimé" : "Gain total estimé"}
               </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
-              {formatMoneyRange(results.totalMin, results.totalMax)}
+              {formatMoneyRange(displayResults.totalMin, displayResults.totalMax)}
             </p>
-            {!results.isFullySupported && (
+            {!displayResults.isFullySupported && !latestSimulation && (
               <p className="mt-2 text-xs text-muted-foreground">
                 {"Estimation partielle. Calculs optimisés pour Wallonie / salarié bientôt disponibles pour votre profil."}
               </p>
@@ -78,9 +142,9 @@ export default function OptimisationPage() {
           </div>
 
           {/* Notes */}
-          {results.notes.length > 0 && (
+          {displayResults.notes.length > 0 && (
             <div className="mb-6 rounded-xl border border-border/60 bg-muted/30 p-4">
-              {results.notes.map((note, i) => (
+              {displayResults.notes.map((note, i) => (
                 <p key={i} className="text-sm text-muted-foreground">
                   {note}
                 </p>
@@ -134,6 +198,18 @@ export default function OptimisationPage() {
               <Button variant="outline" className="mt-4" asChild>
                 <Link href="/wizard">
                   {"Compléter le questionnaire"}
+                </Link>
+              </Button>
+            </div>
+          )}
+
+          {/* View full simulation button */}
+          {latestSimulation && (
+            <div className="mt-8 flex justify-center">
+              <Button variant="outline" asChild>
+                <Link href={`/dashboard/simulations/${latestSimulation.id}`}>
+                  <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
+                  Voir tous les détails de la simulation
                 </Link>
               </Button>
             </div>

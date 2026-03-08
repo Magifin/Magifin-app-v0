@@ -1,16 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Shield, Lock, Sparkles, LayoutDashboard } from "lucide-react"
+import { ArrowRight, Shield, Lock, Sparkles, LayoutDashboard, Calculator } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 
 export function Hero() {
   const { user: authUser, isLoading: authLoading } = useAuth()
-
-  // Determine dashboard link destination - only show dashboard if authenticated
-  const dashboardHref = !!authUser ? "/dashboard" : "/wizard"
-  const dashboardLabel = !!authUser ? "Voir mon tableau de bord" : "Estimer mes impôts"
 
   return (
     <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-20">
@@ -30,19 +26,36 @@ export function Hero() {
           {"L\u2019assistant fiscal intelligent qui détecte automatiquement les déductions fiscales que vous pourriez avoir manquées."}
         </p>
 
+        {/* CTAs - Different for authenticated vs logged out */}
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-          <Button size="lg" className="h-12 px-8 text-base" asChild>
-            <Link href="/wizard">
-              Estimer mon remboursement
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="outline" size="lg" className="h-12 px-8 text-base" asChild>
-            <Link href={dashboardHref}>
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              {dashboardLabel}
-            </Link>
-          </Button>
+          {!authLoading && authUser ? (
+            <>
+              {/* Logged in: two action buttons */}
+              <Button size="lg" className="h-12 px-8 text-base" asChild>
+                <Link href="/wizard">
+                  <Calculator className="mr-2 h-4 w-4" />
+                  Nouvelle simulation
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" className="h-12 px-8 text-base" asChild>
+                <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Mon tableau de bord
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Logged out: single main CTA */}
+              <Button size="lg" className="h-12 px-8 text-base" asChild>
+                <Link href="/wizard">
+                  Estimer mon remboursement
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <p className="mt-6 max-w-lg text-xs leading-relaxed text-muted-foreground/70">

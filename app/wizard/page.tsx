@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -30,15 +30,31 @@ import { useUser } from "@/lib/user-store"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { track } from "@/lib/track"
 
-export default function WizardPage() {
+function WizardContent() {
   const router = useRouter()
-  const { state, setAnswer, goToStep, markStepComplete } = useWizard()
+  const searchParams = useSearchParams()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers } = useWizard()
   const { user } = useUser()
   const { answers, currentStepId, completedStepIds } = state
 
   const availableSteps = getAvailableSteps(answers)
   const currentIndex = getStepIndex(currentStepId, answers)
   const totalSteps = availableSteps.length
+
+  // Load resume data from query param if present - always reset and load when resuming
+  useEffect(() => {
+    const resume = searchParams.get("resume")
+    if (resume) {
+      try {
+        const decoded = JSON.parse(atob(resume))
+        loadAnswers(decoded)
+        // Clear the URL param to prevent re-loading on subsequent renders
+        router.replace("/wizard", { scroll: false })
+      } catch {
+        // ignore parse errors
+      }
+    }
+  }, [searchParams, loadAnswers, router])
 
   // Track wizard start
   useEffect(() => {
@@ -324,5 +340,17 @@ export default function WizardPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function WizardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    }>
+      <WizardContent />
+    </Suspense>
   )
 }

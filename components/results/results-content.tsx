@@ -49,16 +49,16 @@ export function ResultsContent() {
   useEffect(() => {
     if (!authLoading) {
       setAuthInitialized(true)
+    } else {
+      setAuthInitialized(false)
     }
     
     const timeout = setTimeout(() => {
-      if (!authInitialized) {
-        setAuthInitialized(true)
-      }
+      setAuthInitialized(true)
     }, 2000)
     
     return () => clearTimeout(timeout)
-  }, [authLoading, authInitialized])
+  }, [authLoading, authUser])
 
   useEffect(() => {
     const input = mapAnswersToTaxInput(answers)
@@ -86,21 +86,12 @@ export function ResultsContent() {
 
   const availableItems = results.items.filter((i) => i.available)
 
-  // Gate condition: only Supabase authenticated users can persist simulations
-  const isUnlocked = !!authUser && !authLoading
-  const isAuthenticated = !!authUser
+  // Consistent auth check used throughout the app
+  const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    const availableSteps = getAvailableSteps(answers)
-    const lastCompletedId = getLastCompletedStepId(completedStepIds, answers)
-
-    if (lastCompletedId) {
-      goToStep(lastCompletedId)
-    } else if (availableSteps.length > 0) {
-      goToStep(availableSteps[0].id)
-    }
-
-    router.push("/wizard")
+    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(answers))}`
+    router.push(resumeUrl)
   }
 
   const handleCreateSpace = () => {
@@ -126,14 +117,23 @@ export function ResultsContent() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border/50 px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:items-center sm:justify-between sm:flex-row">
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <span className="text-sm font-bold text-primary-foreground">M</span>
+            </div>
+            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+              Magifin
+            </span>
+          </Link>
+
           <div className="flex items-center gap-4">
             <button
               onClick={handleModifyAnswers}
               className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Edit3 className="h-4 w-4" />
-              Modifier mes réponses
+              Modifier
             </button>
             <span className="text-border">|</span>
             <Link
@@ -143,10 +143,11 @@ export function ResultsContent() {
               Accueil
             </Link>
           </div>
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-3">
             {/* Loading state while auth initializes - but resolve after 2 seconds */}
             {authLoading && !authInitialized && (
-              <div className="h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             )}
             {/* Save button for authenticated users */}
             {authInitialized && !!authUser && taxResult && (
@@ -166,19 +167,11 @@ export function ResultsContent() {
             {authInitialized && !authUser && (
               <Link
                 href="/auth/login"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Se connecter
               </Link>
             )}
-            <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-                <span className="text-xs font-bold text-primary-foreground">M</span>
-              </div>
-              <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
-                Magifin
-              </span>
-            </Link>
           </div>
         </div>
       </header>
@@ -219,7 +212,7 @@ export function ResultsContent() {
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
 
-          {!isUnlocked && (
+          {!isAuthenticated && (
             <>
               <Button
                 size="lg"
@@ -238,17 +231,29 @@ export function ResultsContent() {
             </>
           )}
 
-          {isUnlocked && (
-            <Button
-              size="lg"
-              className="mt-8 h-12 px-8 text-base"
-              asChild
-            >
-              <Link href="/dashboard">
-                {"Accéder au dashboard"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+          {isAuthenticated && (
+            <div className="mt-8 flex flex-col gap-3">
+              <Button
+                size="lg"
+                className="h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/dashboard">
+                  {"Accéder au tableau de bord"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/dashboard/optimisation">
+                  {"Voir mes optimisations"}
+                </Link>
+              </Button>
+            </div>
           )}
 
           {/* Notes about region/status */}
@@ -300,7 +305,7 @@ export function ResultsContent() {
                 {"Précision complète bientôt disponible pour votre région / statut."}
               </p>
             )}
-            {!isUnlocked && (
+            {!isAuthenticated && (
               <Button
                 size="sm"
                 className="mt-5 w-full"
@@ -309,6 +314,19 @@ export function ResultsContent() {
               >
                 <Link href="/auth/sign-up?from=results">
                   {"Créer mon espace Magifin"}
+                  <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+            {isAuthenticated && (
+              <Button
+                size="sm"
+                className="mt-5 w-full"
+                asChild
+                variant="outline"
+              >
+                <Link href="/dashboard/optimisation">
+                  {"Voir mes optimisations"}
                   <ArrowRight className="ml-2 h-3.5 w-3.5" />
                 </Link>
               </Button>
@@ -465,8 +483,8 @@ export function ResultsContent() {
               {"Détail de vos optimisations"}
             </h3>
 
-            {/* Locked panel - shown when NOT unlocked */}
-            {!isUnlocked && (
+            {/* Locked panel - shown when NOT authenticated */}
+            {!isAuthenticated && (
               <div className="mb-4 rounded-xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -512,24 +530,24 @@ export function ResultsContent() {
                       {/* Title always visible */}
                       <p className="font-medium text-card-foreground">{item.title}</p>
                       {/* Description: show real text if unlocked, placeholder if not */}
-                      {isUnlocked ? (
-                        <p className="text-xs text-muted-foreground">{item.reason}</p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground/60 italic">
-                          {"Détails disponibles dans votre espace Magifin"}
-                        </p>
-                      )}
+{isAuthenticated ? (
+                  <p className="text-sm text-muted-foreground">{item.details}</p>
+                ) : (
+                  <p className="text-sm italic text-muted-foreground/60">
+                    {"Détails disponibles après création de votre espace"}
+                  </p>
+                )}
                     </div>
                   </div>
                   {/* Amount: show real value if unlocked, placeholder if not */}
-                  {isUnlocked ? (
-                    <p className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
-                      {formatMoneyRange(item.amountMin, item.amountMax)}
-                    </p>
+{isAuthenticated ? (
+                    <span className="text-sm font-semibold text-accent">
+                      {formatMoneyRange(item.savingsMin, item.savingsMax)}
+                    </span>
                   ) : (
-                    <p className="font-[family-name:var(--font-heading)] font-semibold text-muted-foreground/50">
-                      {"— —"}
-                    </p>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {"Montant masqué"}
+                    </span>
                   )}
                 </div>
               ))}

@@ -64,8 +64,9 @@ function SignUpForm() {
     // (This happens when email confirmation is disabled in Supabase)
     if (signUpData.session) {
       track("user_signed_up")
+      // Small delay to allow Supabase to fully establish the session
+      await new Promise(resolve => setTimeout(resolve, 100))
       router.push(redirectTo)
-      router.refresh()
       return
     }
 
@@ -80,13 +81,16 @@ function SignUpForm() {
       // If sign-in fails, email confirmation might still be required
       // Fall back to the success page
       track("user_signed_up")
+      // Small delay to allow Supabase to fully establish the session
+      await new Promise(resolve => setTimeout(resolve, 100))
       router.push("/auth/sign-up-success")
       return
     }
 
     track("user_signed_up")
+    // Small delay to allow Supabase to fully establish the session
+    await new Promise(resolve => setTimeout(resolve, 100))
     router.push(redirectTo)
-    router.refresh()
   }
 
   const canSubmit =
