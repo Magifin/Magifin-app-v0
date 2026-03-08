@@ -22,7 +22,6 @@ import {
   getAvailableSteps,
 } from "@/lib/wizard-store"
 import { useOptimizations } from "@/lib/useOptimizations"
-import { useUser } from "@/lib/user-store"
 import { useAuth } from "@/lib/auth-context"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
@@ -228,7 +227,7 @@ export function ResultsContent() {
                 asChild
                 onClick={handleCreateSpace}
               >
-                <Link href="/create-account">
+                <Link href="/auth/sign-up?from=results">
                   {"Créer mon espace Magifin"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -308,7 +307,7 @@ export function ResultsContent() {
                 asChild
                 onClick={handleCreateSpace}
               >
-                <Link href="/create-account">
+                <Link href="/auth/sign-up?from=results">
                   {"Créer mon espace Magifin"}
                   <ArrowRight className="ml-2 h-3.5 w-3.5" />
                 </Link>
@@ -486,7 +485,7 @@ export function ResultsContent() {
                         asChild
                         onClick={handleCreateSpace}
                       >
-                        <Link href="/create-account">
+                        <Link href="/auth/sign-up?from=results">
                           {"Créer mon espace Magifin"}
                           <ArrowRight className="ml-2 h-3.5 w-3.5" />
                         </Link>

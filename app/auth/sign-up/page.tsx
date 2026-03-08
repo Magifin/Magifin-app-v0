@@ -22,7 +22,13 @@ function SignUpForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const redirectTo = searchParams.get("redirect") || "/dashboard"
+  const redirectTo = (() => {
+    const redirect = searchParams.get("redirect")
+    if (redirect) return redirect
+    const from = searchParams.get("from")
+    if (from === "results") return "/results"
+    return "/dashboard"
+  })()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,13 +38,11 @@ function SignUpForm() {
 
     setIsSubmitting(true)
 
-    const { error: authError } = await supabase.auth.signUp({
+    // Step 1: Create the account (email confirmation is disabled in Supabase dashboard)
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo:
-          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${window.location.origin}${redirectTo}`,
         data: {
           first_name: firstName.trim(),
           last_name: lastName.trim() || null,
@@ -46,8 +50,8 @@ function SignUpForm() {
       },
     })
 
-    if (authError) {
-      if (authError.message.includes("already registered")) {
+    if (signUpError) {
+      if (signUpError.message.includes("already registered")) {
         setError("Un compte existe déjà avec cet email. Essayez de vous connecter.")
       } else {
         setError("Une erreur est survenue. Veuillez réessayer.")
@@ -56,8 +60,33 @@ function SignUpForm() {
       return
     }
 
+    // Step 2: If signup succeeded and we have a session, user is already logged in
+    // (This happens when email confirmation is disabled in Supabase)
+    if (signUpData.session) {
+      track("user_signed_up")
+      router.push(redirectTo)
+      router.refresh()
+      return
+    }
+
+    // Step 3: If no session (email confirmation might still be enabled),
+    // try to sign in immediately
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    })
+
+    if (signInError) {
+      // If sign-in fails, email confirmation might still be required
+      // Fall back to the success page
+      track("user_signed_up")
+      router.push("/auth/sign-up-success")
+      return
+    }
+
     track("user_signed_up")
-    router.push("/auth/sign-up-success")
+    router.push(redirectTo)
+    router.refresh()
   }
 
   const canSubmit =

@@ -51,6 +51,7 @@ export default function SimulationsPage() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   // Fetch available years
   const fetchYears = useCallback(async () => {
@@ -60,16 +61,18 @@ export default function SimulationsPage() {
       if (res.ok && data.years) {
         setAvailableYears(data.years)
         // Default to first available year or current year
-        if (data.years.length > 0 && selectedYear === null) {
-          setSelectedYear(data.years[0])
-        } else if (data.years.length === 0) {
-          setSelectedYear(getDefaultTaxYear())
-        }
+        const yearToSelect = data.years.length > 0 ? data.years[0] : getDefaultTaxYear()
+        setSelectedYear(yearToSelect)
+      } else {
+        // No simulations yet - still set default year
+        setAvailableYears([])
+        setSelectedYear(getDefaultTaxYear())
       }
     } catch {
       // Silently fail - will use default year
+      setSelectedYear(getDefaultTaxYear())
     }
-  }, [selectedYear])
+  }, [])
 
   // Fetch simulations for selected year
   const fetchSimulations = useCallback(async () => {
@@ -96,6 +99,7 @@ export default function SimulationsPage() {
       setError("Erreur de connexion")
     } finally {
       setIsLoading(false)
+      setInitialized(true)
     }
   }, [selectedYear, router])
 
@@ -113,14 +117,16 @@ export default function SimulationsPage() {
     }
   }
 
+  // Initialize years and auth check
   useEffect(() => {
     if (!authLoading && user) {
       fetchYears()
     }
   }, [authLoading, user, fetchYears])
 
+  // Fetch simulations when year is selected
   useEffect(() => {
-    if (selectedYear && user) {
+    if (selectedYear !== null && user) {
       fetchSimulations()
     }
   }, [selectedYear, user, fetchSimulations])
@@ -132,10 +138,32 @@ export default function SimulationsPage() {
     }
   }, [authLoading, user, router])
 
-  if (authLoading || !user) {
+  // Timeout fallback: if still loading after 2 seconds, force initialized state
+  useEffect(() => {
+    if (isLoading && !initialized) {
+      const timeout = setTimeout(() => {
+        setIsLoading(false)
+        setInitialized(true)
+      }, 2000)
+      return () => clearTimeout(timeout)
+    }
+  }, [isLoading, initialized])
+
+  // Show auth spinner while checking auth
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  // If not authenticated, show redirect message while redirect processes
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent mb-4" />
+        <p className="text-muted-foreground">Redirection en cours...</p>
       </div>
     )
   }
@@ -208,14 +236,14 @@ export default function SimulationsPage() {
       )}
 
       {/* Loading state */}
-      {isLoading && (
+      {isLoading && !initialized && (
         <div className="flex items-center justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       )}
 
       {/* Empty state */}
-      {!isLoading && !error && simulations.length === 0 && (
+      {!isLoading && !error && simulations.length === 0 && initialized && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 py-16 text-center">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
             <FileText className="h-6 w-6 text-muted-foreground" />
@@ -236,7 +264,7 @@ export default function SimulationsPage() {
       )}
 
       {/* Simulations list */}
-      {!isLoading && !error && simulations.length > 0 && (
+      {!isLoading && !error && simulations.length > 0 && initialized && (
         <div className="flex flex-col gap-4">
           {simulations.map((sim) => (
             <div
