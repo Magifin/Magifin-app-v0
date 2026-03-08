@@ -240,8 +240,13 @@ function createWizardStore() {
 
   const resetWizard = () => {
     state = defaultState
+    isHydrated = false // Reset hydration flag when explicitly resetting
     persist()
     emit()
+  }
+
+  const resetHydrationFlag = () => {
+    isHydrated = false
   }
 
   const loadAnswers = (answers: Partial<WizardAnswers>) => {
@@ -292,6 +297,7 @@ function createWizardStore() {
     getServerSnapshot,
     subscribe,
     hydrate,
+    resetHydrationFlag,
     setAnswer,
     goToStep,
     markStepComplete,
@@ -379,10 +385,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.getServerSnapshot
   )
 
-  // Hydrate on mount
-  if (typeof window !== "undefined" && !store.isHydrated()) {
-    store.hydrate()
-  }
+  // NOTE: hydrate() is NOT called here automatically
+  // Instead, WizardContent will explicitly call hydrate() only if needed
+  // This prevents old localStorage state from being loaded when user clicks "Nouvelle simulation"
 
   const setAnswer = useCallback(
     <K extends keyof WizardAnswers>(key: K, value: WizardAnswers[K]) => {
@@ -405,6 +410,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const loadAnswers = useCallback((answers: Partial<WizardAnswers>) => {
     store.loadAnswers(answers)
+  }, [])
+
+  const resetHydrationFlag = useCallback(() => {
+    store.resetHydrationFlag()
   }, [])
 
   return (

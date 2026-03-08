@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, Suspense, useRef } from "react"
+import { useEffect, useMemo, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Eye } from "lucide-react"
@@ -41,31 +41,26 @@ function WizardContent() {
   const currentIndex = getStepIndex(currentStepId, answers)
   const totalSteps = availableSteps.length
 
-  // Track if we've already processed the resume/reset logic to avoid duplicate runs
-  const hasProcessedResume = useRef(false)
-
-  // Load resume data from query param if present, or reset to clean state if no resume param
+  // Handle resume or reset on mount
   useEffect(() => {
-    if (hasProcessedResume.current) return
-
     const resume = searchParams.get("resume")
+    
     if (resume) {
+      // Resume param present: decode and load those specific answers
       try {
         const decoded = JSON.parse(atob(resume))
         loadAnswers(decoded)
         // Clear the URL param to prevent re-loading on subsequent renders
         router.replace("/wizard", { scroll: false })
-        hasProcessedResume.current = true
-      } catch (e) {
-        hasProcessedResume.current = true
+      } catch {
+        // If decode fails, continue with default state
       }
     } else {
-      // No resume param = user clicked "Nouvelle simulation"
-      // Reset to clean state to ensure no old localStorage state carries over
+      // No resume param: ensure wizard starts clean
+      // This prevents hydration of old localStorage state
       resetWizard()
-      hasProcessedResume.current = true
     }
-  }, [searchParams, loadAnswers, resetWizard, router])
+  }, [])
 
   // Track wizard start
   useEffect(() => {
