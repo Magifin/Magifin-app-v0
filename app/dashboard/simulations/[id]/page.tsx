@@ -123,15 +123,24 @@ export default function SimulationDetailPage({
 
   return (
     <div>
-      {/* Header */}
+      {/* Header with navigation */}
       <div className="mb-8">
-        <Link
-          href="/dashboard/simulations"
-          className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour aux simulations
-        </Link>
+        <div className="flex items-center gap-2 mb-4">
+          <Link
+            href="/dashboard/simulations"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour aux simulations
+          </Link>
+          <span className="text-muted-foreground">•</span>
+          <Link
+            href="/dashboard/optimisation"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Optimisation fiscale
+          </Link>
+        </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -335,6 +344,22 @@ export default function SimulationDetailPage({
             </div>
           )}
         </dl>
+      </div>
+
+      {/* Navigation CTA */}
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/optimisation">
+            <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
+            Voir optimisations
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link href="/wizard">
+            <Calculator className="mr-2 h-4 w-4" />
+            Créer une nouvelle simulation
+          </Link>
+        </Button>
       </div>
     </div>
   )

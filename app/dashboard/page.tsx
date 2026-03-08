@@ -9,16 +9,18 @@ import {
   AlertCircle,
 } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useUser } from "@/lib/user-store"
+import { useAuth } from "@/lib/auth-context"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
+import type { Simulation } from "@/lib/supabase/types"
 
 const checklistItems = [
   { label: "Compléter le questionnaire fiscal", done: true },
   { label: "Vérifier les frais de garde", done: true },
   { label: "Ajouter les attestations titres-services", done: false },
-  { label: "Confirmer l\u2019épargne pension", done: false },
+  { label: "Confirmer l'épargne pension", done: false },
   { label: "Télécharger le rapport fiscal", done: false },
 ]
 
@@ -35,18 +37,47 @@ const nextActions = [
     href: "/dashboard/documents",
   },
   {
-    title: "Consulter l\u2019assistant IA",
+    title: "Consulter l'assistant IA",
     description: "Posez vos questions sur votre situation fiscale à Magi.",
     href: "/dashboard/assistant",
   },
 ]
 
 export default function DashboardPage() {
-  const { user } = useUser()
+  const { profile } = useAuth()
   const { results, hasWizardData } = useOptimizations()
+  const [latestSimulation, setLatestSimulation] = useState<Simulation | null>(null)
+  const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
 
-  // Use user's first name or default to generic greeting
-  const greeting = user?.firstName ? `Bonjour, ${user.firstName}` : "Bonjour"
+  // Fetch latest saved simulation
+  useEffect(() => {
+    const fetchLatestSimulation = async () => {
+      try {
+        const res = await fetch("/api/simulations/list")
+        const data = await res.json()
+        if (res.ok && data.simulations && data.simulations.length > 0) {
+          setLatestSimulation(data.simulations[0])
+        }
+      } catch (error) {
+        console.error("Error fetching latest simulation:", error)
+      } finally {
+        setIsLoadingSimulation(false)
+      }
+    }
+
+    fetchLatestSimulation()
+  }, [])
+
+  // Determine what to show: latest saved simulation or wizard data
+  const hasData = latestSimulation || hasWizardData
+  const estimatedGain = latestSimulation ? {
+    min: latestSimulation.tax_result?.refundOrBalance || 0,
+    max: latestSimulation.tax_result?.refundOrBalance || 0,
+  } : results
+
+  const greeting = profile?.full_name 
+    ? `Bonjour, ${profile.full_name.split(' ')[0]}`
+    : "Bonjour"
 
   return (
     <div>
@@ -65,27 +96,38 @@ export default function DashboardPage() {
           <div>
             <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp className="h-4 w-4 text-accent" />
-              {"Gain fiscal estimé"}
+              {latestSimulation ? "Gain de votre dernière simulation" : "Gain fiscal estimé"}
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-[family-name:var(--font-heading)] text-4xl font-bold text-primary sm:text-5xl">
-                {hasWizardData
-                  ? formatMoneyRange(results.totalMin, results.totalMax)
+                {hasData && !isLoadingSimulation
+                  ? formatMoneyRange(estimatedGain.min, estimatedGain.max)
                   : "---"}
               </span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              {hasWizardData
+              {latestSimulation
+                ? `Simulation du ${new Date(latestSimulation.created_at).toLocaleDateString("fr-BE")}`
+                : hasWizardData
                 ? "Estimation basée sur votre profil actuel"
                 : "Complétez le questionnaire pour voir votre estimation"}
             </p>
           </div>
-          <Button asChild>
-            <Link href="/wizard">
-              {hasWizardData ? "Mettre à jour" : "Commencer"}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button asChild>
+              <Link href="/wizard">
+                {hasData ? "Mettre à jour" : "Commencer"}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            {latestSimulation && (
+              <Button variant="outline" asChild>
+                <Link href={`/dashboard/simulations/${latestSimulation.id}`}>
+                  Voir détails
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
