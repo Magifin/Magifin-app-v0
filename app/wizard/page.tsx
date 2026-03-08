@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, Suspense } from "react"
+import { useEffect, useMemo, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Eye } from "lucide-react"
@@ -33,7 +33,7 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard } = useWizard()
   const { user } = useUser()
   const { answers, currentStepId, completedStepIds } = state
 
@@ -41,8 +41,13 @@ function WizardContent() {
   const currentIndex = getStepIndex(currentStepId, answers)
   const totalSteps = availableSteps.length
 
-  // Load resume data from query param if present - always reset and load when resuming
+  // Track if we've already processed the resume/reset logic to avoid duplicate runs
+  const hasProcessedResume = useRef(false)
+
+  // Load resume data from query param if present, or reset to clean state if no resume param
   useEffect(() => {
+    if (hasProcessedResume.current) return
+
     const resume = searchParams.get("resume")
     if (resume) {
       try {
@@ -50,11 +55,17 @@ function WizardContent() {
         loadAnswers(decoded)
         // Clear the URL param to prevent re-loading on subsequent renders
         router.replace("/wizard", { scroll: false })
-      } catch {
-        // ignore parse errors
+        hasProcessedResume.current = true
+      } catch (e) {
+        hasProcessedResume.current = true
       }
+    } else {
+      // No resume param = user clicked "Nouvelle simulation"
+      // Reset to clean state to ensure no old localStorage state carries over
+      resetWizard()
+      hasProcessedResume.current = true
     }
-  }, [searchParams, loadAnswers, router])
+  }, [searchParams, loadAnswers, resetWizard, router])
 
   // Track wizard start
   useEffect(() => {
