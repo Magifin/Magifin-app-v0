@@ -245,10 +245,43 @@ function createWizardStore() {
   }
 
   const loadAnswers = (answers: Partial<WizardAnswers>) => {
+    // Rebuild state from defaultAnswers with loaded answers on top
+    const mergedAnswers = { ...defaultAnswers, ...answers }
+    
+    // Recompute completedStepIds based on what answers we have
+    const availableSteps = getAvailableSteps(mergedAnswers)
+    const newCompletedStepIds = availableSteps
+      .filter((step) => {
+        // A step is considered complete if its key has a non-null, non-zero, non-empty value
+        const answerKey = step.id as keyof WizardAnswers
+        const value = mergedAnswers[answerKey]
+        
+        // Treat different types appropriately
+        if (value === null || value === undefined) return false
+        if (typeof value === 'string' && value === '') return false
+        if (typeof value === 'number' && value === 0) {
+          // For numeric fields, 0 is valid (e.g., children: 0, costs: 0)
+          // But we check if the field was explicitly set in the loaded answers
+          return answerKey in answers
+        }
+        return true
+      })
+      .map((step) => step.id)
+    
+    // Find the first incomplete step, or use the last available if all are complete
+    let nextStepId = "region"
+    const firstIncomplete = availableSteps.find((step) => !newCompletedStepIds.includes(step.id))
+    if (firstIncomplete) {
+      nextStepId = firstIncomplete.id
+    } else if (availableSteps.length > 0) {
+      // All steps are complete, go to the last one
+      nextStepId = availableSteps[availableSteps.length - 1].id
+    }
+    
     state = {
-      answers: { ...state.answers, ...answers },
-      currentStepId: "region",
-      completedStepIds: [],
+      answers: mergedAnswers,
+      currentStepId: nextStepId,
+      completedStepIds: newCompletedStepIds,
     }
     persist()
     emit()
