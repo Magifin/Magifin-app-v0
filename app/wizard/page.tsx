@@ -46,48 +46,24 @@ function WizardContent() {
 
   // Handle resume or reset on mount
   useEffect(() => {
-    // Skip if already processed
-    if (hasProcessedResume.current) {
-      return
-    }
+    if (hasProcessedResume.current) return
+
+    hasProcessedResume.current = true
 
     const resume = searchParams.get("resume")
 
-    // Two cases:
-    // 1. resume param exists -> load it
-    // 2. resume param does NOT exist -> reset to clean state
-    
-    // BUT: on first render (hydration), searchParams might be empty even if URL has ?resume=...
-    // So we check: if searchParams is completely empty AND we're on first render, 
-    // wait for it to populate (don't process yet)
-    
-    if (searchParams.size === 0 && !hasProcessedResume.current) {
-      // searchParams is empty - could be hydration or truly no params
-      // Check if there's actually a query string in the URL
-      if (typeof window !== "undefined" && !window.location.search.includes("resume")) {
-        // No resume in actual URL either -> this is a truly blank wizard request
-        resetWizard()
-        hasProcessedResume.current = true
-      } else if (typeof window !== "undefined" && window.location.search.includes("resume")) {
-        // Resume IS in the URL but searchParams not ready yet - wait for next render
-        return
-      }
-    } else if (resume) {
-      // searchParams populated and resume exists -> load it
+    if (resume) {
       try {
         const decoded = JSON.parse(atob(resume))
         loadAnswers(decoded)
-        hasProcessedResume.current = true
-        // Clear the URL param to prevent re-loading on subsequent renders
+
         router.replace("/wizard", { scroll: false })
-      } catch (e) {
-        // If decode fails, continue with default state
-        hasProcessedResume.current = true
+      } catch (err) {
+        console.error("[wizard] resume decode failed", err)
+        resetWizard()
       }
-    } else if (searchParams.size > 0 && !resume) {
-      // searchParams populated but NO resume param -> this is truly a blank wizard
+    } else {
       resetWizard()
-      hasProcessedResume.current = true
     }
   }, [searchParams, loadAnswers, resetWizard, router])
 
