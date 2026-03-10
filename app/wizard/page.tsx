@@ -57,7 +57,7 @@ function WizardContent() {
         const decoded = JSON.parse(atob(resume))
         loadAnswers(decoded)
 
-        router.replace("/wizard", { scroll: false })
+        window.history.replaceState(null, '', '/wizard')
       } catch (err) {
         console.error("[wizard] resume decode failed", err)
         resetWizard()
@@ -65,7 +65,7 @@ function WizardContent() {
     } else {
       resetWizard()
     }
-  }, [searchParams, loadAnswers, resetWizard, router])
+  }, [searchParams, loadAnswers, resetWizard])
 
   // Track wizard start
   useEffect(() => {

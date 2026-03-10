@@ -172,7 +172,7 @@ export function ResultsContent() {
             {/* Login link for unauthenticated users */}
             {authInitialized && !authUser && (
               <Link
-                href="/auth/login"
+                href="/auth/login?redirect=/results"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Se connecter
