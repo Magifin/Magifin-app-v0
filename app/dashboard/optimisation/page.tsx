@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
 
-export default function OptimisationPage() {
+function OptimisationContent() {
   const searchParams = useSearchParams()
   const simulationId = searchParams.get("simulationId") // Contextual: specific simulation ID
   
@@ -231,5 +231,17 @@ export default function OptimisationPage() {
         </>
       )}
     </div>
+  )
+}
+
+export default function OptimisationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    }>
+      <OptimisationContent />
+    </Suspense>
   )
 }
