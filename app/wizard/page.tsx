@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, Suspense } from "react"
+import { useEffect, useMemo, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Eye } from "lucide-react"
@@ -33,7 +33,7 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard } = useWizard()
   const { user } = useUser()
   const { answers, currentStepId, completedStepIds } = state
 
@@ -41,20 +41,31 @@ function WizardContent() {
   const currentIndex = getStepIndex(currentStepId, answers)
   const totalSteps = availableSteps.length
 
-  // Load resume data from query param if present - always reset and load when resuming
+  // Track if we've already processed the resume/reset logic
+  const hasProcessedResume = useRef(false)
+
+  // Handle resume or reset on mount
   useEffect(() => {
+    if (hasProcessedResume.current) return
+
+    hasProcessedResume.current = true
+
     const resume = searchParams.get("resume")
+
     if (resume) {
       try {
         const decoded = JSON.parse(atob(resume))
         loadAnswers(decoded)
-        // Clear the URL param to prevent re-loading on subsequent renders
-        router.replace("/wizard", { scroll: false })
-      } catch {
-        // ignore parse errors
+
+        window.history.replaceState(null, '', '/wizard')
+      } catch (err) {
+        console.error("[wizard] resume decode failed", err)
+        resetWizard()
       }
+    } else {
+      resetWizard()
     }
-  }, [searchParams, loadAnswers, router])
+  }, [searchParams, loadAnswers, resetWizard])
 
   // Track wizard start
   useEffect(() => {

@@ -20,6 +20,7 @@ import {
   useWizard,
   getLastCompletedStepId,
   getAvailableSteps,
+  wizardStore,
 } from "@/lib/wizard-store"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { useAuth } from "@/lib/auth-context"
@@ -44,6 +45,11 @@ export function ResultsContent() {
   const [taxResult, setTaxResult] = useState<TaxResult | null>(null)
   const [taxLoading, setTaxLoading] = useState(false)
   const [taxError, setTaxError] = useState<string | null>(null)
+
+  // Restore answers from localStorage if store is empty (e.g. after page refresh)
+  useEffect(() => {
+    wizardStore.hydrate()
+  }, [])
 
   // Ensure auth initializes within reasonable time (max 2 seconds)
   useEffect(() => {
@@ -166,7 +172,7 @@ export function ResultsContent() {
             {/* Login link for unauthenticated users */}
             {authInitialized && !authUser && (
               <Link
-                href="/auth/login"
+                href="/auth/login?redirect=/results"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Se connecter

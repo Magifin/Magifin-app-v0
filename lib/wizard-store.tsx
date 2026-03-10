@@ -160,6 +160,24 @@ const defaultState: WizardState = {
 
 const STORAGE_KEY = "magifin_wizard_v1"
 
+// === Step ID to Answer Key Mapping ===
+// Step IDs do NOT match WizardAnswers keys directly, so we need this mapping
+const STEP_ID_TO_ANSWER_KEY: Partial<Record<string, keyof WizardAnswers>> = {
+  region: "region",
+  status: "status",
+  situation: "householdSituation",
+  revenu: "annualGrossIncome",
+  children: "children",
+  childcare: "childcare",
+  services: "serviceVouchers",
+  pension: "pensionSaving",
+  housing: "housingStatus",
+  propertyUse: "propertyUse",
+  cadastral: "hasCadastralIncome",
+  mortgage: "hasMortgagePayments",
+  mortgageInsurance: "mortgageInsuranceYesNo",
+}
+
 // === Store implementation ===
 type Listener = () => void
 
@@ -240,8 +258,13 @@ function createWizardStore() {
 
   const resetWizard = () => {
     state = defaultState
+    isHydrated = false // Reset hydration flag when explicitly resetting
     persist()
     emit()
+  }
+
+  const resetHydrationFlag = () => {
+    isHydrated = false
   }
 
   const loadAnswers = (answers: Partial<WizardAnswers>) => {
@@ -252,8 +275,13 @@ function createWizardStore() {
     const availableSteps = getAvailableSteps(mergedAnswers)
     const newCompletedStepIds = availableSteps
       .filter((step) => {
-        // A step is considered complete if its key has a non-null, non-zero, non-empty value
-        const answerKey = step.id as keyof WizardAnswers
+        // Map step ID to the corresponding answer key
+        const answerKey = STEP_ID_TO_ANSWER_KEY[step.id]
+
+        if (!answerKey) {
+          return false
+        }
+
         const value = mergedAnswers[answerKey]
         
         // Treat different types appropriately
@@ -292,6 +320,7 @@ function createWizardStore() {
     getServerSnapshot,
     subscribe,
     hydrate,
+    resetHydrationFlag,
     setAnswer,
     goToStep,
     markStepComplete,
@@ -379,10 +408,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.getServerSnapshot
   )
 
-  // Hydrate on mount
-  if (typeof window !== "undefined" && !store.isHydrated()) {
-    store.hydrate()
-  }
+  // NOTE: hydrate() is NOT called here automatically
+  // Instead, WizardContent will explicitly call hydrate() only if needed
+  // This prevents old localStorage state from being loaded when user clicks "Nouvelle simulation"
 
   const setAnswer = useCallback(
     <K extends keyof WizardAnswers>(key: K, value: WizardAnswers[K]) => {
@@ -405,6 +433,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const loadAnswers = useCallback((answers: Partial<WizardAnswers>) => {
     store.loadAnswers(answers)
+  }, [])
+
+  const resetHydrationFlag = useCallback(() => {
+    store.resetHydrationFlag()
   }, [])
 
   return (
