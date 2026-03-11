@@ -7,6 +7,7 @@
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxInput } from "../types"
 import type { BelgiumRegion } from "../rules/brackets"
+import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 
 /**
  * Income bracket midpoint mapping
@@ -80,6 +81,7 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
   const taxesAlreadyPaid = answers.taxesAlreadyPaid > 0 ? answers.taxesAlreadyPaid : 0
 
   return {
+    fiscalYear: answers.taxYear ?? getDefaultTaxYear(),
     region,
     salaryIncome,
     dependents,

@@ -43,24 +43,5 @@ export interface SimulationUpdate {
   updated_at?: string
 }
 
-/**
- * Helper to get the default tax year
- * Before April, use previous year (filing for last year's taxes)
- * After April, use current year
- */
-export function getDefaultTaxYear(): number {
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth() // 0-indexed, so April = 3
-  
-  // Before April, default to previous year (filing for last year)
-  return currentMonth < 3 ? currentYear - 1 : currentYear
-}
-
-/**
- * Available tax years for selection
- */
-export function getAvailableTaxYears(): number[] {
-  const currentYear = new Date().getFullYear()
-  return [currentYear - 2, currentYear - 1, currentYear]
-}
+// Re-export tax year functions to maintain backwards compatibility
+export { getDefaultTaxYear, getAvailableTaxYears } from "@/lib/fiscal/tax-year"

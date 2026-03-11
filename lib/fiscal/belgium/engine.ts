@@ -13,7 +13,8 @@ import { createResultBuilder } from "@/lib/fiscal/core/result"
 import { calculateTotalIncomeTax } from "./calculators/incomeTax"
 import { calculateAllDeductions } from "./calculators/deductions"
 import { calculateEffectiveRate } from "./calculators/effectiveRate"
-import { ENGINE_VERSION } from "./rules/assumptions"
+import { ENGINE_VERSION, SUPPORTED_FISCAL_YEARS } from "./rules/assumptions"
+import { getFederalBrackets } from "./rules/brackets"
 
 /**
  * Compute Belgium tax with basic result
@@ -45,7 +46,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   const taxableIncome = clampNonNegative(salaryIncome - deductionResult.totalDeductions)
 
   // Calculate income tax (federal + regional)
-  const { totalTax: estimatedTax } = calculateTotalIncomeTax(taxableIncome, region)
+  const { totalTax: estimatedTax } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
 
   // Calculate effective rate
   const effectiveTaxRate = calculateEffectiveRate(estimatedTax, taxableIncome)
@@ -95,7 +96,8 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   // Calculate income tax with breakdown
   const { federalTax, regionalSurcharge, totalTax } = calculateTotalIncomeTax(
     taxableIncome,
-    region
+    region,
+    input.fiscalYear
   )
 
   // Build detailed result
@@ -123,7 +125,7 @@ export function getEngineInfo(): {
   return {
     version: ENGINE_VERSION,
     country: "BE",
-    supportedFiscalYears: [2024],
+    supportedFiscalYears: SUPPORTED_FISCAL_YEARS,
   }
 }
 
