@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ArrowLeft, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
+import { StepTaxYear } from "@/components/wizard/step-tax-year"
 import { StepRegion } from "@/components/wizard/step-region"
 import { StepStatus } from "@/components/wizard/step-status"
 import { StepSituation } from "@/components/wizard/step-situation"
@@ -26,6 +27,7 @@ import {
   getNextStepId,
   getPreviousStepId,
 } from "@/lib/wizard-store"
+import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import { useUser } from "@/lib/user-store"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { track } from "@/lib/track"
@@ -56,6 +58,11 @@ function WizardContent() {
       try {
         const decoded = JSON.parse(atob(resume))
         loadAnswers(decoded)
+
+        // Backward-compat: old saved simulations without taxYear get a default
+        if (decoded.taxYear === undefined || decoded.taxYear === null) {
+          setAnswer("taxYear", getDefaultTaxYear())
+        }
 
         window.history.replaceState(null, '', '/wizard')
       } catch (err) {
@@ -88,6 +95,8 @@ function WizardContent() {
 
   const canProceed = (): boolean => {
     switch (currentStepId) {
+      case "taxYear":
+        return answers.taxYear !== null
       case "region":
         return answers.region !== null
       case "status":
@@ -152,6 +161,13 @@ function WizardContent() {
 
   const renderStep = () => {
     switch (currentStepId) {
+      case "taxYear":
+        return (
+          <StepTaxYear
+            value={answers.taxYear}
+            onChange={(v) => setAnswer("taxYear", v)}
+          />
+        )
       case "region":
         return (
           <StepRegion

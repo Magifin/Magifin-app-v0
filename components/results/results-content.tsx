@@ -13,6 +13,7 @@ import {
   Lock,
   Calculator,
   Save,
+  Calendar,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -198,6 +199,16 @@ export function ResultsContent() {
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Magi a analysé votre situation
           </p>
+
+          {answers.taxYear && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>
+                Déclaration <strong>{answers.taxYear}</strong>
+                {" · "}revenus {answers.taxYear - 1}
+              </span>
+            </div>
+          )}
 
           <p className="mb-3 mt-6 text-sm font-semibold uppercase tracking-widest text-accent">
             Votre estimation
