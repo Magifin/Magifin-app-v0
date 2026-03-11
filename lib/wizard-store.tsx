@@ -129,7 +129,7 @@ export const WIZARD_STEPS: WizardStep[] = [
 
 // === Default state ===
 const defaultAnswers: WizardAnswers = {
-  taxYear: getDefaultTaxYear(),
+  taxYear: null,
   region: null,
   status: null,
   householdSituation: null,
