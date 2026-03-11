@@ -14,7 +14,7 @@ import { calculateTotalIncomeTax } from "./calculators/incomeTax"
 import { calculateAllDeductions } from "./calculators/deductions"
 import { calculateEffectiveRate } from "./calculators/effectiveRate"
 import { ENGINE_VERSION, SUPPORTED_FISCAL_YEARS } from "./rules/assumptions"
-import { getFederalBrackets } from "./rules/brackets"
+import { calculateProfessionalExpenses } from "./rules/brackets"
 
 /**
  * Compute Belgium tax with basic result
@@ -35,7 +35,12 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   const donations = clampNonNegative(input.donations ?? 0)
   const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
-  // Calculate all deductions
+  // P1: Professional expenses deduction (Art. 51 CIR 92)
+  // MIN(salary × 30%, cap_by_year). Caps for 2024/2025 are PROVISIONAL.
+  const profExpenses = calculateProfessionalExpenses(salaryIncome, input.fiscalYear)
+
+  // Income deductions (pension + dependents — UNCHANGED in P1)
+  // ⚠️ TODO P2: pension will become a tax credit; dependent will use quotité supplement
   const deductionResult = calculateAllDeductions({
     pensionContribution,
     donations,
@@ -43,7 +48,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   })
 
   // Calculate taxable income
-  const taxableIncome = clampNonNegative(salaryIncome - deductionResult.totalDeductions)
+  const taxableIncome = clampNonNegative(salaryIncome - profExpenses - deductionResult.totalDeductions)
 
   // Calculate income tax (federal + regional)
   const { totalTax: estimatedTax } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
@@ -58,7 +63,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   return {
     taxableIncome,
     estimatedTax,
-    deductionsApplied: deductionResult.totalDeductions,
+    deductionsApplied: profExpenses + deductionResult.totalDeductions,
     effectiveTaxRate,
     taxesAlreadyPaid,
     refundOrBalance,
@@ -83,7 +88,12 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
 
-  // Calculate all deductions with breakdown
+  // P1: Professional expenses deduction (Art. 51 CIR 92)
+  // MIN(salary × 30%, cap_by_year). Caps for 2024/2025 are PROVISIONAL.
+  const profExpenses = calculateProfessionalExpenses(salaryIncome, input.fiscalYear)
+
+  // Income deductions (pension + dependents — UNCHANGED in P1)
+  // ⚠️ TODO P2: pension will become a tax credit; dependent will use quotité supplement
   const deductionResult = calculateAllDeductions({
     pensionContribution,
     donations,
@@ -91,7 +101,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   })
 
   // Calculate taxable income
-  const taxableIncome = clampNonNegative(salaryIncome - deductionResult.totalDeductions)
+  const taxableIncome = clampNonNegative(salaryIncome - profExpenses - deductionResult.totalDeductions)
 
   // Calculate income tax with breakdown
   const { federalTax, regionalSurcharge, totalTax } = calculateTotalIncomeTax(
@@ -104,7 +114,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const builder = createResultBuilder()
     .setTaxableIncome(taxableIncome)
     .setEstimatedTax(totalTax)
-    .setDeductionsApplied(deductionResult.totalDeductions)
+    .setDeductionsApplied(profExpenses + deductionResult.totalDeductions)
 
   // Add each deduction to the breakdown
   for (const deduction of deductionResult.appliedDeductions) {
