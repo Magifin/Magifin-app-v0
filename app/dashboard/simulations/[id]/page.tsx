@@ -427,7 +427,7 @@ export default function SimulationDetailPage({
         <Button asChild>
           <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}`}>
             <Calculator className="mr-2 h-4 w-4" />
-            Mettre �� jour cette simulation
+            {"Mettre à jour cette simulation"}
           </Link>
         </Button>
       </div>

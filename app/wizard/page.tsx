@@ -330,6 +330,11 @@ function WizardContent() {
           <p className="text-sm text-muted-foreground">
             {"Étape"} {currentIndex + 1} {"sur"} {totalSteps}
           </p>
+          {answers.taxYear !== null && currentStepId !== "taxYear" && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-0.5 text-xs text-muted-foreground">
+              {"Déclaration"} {answers.taxYear} {"· revenus"} {answers.taxYear - 1}
+            </p>
+          )}
         </div>
 
         <div className="flex-1">{renderStep()}</div>
