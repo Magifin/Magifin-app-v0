@@ -138,9 +138,9 @@ export function getMvpAssumptions(): Array<{
 }
 
 /**
- * Fiscal year supported by MVP
+ * Fiscal years supported by the engine
  */
-export const SUPPORTED_FISCAL_YEAR = 2024
+export const SUPPORTED_FISCAL_YEARS = [2024, 2025, 2026]
 
 /**
  * MVP version identifier

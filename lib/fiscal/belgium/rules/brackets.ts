@@ -22,6 +22,22 @@ export const FEDERAL_BRACKETS_2024: TaxBracket[] = [
   { upTo: Infinity, rate: 0.50 },
 ]
 
+// Déclaration 2025 — revenus 2024 (source: SPF Finances)
+export const FEDERAL_BRACKETS_2025: TaxBracket[] = [
+  { upTo: 15820,    rate: 0.25 },
+  { upTo: 27920,    rate: 0.40 },
+  { upTo: 48320,    rate: 0.45 },
+  { upTo: Infinity, rate: 0.50 },
+]
+
+// Déclaration 2026 — revenus 2025 (source: SPF Finances)
+export const FEDERAL_BRACKETS_2026: TaxBracket[] = [
+  { upTo: 16320,    rate: 0.25 },
+  { upTo: 28800,    rate: 0.40 },
+  { upTo: 49840,    rate: 0.45 },
+  { upTo: Infinity, rate: 0.50 },
+]
+
 /**
  * Regional surcharges (centimes additionnels / opcentiemen)
  * 
@@ -53,7 +69,10 @@ export function getRegionalSurchargeRate(region: BelgiumRegion): number {
  * Currently only 2024 is supported
  */
 export function getFederalBrackets(fiscalYear?: number): TaxBracket[] {
-  // MVP: Only 2024 brackets available
-  // Future: Add support for historical years
-  return FEDERAL_BRACKETS_2024
+  switch (fiscalYear) {
+    case 2024: return FEDERAL_BRACKETS_2024
+    case 2025: return FEDERAL_BRACKETS_2025
+    case 2026: return FEDERAL_BRACKETS_2026
+    default:   return FEDERAL_BRACKETS_2026
+  }
 }

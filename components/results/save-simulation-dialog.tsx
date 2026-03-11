@@ -14,14 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { getDefaultTaxYear, getAvailableTaxYears } from "@/lib/supabase/types"
+import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
@@ -40,11 +33,8 @@ export function SaveSimulationDialog({
 }: SaveSimulationDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
-  const [taxYear, setTaxYear] = useState<string>(String(getDefaultTaxYear()))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const availableYears = getAvailableTaxYears()
 
   const handleSave = async () => {
     setError(null)
@@ -55,8 +45,8 @@ export function SaveSimulationDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tax_year: parseInt(taxYear, 10),
-          name: name.trim() || `Simulation ${taxYear}`,
+          tax_year: wizardAnswers.taxYear ?? getDefaultTaxYear(),
+          name: name.trim() || `Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`,
           wizard_answers: wizardAnswers,
           tax_result: taxResult,
         }),
@@ -115,33 +105,19 @@ export function SaveSimulationDialog({
             </Label>
             <Input
               id="simulation-name"
-              placeholder={`Simulation ${taxYear}`}
+              placeholder={`Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-2"
             />
           </div>
 
-          <div>
-            <Label htmlFor="tax-year" className="text-sm font-medium">
-              <Calendar className="inline-block h-4 w-4 mr-1.5 text-muted-foreground" />
-              Année fiscale
-            </Label>
-            <Select value={taxYear} onValueChange={setTaxYear}>
-              <SelectTrigger id="tax-year" className="mt-2">
-                <SelectValue placeholder="Sélectionner l'année" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableYears.map((year) => (
-                  <SelectItem key={year} value={String(year)}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              L&apos;année fiscale pour laquelle vous faites cette simulation
-            </p>
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Déclaration</span>
+            <strong className="ml-auto">
+              {wizardAnswers.taxYear ?? getDefaultTaxYear()}
+            </strong>
           </div>
 
           {/* Summary preview */}

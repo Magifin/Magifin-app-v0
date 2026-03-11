@@ -188,14 +188,16 @@ export default function SimulationDetailPage({
                 <FileText className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-                  {simulation.name}
-                </h1>
-                <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4" />
-                    {simulation.tax_year}
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
+                    {simulation.name}
+                  </h1>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Déclaration {simulation.tax_year} · revenus {simulation.tax_year - 1}
                   </span>
+                </div>
+                <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
                   <span>Créée le {formatDate(simulation.created_at)}</span>
                 </div>
               </div>
@@ -425,7 +427,7 @@ export default function SimulationDetailPage({
         <Button asChild>
           <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}`}>
             <Calculator className="mr-2 h-4 w-4" />
-            Mettre à jour cette simulation
+            {"Mettre à jour cette simulation"}
           </Link>
         </Button>
       </div>

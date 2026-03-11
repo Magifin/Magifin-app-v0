@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react"
+import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 
 // === Types ===
 export type Region = "Wallonie" | "Bruxelles" | "Flandre" | null
@@ -37,6 +38,7 @@ export type PropertyUse = "HabitationPropreUnique" | "Autre" | null
 export type YesNo = "Oui" | "Non" | null
 
 export interface WizardAnswers {
+  taxYear: number | null
   region: Region
   status: Status
   householdSituation: HouseholdSituation
@@ -80,6 +82,7 @@ export interface WizardStep {
 }
 
 export const WIZARD_STEPS: WizardStep[] = [
+  { id: "taxYear", title: "Déclaration fiscale", shortTitle: "Déclaration" },
   { id: "region", title: "Votre région", shortTitle: "Région" },
   { id: "status", title: "Statut professionnel", shortTitle: "Statut" },
   { id: "situation", title: "Situation du ménage", shortTitle: "Ménage" },
@@ -126,6 +129,7 @@ export const WIZARD_STEPS: WizardStep[] = [
 
 // === Default state ===
 const defaultAnswers: WizardAnswers = {
+  taxYear: null,
   region: null,
   status: null,
   householdSituation: null,
@@ -154,7 +158,7 @@ const defaultAnswers: WizardAnswers = {
 
 const defaultState: WizardState = {
   answers: defaultAnswers,
-  currentStepId: "region",
+  currentStepId: "taxYear",
   completedStepIds: [],
 }
 
@@ -163,6 +167,7 @@ const STORAGE_KEY = "magifin_wizard_v1"
 // === Step ID to Answer Key Mapping ===
 // Step IDs do NOT match WizardAnswers keys directly, so we need this mapping
 const STEP_ID_TO_ANSWER_KEY: Partial<Record<string, keyof WizardAnswers>> = {
+  taxYear: "taxYear",
   region: "region",
   status: "status",
   situation: "householdSituation",
@@ -217,7 +222,7 @@ function createWizardStore() {
         const parsed = JSON.parse(stored) as WizardState
         state = {
           answers: { ...defaultAnswers, ...parsed.answers },
-          currentStepId: parsed.currentStepId || "region",
+          currentStepId: parsed.currentStepId || "taxYear",
           completedStepIds: parsed.completedStepIds || [],
         }
         emit()
@@ -297,7 +302,7 @@ function createWizardStore() {
       .map((step) => step.id)
     
     // Find the first incomplete step, or use the last available if all are complete
-    let nextStepId = "region"
+    let nextStepId = "taxYear"
     const firstIncomplete = availableSteps.find((step) => !newCompletedStepIds.includes(step.id))
     if (firstIncomplete) {
       nextStepId = firstIncomplete.id
