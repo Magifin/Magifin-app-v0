@@ -158,7 +158,7 @@ const defaultAnswers: WizardAnswers = {
 
 const defaultState: WizardState = {
   answers: defaultAnswers,
-  currentStepId: "region",
+  currentStepId: "taxYear",
   completedStepIds: [],
 }
 
@@ -222,7 +222,7 @@ function createWizardStore() {
         const parsed = JSON.parse(stored) as WizardState
         state = {
           answers: { ...defaultAnswers, ...parsed.answers },
-          currentStepId: parsed.currentStepId || "region",
+          currentStepId: parsed.currentStepId || "taxYear",
           completedStepIds: parsed.completedStepIds || [],
         }
         emit()
@@ -302,7 +302,7 @@ function createWizardStore() {
       .map((step) => step.id)
     
     // Find the first incomplete step, or use the last available if all are complete
-    let nextStepId = "region"
+    let nextStepId = "taxYear"
     const firstIncomplete = availableSteps.find((step) => !newCompletedStepIds.includes(step.id))
     if (firstIncomplete) {
       nextStepId = firstIncomplete.id
