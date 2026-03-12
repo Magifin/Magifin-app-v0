@@ -22,6 +22,7 @@ interface SaveSimulationDialogProps {
   wizardAnswers: WizardAnswers
   taxResult: TaxResult
   editingSimulationId?: string | null
+  editingSimulationName?: string | null
   onSaved?: () => void
   trigger?: React.ReactNode
 }
@@ -30,11 +31,12 @@ export function SaveSimulationDialog({
   wizardAnswers,
   taxResult,
   editingSimulationId,
+  editingSimulationName,
   onSaved,
   trigger,
 }: SaveSimulationDialogProps) {
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
+  const [name, setName] = useState(editingSimulationName || "")
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

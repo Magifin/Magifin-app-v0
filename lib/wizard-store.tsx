@@ -72,6 +72,7 @@ export interface WizardState {
   currentStepId: string
   completedStepIds: string[]
   editingSimulationId: string | null
+  editingSimulationName: string | null
 }
 
 // === Step definitions ===
@@ -162,6 +163,7 @@ const defaultState: WizardState = {
   currentStepId: "taxYear",
   completedStepIds: [],
   editingSimulationId: null,
+  editingSimulationName: null,
 }
 
 const STORAGE_KEY = "magifin_wizard_v1"
@@ -227,6 +229,7 @@ function createWizardStore() {
           currentStepId: parsed.currentStepId || "taxYear",
           completedStepIds: parsed.completedStepIds || [],
           editingSimulationId: parsed.editingSimulationId ?? null,
+          editingSimulationName: parsed.editingSimulationName ?? null,
         }
         emit()
       }
@@ -333,6 +336,15 @@ function createWizardStore() {
     emit()
   }
 
+  const setEditingSimulationName = (simulationName: string | null) => {
+    state = {
+      ...state,
+      editingSimulationName: simulationName,
+    }
+    persist()
+    emit()
+  }
+
   return {
     getSnapshot,
     getServerSnapshot,
@@ -417,6 +429,7 @@ interface WizardContextValue {
   resetWizard: () => void
   loadAnswers: (answers: Partial<WizardAnswers>) => void
   setEditingSimulationId: (simulationId: string | null) => void
+  setEditingSimulationName: (simulationName: string | null) => void
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null)
@@ -459,13 +472,17 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.setEditingSimulationId(simulationId)
   }, [])
 
+  const setEditingSimulationName = useCallback((simulationName: string | null) => {
+    store.setEditingSimulationName(simulationName)
+  }, [])
+
   const resetHydrationFlag = useCallback(() => {
     store.resetHydrationFlag()
   }, [])
 
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId }}
+      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId, setEditingSimulationName }}
     >
       {children}
     </WizardContext.Provider>
