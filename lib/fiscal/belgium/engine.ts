@@ -10,8 +10,9 @@ import type { BelgiumRegion } from "./rules/brackets"
 import type { DetailedTaxResult } from "@/lib/fiscal/core/types"
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { createResultBuilder } from "@/lib/fiscal/core/result"
-import { calculateTotalIncomeTax } from "./calculators/incomeTax"
+import { calculateTotalIncomeTax, calculateEffectiveTaxFreeAllowance } from "./calculators/incomeTax"
 import { calculateAllDeductions } from "./calculators/deductions"
+import { calculateAllTaxCredits } from "./calculators/taxCredits"
 import { calculateEffectiveRate } from "./calculators/effectiveRate"
 import { ENGINE_VERSION, SUPPORTED_FISCAL_YEARS } from "./rules/assumptions"
 import { calculateProfessionalExpenses } from "./rules/brackets"
@@ -19,8 +20,13 @@ import { calculateProfessionalExpenses } from "./rules/brackets"
 /**
  * Compute Belgium tax with basic result
  * 
- * This is the main computation function that maintains backwards compatibility
- * with the existing API contract.
+ * P2 Restructure: Follows calculation order:
+ * gross_income → net_income → taxable_income → tax_before_credits → tax_credits → final_tax
+ * 
+ * Key changes:
+ * - Pension now applied as 30% tax credit (not deduction)
+ * - Children increase tax-free allowance (not deductions)
+ * - Regional tax updated (Wallonia 7.5%)
  * 
  * @param input - Tax computation input
  * @returns Tax computation result
@@ -28,42 +34,55 @@ import { calculateProfessionalExpenses } from "./rules/brackets"
 export function computeBelgiumTax(input: TaxInput): TaxResult {
   const region: BelgiumRegion = input.region
 
-  // Sanitize inputs
-  const salaryIncome = clampNonNegative(input.salaryIncome)
-  const dependents = clampNonNegative(input.dependents)
+  // === Stage 1: Sanitize and normalize inputs ===
+  const grossIncome = clampNonNegative(input.salaryIncome)
+  const numDependents = clampNonNegative(input.dependents)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
   const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
-  // P1: Professional expenses deduction (Art. 51 CIR 92)
-  // MIN(salary × 30%, cap_by_year). Caps for 2024/2025 are PROVISIONAL.
-  const profExpenses = calculateProfessionalExpenses(salaryIncome, input.fiscalYear)
+  // === Stage 2: Calculate net income ===
+  // Professional expenses deduction (Art. 51 CIR 92)
+  // MIN(salary × 30%, cap_by_year)
+  const profExpenses = calculateProfessionalExpenses(grossIncome, input.fiscalYear)
+  const netIncome = clampNonNegative(grossIncome - profExpenses)
 
-  // Income deductions (pension + dependents — UNCHANGED in P1)
-  // ⚠️ TODO P2: pension will become a tax credit; dependent will use quotité supplement
+  // === Stage 3: Calculate deductions (non-pension, non-dependent) ===
   const deductionResult = calculateAllDeductions({
-    pensionContribution,
+    pensionContribution: 0, // P2: Pension no longer deducted
     donations,
-    dependents,
+    dependents: 0, // P2: Dependents now increase tax-free allowance
   })
 
-  // Calculate taxable income
-  const taxableIncome = clampNonNegative(salaryIncome - profExpenses - deductionResult.totalDeductions)
+  // === Stage 4: Calculate taxable income ===
+  // taxable_income = net_income - donations - (professional expenses already subtracted)
+  // Children increase the tax-free allowance (handled in calculateTotalIncomeTax)
+  const effectiveTaxFreeAllowance = calculateEffectiveTaxFreeAllowance(
+    numDependents,
+    input.fiscalYear
+  )
+  const baselineIncome = clampNonNegative(netIncome - deductionResult.totalDeductions)
+  const taxableIncome = clampNonNegative(baselineIncome - effectiveTaxFreeAllowance)
 
-  // Calculate income tax (federal + regional)
-  const { totalTax: estimatedTax } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
+  // === Stage 5: Calculate tax before credits ===
+  const { totalTax: taxBeforeCredits } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
 
-  // Calculate effective rate
-  const effectiveTaxRate = calculateEffectiveRate(estimatedTax, taxableIncome)
+  // === Stage 6: Apply tax credits ===
+  // P2: Pension is now a tax credit (30% of contribution)
+  const taxCredits = calculateAllTaxCredits({ pensionContribution })
+  const estimatedTax = clampNonNegative(taxBeforeCredits - taxCredits.totalCredits)
 
-  // Calculate refund or balance owed
-  // Positive = refund to recover, negative = still owe
+  // === Stage 7: Calculate effective rate and balance ===
+  const effectiveTaxRate = calculateEffectiveRate(estimatedTax, grossIncome)
   const refundOrBalance = taxesAlreadyPaid - estimatedTax
+
+  // Total deductions shown to user (for UI display)
+  const totalDeductionsApplied = profExpenses + deductionResult.totalDeductions + effectiveTaxFreeAllowance
 
   return {
     taxableIncome,
     estimatedTax,
-    deductionsApplied: profExpenses + deductionResult.totalDeductions,
+    deductionsApplied: totalDeductionsApplied,
     effectiveTaxRate,
     taxesAlreadyPaid,
     refundOrBalance,
@@ -73,8 +92,8 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 /**
  * Compute Belgium tax with detailed breakdown
  * 
- * Extended computation that provides full deduction breakdown and
- * optimization suggestions. Use this for detailed analysis views.
+ * P2: Same restructured calculation flow as computeBelgiumTax,
+ * with additional detail output.
  * 
  * @param input - Tax computation input
  * @returns Detailed tax computation result
@@ -82,39 +101,49 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const region: BelgiumRegion = input.region
 
-  // Sanitize inputs
-  const salaryIncome = clampNonNegative(input.salaryIncome)
-  const dependents = clampNonNegative(input.dependents)
+  // === Stage 1: Sanitize and normalize inputs ===
+  const grossIncome = clampNonNegative(input.salaryIncome)
+  const numDependents = clampNonNegative(input.dependents)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
 
-  // P1: Professional expenses deduction (Art. 51 CIR 92)
-  // MIN(salary × 30%, cap_by_year). Caps for 2024/2025 are PROVISIONAL.
-  const profExpenses = calculateProfessionalExpenses(salaryIncome, input.fiscalYear)
+  // === Stage 2: Calculate net income ===
+  const profExpenses = calculateProfessionalExpenses(grossIncome, input.fiscalYear)
+  const netIncome = clampNonNegative(grossIncome - profExpenses)
 
-  // Income deductions (pension + dependents — UNCHANGED in P1)
-  // ⚠️ TODO P2: pension will become a tax credit; dependent will use quotité supplement
+  // === Stage 3: Calculate deductions ===
   const deductionResult = calculateAllDeductions({
-    pensionContribution,
+    pensionContribution: 0, // P2: Pension no longer deducted
     donations,
-    dependents,
+    dependents: 0, // P2: Dependents now increase tax-free allowance
   })
 
-  // Calculate taxable income
-  const taxableIncome = clampNonNegative(salaryIncome - profExpenses - deductionResult.totalDeductions)
+  // === Stage 4: Calculate taxable income ===
+  const effectiveTaxFreeAllowance = calculateEffectiveTaxFreeAllowance(
+    numDependents,
+    input.fiscalYear
+  )
+  const baselineIncome = clampNonNegative(netIncome - deductionResult.totalDeductions)
+  const taxableIncome = clampNonNegative(baselineIncome - effectiveTaxFreeAllowance)
 
-  // Calculate income tax with breakdown
-  const { federalTax, regionalSurcharge, totalTax } = calculateTotalIncomeTax(
+  // === Stage 5: Calculate tax before credits ===
+  const { totalTax } = calculateTotalIncomeTax(
     taxableIncome,
     region,
     input.fiscalYear
   )
 
-  // Build detailed result
+  // === Stage 6: Apply tax credits ===
+  const taxCredits = calculateAllTaxCredits({ pensionContribution })
+  const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits)
+
+  // === Stage 7: Build detailed result ===
+  const totalDeductionsApplied = profExpenses + deductionResult.totalDeductions + effectiveTaxFreeAllowance
+
   const builder = createResultBuilder()
     .setTaxableIncome(taxableIncome)
-    .setEstimatedTax(totalTax)
-    .setDeductionsApplied(profExpenses + deductionResult.totalDeductions)
+    .setEstimatedTax(finalTax)
+    .setDeductionsApplied(totalDeductionsApplied)
 
   // Add each deduction to the breakdown
   for (const deduction of deductionResult.appliedDeductions) {

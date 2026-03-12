@@ -41,19 +41,16 @@ export const FEDERAL_BRACKETS_2026: TaxBracket[] = [
 /**
  * Regional surcharges (centimes additionnels / opcentiemen)
  * 
- * These are simplified placeholders representing the average communal tax
- * rate for each region. In reality, this varies by municipality.
+ * P2: Updated rates based on confirmed regional tax rates
+ * - Flanders: 7.0% average communal tax
+ * - Wallonia: 7.5% additional tax on federal tax (per specification)
+ * - Brussels: 8.0% average communal tax
  * 
- * MVP Assumption: Using average rates per region
- * - Flanders: ~7% average communal tax
- * - Wallonia: ~8% average communal tax
- * - Brussels: ~8% average communal tax
- * 
- * TODO: Replace with actual municipality lookup
+ * TODO: Replace with actual municipality lookup for precision
  */
 export const REGION_SURCHARGE: Record<BelgiumRegion, number> = {
   flanders: 0.07,
-  wallonia: 0.08,
+  wallonia: 0.075,
   brussels: 0.08,
 }
 

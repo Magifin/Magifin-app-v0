@@ -8,6 +8,25 @@ import type { TaxBracket } from "@/lib/fiscal/core/types"
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { getFederalBrackets, getRegionalSurchargeRate, type BelgiumRegion } from "../rules/brackets"
 import { getQuotiteCredit } from "../rules/credits"
+import { getChildTaxFreeAllowanceSupplement } from "../rules/deductions"
+
+/**
+ * Calculate effective tax-free allowance with child supplements
+ * 
+ * P2: Children at charge increase the tax-free allowance instead of being deductions.
+ * 
+ * @param numChildren - Number of children at charge
+ * @param fiscalYear - The fiscal year
+ * @returns Total tax-free allowance including child supplements
+ */
+export function calculateEffectiveTaxFreeAllowance(
+  numChildren: number,
+  fiscalYear?: number
+): number {
+  const baseAllowance = getQuotiteCredit(fiscalYear)
+  const childSupplement = getChildTaxFreeAllowanceSupplement(clampNonNegative(numChildren))
+  return baseAllowance + childSupplement
+}
 
 /**
  * Calculate progressive tax using tax brackets

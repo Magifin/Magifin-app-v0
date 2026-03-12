@@ -7,12 +7,13 @@
 import type { AppliedDeduction } from "@/lib/fiscal/core/types"
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import {
-  calculatePensionDeduction,
   calculateDonationsDeduction,
   calculateDependentDeduction,
-  PENSION_SAVINGS_RULE,
+  getChildTaxFreeAllowanceSupplement,
+  calculatePensionTaxCredit,
   DONATIONS_RULE,
   DEPENDENT_DEDUCTION_RULE,
+  PENSION_SAVINGS_RULE,
 } from "../rules/deductions"
 
 /**
@@ -37,6 +38,9 @@ export interface DeductionResult {
 /**
  * Calculate all applicable deductions for Belgium
  * 
+ * P2: Pension is now handled separately as a tax credit, not a deduction.
+ * Only donations and (deprecated) dependent deductions are calculated here.
+ * 
  * @param input - Deduction inputs
  * @returns Total deductions and breakdown
  */
@@ -44,20 +48,8 @@ export function calculateAllDeductions(input: DeductionInput): DeductionResult {
   const appliedDeductions: AppliedDeduction[] = []
   let totalDeductions = 0
 
-  // Pension savings deduction
-  const pensionAmount = calculatePensionDeduction(
-    clampNonNegative(input.pensionContribution ?? 0)
-  )
-  if (pensionAmount > 0) {
-    appliedDeductions.push({
-      key: PENSION_SAVINGS_RULE.key,
-      label: PENSION_SAVINGS_RULE.label,
-      amount: pensionAmount,
-      certainty: PENSION_SAVINGS_RULE.certainty,
-      reference: PENSION_SAVINGS_RULE.reference,
-    })
-    totalDeductions += pensionAmount
-  }
+  // NOTE: Pension savings are no longer deducted here (P2 change)
+  // Pension is now applied as a tax credit after tax calculation
 
   // Donations deduction
   const donationsAmount = calculateDonationsDeduction(
@@ -74,7 +66,7 @@ export function calculateAllDeductions(input: DeductionInput): DeductionResult {
     totalDeductions += donationsAmount
   }
 
-  // Dependent deduction
+  // Dependent deduction (DEPRECATED - kept for backwards compatibility)
   const dependentAmount = calculateDependentDeduction(
     clampNonNegative(input.dependents ?? 0)
   )
