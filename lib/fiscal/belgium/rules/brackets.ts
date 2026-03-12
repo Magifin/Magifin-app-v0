@@ -76,3 +76,49 @@ export function getFederalBrackets(fiscalYear?: number): TaxBracket[] {
     default:   return FEDERAL_BRACKETS_2026
   }
 }
+
+// ─── Professional Expenses (Frais professionnels forfaitaires) ────────────────
+
+/**
+ * Flat-rate professional expense deduction
+ *
+ * Reference: Art. 51 CIR 92
+ * Salaried employees may deduct a flat rate of 30% of gross salary,
+ * capped at a maximum amount that varies by fiscal year.
+ * Applied BEFORE tax brackets (income reduction, not a tax credit).
+ *
+ * ⚠️ PROVISIONAL: Caps for 2024 and 2025 are not yet confirmed from SPF Finances.
+ * ✅ CONFIRMED:   Cap for 2026 is confirmed (SPF Finances).
+ */
+export const PROFESSIONAL_EXPENSE_RATE = 0.30
+
+export const PROFESSIONAL_EXPENSE_CAPS: Record<number, number> = {
+  2024: 5_750,  // ⚠️ PROVISIONAL
+  2025: 5_810,  // ⚠️ PROVISIONAL
+  2026: 5_930,  // ✅ CONFIRMED
+}
+
+/**
+ * Get the professional expense cap for a given fiscal year.
+ * Defaults to the 2026 confirmed cap.
+ */
+export function getProfessionalExpenseCap(fiscalYear?: number): number {
+  const year = fiscalYear ?? 2026
+  return PROFESSIONAL_EXPENSE_CAPS[year] ?? PROFESSIONAL_EXPENSE_CAPS[2026]
+}
+
+/**
+ * Calculate the flat-rate professional expense deduction.
+ *
+ * @param grossIncome - Annual gross salary (before any deductions)
+ * @param fiscalYear  - Declaration year. Defaults to 2026.
+ * @returns Deduction amount in EUR: MIN(gross × 30%, cap)
+ */
+export function calculateProfessionalExpenses(
+  grossIncome: number,
+  fiscalYear?: number,
+): number {
+  if (grossIncome <= 0) return 0
+  const cap = getProfessionalExpenseCap(fiscalYear)
+  return Math.min(grossIncome * PROFESSIONAL_EXPENSE_RATE, cap)
+}
