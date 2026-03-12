@@ -104,3 +104,4 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ simulation: createData }, { status: 201 })
   }
+}
