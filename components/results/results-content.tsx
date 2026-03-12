@@ -418,12 +418,12 @@ export function ResultsContent() {
                     {formatMoney(taxResult.taxableIncome)}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Déductions appliquées</dt>
-                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-                    -{formatMoney(taxResult.deductionsApplied)}
-                  </dd>
-                </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
+            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+              -{formatMoney(taxResult.deductionsApplied)}
+            </dd>
+          </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
                   <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
