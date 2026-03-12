@@ -35,7 +35,7 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, setEditingSimulationName } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId } = useWizard()
   const { user } = useUser()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
 
@@ -65,18 +65,9 @@ function WizardContent() {
           setAnswer("taxYear", getDefaultTaxYear())
         }
 
-        // Store simulation ID and fetch name if editing an existing simulation
+        // Store simulation ID if editing an existing simulation
         if (simulationId) {
           setEditingSimulationId(simulationId)
-          // Fetch the simulation to get the current name
-          fetch(`/api/simulations/${simulationId}`)
-            .then(res => res.json())
-            .then(data => {
-              if (data.simulation?.name) {
-                setEditingSimulationName(data.simulation.name)
-              }
-            })
-            .catch(err => console.error("[wizard] failed to fetch simulation name", err))
         }
 
         window.history.replaceState(null, '', '/wizard')
@@ -87,7 +78,7 @@ function WizardContent() {
     } else {
       resetWizard()
     }
-  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setEditingSimulationName, setAnswer])
+  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
 
   // Track wizard start
   useEffect(() => {
