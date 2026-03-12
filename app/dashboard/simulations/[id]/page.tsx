@@ -261,7 +261,7 @@ export default function SimulationDetailPage({
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Impôt estim��</dt>
+            <dt className="text-xs text-muted-foreground">{"Impôt estimé"}</dt>
             <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
               {formatMoney(tax_result.estimatedTax)}
             </dd>

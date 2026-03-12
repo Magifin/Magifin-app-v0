@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   // Build query
   let query = supabase
     .from("simulations")
-    .select("id, tax_year, name, description, created_at, updated_at, tax_result")
+    .select("id, tax_year, name, description, created_at, updated_at, tax_result, wizard_answers")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
