@@ -416,6 +416,7 @@ interface WizardContextValue {
   markStepComplete: (stepId: string) => void
   resetWizard: () => void
   loadAnswers: (answers: Partial<WizardAnswers>) => void
+  setEditingSimulationId: (simulationId: string | null) => void
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null)
@@ -454,13 +455,17 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.loadAnswers(answers)
   }, [])
 
+  const setEditingSimulationId = useCallback((simulationId: string | null) => {
+    store.setEditingSimulationId(simulationId)
+  }, [])
+
   const resetHydrationFlag = useCallback(() => {
     store.resetHydrationFlag()
   }, [])
 
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers }}
+      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId }}
     >
       {children}
     </WizardContext.Provider>
