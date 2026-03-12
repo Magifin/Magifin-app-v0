@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     const { data: updateData, error: updateError } = await supabase
       .from("simulations")
       .update({
+        name: body.name || "Ma simulation",
         wizard_answers: body.wizard_answers as any,
         tax_result: body.tax_result as any,
         updated_at: new Date().toISOString(),
