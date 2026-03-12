@@ -7,7 +7,6 @@
 import type { TaxBracket } from "@/lib/fiscal/core/types"
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { getFederalBrackets, getRegionalSurchargeRate, type BelgiumRegion } from "../rules/brackets"
-import { getQuotiteCredit } from "../rules/credits"
 import { getChildTaxFreeAllowanceSupplement } from "../rules/deductions"
 
 /**
@@ -94,17 +93,14 @@ export function calculateRegionalSurcharge(
 /**
  * Calculate total income tax (federal + regional)
  *
- * P1 changes:
- *   - Quotité exemptée base credit is subtracted from federalTax to produce netFederal.
- *   - Regional surcharge is applied on netFederal (not on raw federalTax).
+ * IMPORTANT: Quotité exemptée is NOT applied here. It is applied in engine.ts
+ * as an income reduction BEFORE calculating tax brackets (Stage 4).
+ * This function only calculates federal + regional on already-reduced taxable income.
  *
- * Return type is additive (new fields: quotiteCredit, netFederal).
- * Existing destructuring of { totalTax, federalTax, regionalSurcharge } is unaffected.
- *
- * @param taxableIncome - Taxable income after income deductions
+ * @param taxableIncome - Taxable income AFTER quotité reduction and other deductions
  * @param region        - The taxpayer's region
  * @param fiscalYear    - Declaration year. Defaults to 2026.
- * @returns Breakdown including federal tax, quotité credit, net federal, surcharge, and total
+ * @returns Federal tax, regional surcharge, and total
  */
 export function calculateTotalIncomeTax(
   taxableIncome: number,
@@ -112,29 +108,18 @@ export function calculateTotalIncomeTax(
   fiscalYear?: number
 ): {
   federalTax: number
-  quotiteCredit: number
-  netFederal: number
   regionalSurcharge: number
   totalTax: number
 } {
   const federalTax = calculateFederalTax(taxableIncome, fiscalYear)
 
-  // P1: Apply quotité exemptée base credit (Art. 131 CIR 92)
-  // Subtracted from federal tax before the municipal surcharge is applied.
-  // Child supplement credit (P2) will be added here once implemented.
-  const quotiteCredit = getQuotiteCredit(fiscalYear)
-  const netFederal = Math.max(0, federalTax - quotiteCredit)
+  // Regional surcharge applied on federalTax (post-bracket), not on raw income
+  const regionalSurcharge = calculateRegionalSurcharge(federalTax, region)
 
-  // P1: Surcharge applied on netFederal (post-credit), not on raw federalTax.
-  // ⚠️ Rate for Wallonia is currently 8% — will be corrected to 7.5% in P2.
-  const regionalSurcharge = calculateRegionalSurcharge(netFederal, region)
-
-  const totalTax = netFederal + regionalSurcharge
+  const totalTax = federalTax + regionalSurcharge
 
   return {
     federalTax,
-    quotiteCredit,
-    netFederal,
     regionalSurcharge,
     totalTax,
   }
