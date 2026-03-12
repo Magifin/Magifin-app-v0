@@ -35,9 +35,9 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId } = useWizard()
   const { user } = useUser()
-  const { answers, currentStepId, completedStepIds } = state
+  const { answers, currentStepId, completedStepIds, editingSimulationId } = state
 
   const availableSteps = getAvailableSteps(answers)
   const currentIndex = getStepIndex(currentStepId, answers)
@@ -53,6 +53,7 @@ function WizardContent() {
     hasProcessedResume.current = true
 
     const resume = searchParams.get("resume")
+    const simulationId = searchParams.get("simulationId")
 
     if (resume) {
       try {
@@ -64,6 +65,11 @@ function WizardContent() {
           setAnswer("taxYear", getDefaultTaxYear())
         }
 
+        // Store simulation ID if editing an existing simulation
+        if (simulationId) {
+          setEditingSimulationId(simulationId)
+        }
+
         window.history.replaceState(null, '', '/wizard')
       } catch (err) {
         console.error("[wizard] resume decode failed", err)
@@ -72,7 +78,7 @@ function WizardContent() {
     } else {
       resetWizard()
     }
-  }, [searchParams, loadAnswers, resetWizard])
+  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
 
   // Track wizard start
   useEffect(() => {

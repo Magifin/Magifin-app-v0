@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
 
   // Parse body
   let body: {
+    simulation_id?: string | null
     tax_year: number
     name: string
     description?: string
@@ -52,28 +53,54 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const simulation: SimulationInsert = {
-    user_id: user.id,
-    tax_year: body.tax_year,
-    name: body.name || "Ma simulation",
-    description: body.description || null,
-    wizard_answers: body.wizard_answers as SimulationInsert["wizard_answers"],
-    tax_result: body.tax_result as SimulationInsert["tax_result"],
+  // Check if this is an update (simulation_id provided)
+  if (body.simulation_id) {
+    // UPDATE existing simulation
+    const { data: updateData, error: updateError } = await supabase
+      .from("simulations")
+      .update({
+        wizard_answers: body.wizard_answers as any,
+        tax_result: body.tax_result as any,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", body.simulation_id)
+      .eq("user_id", user.id)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error("Error updating simulation:", updateError)
+      return NextResponse.json(
+        { error: "Erreur lors de la mise à jour de la simulation." },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ simulation: updateData }, { status: 200 })
+  } else {
+    // CREATE new simulation
+    const simulation: SimulationInsert = {
+      user_id: user.id,
+      tax_year: body.tax_year,
+      name: body.name || "Ma simulation",
+      description: body.description || null,
+      wizard_answers: body.wizard_answers as SimulationInsert["wizard_answers"],
+      tax_result: body.tax_result as SimulationInsert["tax_result"],
+    }
+
+    const { data: createData, error: createError } = await supabase
+      .from("simulations")
+      .insert(simulation)
+      .select()
+      .single()
+
+    if (createError) {
+      console.error("Error saving simulation:", createError)
+      return NextResponse.json(
+        { error: "Erreur lors de la sauvegarde de la simulation." },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ simulation: createData }, { status: 201 })
   }
-
-  const { data, error } = await supabase
-    .from("simulations")
-    .insert(simulation)
-    .select()
-    .single()
-
-  if (error) {
-    console.error("Error saving simulation:", error)
-    return NextResponse.json(
-      { error: "Erreur lors de la sauvegarde de la simulation." },
-      { status: 500 }
-    )
-  }
-
-  return NextResponse.json({ simulation: data }, { status: 201 })
-}

@@ -37,7 +37,7 @@ const PARTNER_URL =
 export function ResultsContent() {
   const router = useRouter()
   const { state, goToStep } = useWizard()
-  const { answers, completedStepIds } = state
+  const { answers, completedStepIds, editingSimulationId } = state
   const { results } = useOptimizations()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const [savedSuccess, setSavedSuccess] = useState(false)
@@ -161,6 +161,7 @@ export function ResultsContent() {
               <SaveSimulationDialog
                 wizardAnswers={answers}
                 taxResult={taxResult}
+                editingSimulationId={editingSimulationId}
                 onSaved={handleSimulationSaved}
                 trigger={
                   <Button variant="outline" size="sm" className="gap-2">

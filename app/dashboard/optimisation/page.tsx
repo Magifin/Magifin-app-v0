@@ -90,7 +90,7 @@ function OptimisationContent() {
           </p>
         </div>
         <Button asChild>
-          <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}` : "/wizard"}>
+          <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard"}>
             <Calculator className="mr-2 h-4 w-4" />
             {hasData ? "Mettre à jour" : "Analyser ma situation"}
           </Link>
@@ -129,7 +129,7 @@ function OptimisationContent() {
             {"Les détails d'optimisation ne sont pas encore disponibles pour cette simulation. Mettez à jour vos informations pour voir plus d'options."}
           </p>
           <Button className="mt-6" asChild>
-            <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}` : "/wizard"}>
+            <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard"}>
               <Calculator className="mr-2 h-4 w-4" />
               {currentSimulation ? "Mettre à jour cette simulation" : "Commencer l'analyse"}
             </Link>
