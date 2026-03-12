@@ -7,25 +7,7 @@
 import type { TaxBracket } from "@/lib/fiscal/core/types"
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { getFederalBrackets, getRegionalSurchargeRate, type BelgiumRegion } from "../rules/brackets"
-import { getChildTaxFreeAllowanceSupplement } from "../rules/deductions"
-
-/**
- * Calculate effective tax-free allowance with child supplements
- * 
- * P2: Children at charge increase the tax-free allowance instead of being deductions.
- * 
- * @param numChildren - Number of children at charge
- * @param fiscalYear - The fiscal year
- * @returns Total tax-free allowance including child supplements
- */
-export function calculateEffectiveTaxFreeAllowance(
-  numChildren: number,
-  fiscalYear?: number
-): number {
-  const baseAllowance = getQuotiteCredit(fiscalYear)
-  const childSupplement = getChildTaxFreeAllowanceSupplement(clampNonNegative(numChildren))
-  return baseAllowance + childSupplement
-}
+import { getQuotiteCredit } from "../rules/credits"
 
 /**
  * Calculate progressive tax using tax brackets
@@ -91,16 +73,20 @@ export function calculateRegionalSurcharge(
 }
 
 /**
- * Calculate total income tax (federal + regional)
+ * Calculate total income tax (federal + regional + quotité credit)
  *
- * IMPORTANT: Quotité exemptée is NOT applied here. It is applied in engine.ts
- * as an income reduction BEFORE calculating tax brackets (Stage 4).
- * This function only calculates federal + regional on already-reduced taxable income.
+ * Method B: Quotité exemptée is applied as a FIXED TAX CREDIT after brackets.
+ * 
+ * Calculation order:
+ * 1. Calculate federal tax on full taxable income (no income reduction)
+ * 2. Apply quotité as fixed credit: federalTax - quotiteCredit = netFederal
+ * 3. Apply regional surcharge on netFederal (post-credit)
+ * 4. Return netFederal + surcharge as totalTax
  *
- * @param taxableIncome - Taxable income AFTER quotité reduction and other deductions
+ * @param taxableIncome - Taxable income BEFORE any quotité reduction
  * @param region        - The taxpayer's region
  * @param fiscalYear    - Declaration year. Defaults to 2026.
- * @returns Federal tax, regional surcharge, and total
+ * @returns Federal tax, quotité credit, net federal, surcharge, and total
  */
 export function calculateTotalIncomeTax(
   taxableIncome: number,
@@ -108,18 +94,26 @@ export function calculateTotalIncomeTax(
   fiscalYear?: number
 ): {
   federalTax: number
+  quotiteCredit: number
+  netFederal: number
   regionalSurcharge: number
   totalTax: number
 } {
   const federalTax = calculateFederalTax(taxableIncome, fiscalYear)
 
-  // Regional surcharge applied on federalTax (post-bracket), not on raw income
-  const regionalSurcharge = calculateRegionalSurcharge(federalTax, region)
+  // Apply quotité exemptée as a fixed tax credit (Method B)
+  const quotiteCredit = getQuotiteCredit(fiscalYear)
+  const netFederal = Math.max(0, federalTax - quotiteCredit)
 
-  const totalTax = federalTax + regionalSurcharge
+  // Regional surcharge applied on netFederal (post-credit)
+  const regionalSurcharge = calculateRegionalSurcharge(netFederal, region)
+
+  const totalTax = netFederal + regionalSurcharge
 
   return {
     federalTax,
+    quotiteCredit,
+    netFederal,
     regionalSurcharge,
     totalTax,
   }
