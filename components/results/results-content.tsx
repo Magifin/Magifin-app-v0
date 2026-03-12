@@ -195,13 +195,14 @@ export function ResultsContent() {
       )}
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
-        {/* Page title and declaration year */}
-        <div className="mb-12 flex flex-col items-center text-center">
-          <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance mb-2">
-            Votre estimation fiscale
-          </h1>
+        {/* Hero estimate - totals and final balance (RESTORED) */}
+        <div className="mb-14 flex flex-col items-center text-center">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Votre situation analysée
+          </p>
+
           {answers.taxYear && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>
                 Déclaration <strong>{answers.taxYear}</strong>
@@ -209,381 +210,365 @@ export function ResultsContent() {
               </span>
             </div>
           )}
+
+          <p className="mb-3 mt-6 text-sm font-semibold uppercase tracking-widest text-accent">
+            Votre estimation fiscale
+          </p>
+          
+          {/* Primary focus: show final balance/result */}
+          {taxResult && !taxLoading && (
+            <>
+              <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance mb-2">
+                {taxResult.refundOrBalance >= 0
+                  ? "Remboursement estimé"
+                  : "Montant estimé à payer"}
+              </h1>
+              <div className="mt-6 flex items-baseline justify-center gap-3 sm:gap-4">
+                <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
+                  {taxResult.refundOrBalance >= 0
+                    ? formatMoney(taxResult.refundOrBalance)
+                    : "−" + formatMoney(Math.abs(taxResult.refundOrBalance))}
+                </span>
+              </div>
+            </>
+          )}
+
+          {!taxResult && !taxLoading && !taxError && (
+            <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
+              Complétez vos informations
+            </h1>
+          )}
+
+          <p className="mt-4 text-sm text-muted-foreground">
+            {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
+          </p>
+
+          {!isAuthenticated && (
+            <>
+              <Button
+                size="lg"
+                className="mt-8 h-12 px-8 text-base"
+                asChild
+                onClick={handleCreateSpace}
+              >
+                <Link href="/auth/sign-up?from=results">
+                  {"Créer mon espace Magifin"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {"Gratuit · Sans engagement · 5 minutes"}
+              </p>
+            </>
+          )}
+
+          {isAuthenticated && (
+            <div className="mt-8 flex flex-col gap-3">
+              <Button
+                size="lg"
+                className="h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/dashboard">
+                  {"Accéder au tableau de bord"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/dashboard/optimisation">
+                  {"Voir mes optimisations"}
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* SECTION 1: TAX ESTIMATION (primary information) */}
-        <div className="mb-12">
-          <h2 className="font-[family-name:var(--font-heading)] text-xl font-bold text-foreground mb-4">
-            Votre estimation fiscale
-          </h2>
+        {/* Cards grid - Left: Optimizations | Right: Insurance */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          {/* Left: Unlock optimisations */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+                {leftCardTitle}
+              </h2>
+            </div>
+            <ul className="flex flex-col gap-3">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <span className="text-sm text-card-foreground">
+                  {"Vérification complète de vos droits fiscaux"}
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <span className="text-sm text-card-foreground">
+                  {"Détection automatique des économies potentielles"}
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <span className="text-sm text-card-foreground">
+                  {"Assistance jusqu'à la déclaration finale"}
+                </span>
+              </li>
+            </ul>
+            {!results.isFullySupported && (
+              <p className="mt-4 text-xs text-muted-foreground/70">
+                {"Précision complète bientôt disponible pour votre région / statut."}
+              </p>
+            )}
+            {!isAuthenticated && (
+              <Button
+                size="sm"
+                className="mt-5 w-full"
+                asChild
+                onClick={handleCreateSpace}
+              >
+                <Link href="/auth/sign-up?from=results">
+                  {"Créer mon espace Magifin"}
+                  <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+            {isAuthenticated && (
+              <Button
+                size="sm"
+                className="mt-5 w-full"
+                asChild
+                variant="outline"
+              >
+                <Link href="/dashboard/optimisation">
+                  {"Voir mes optimisations"}
+                  <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Right: Assurance partner */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+                {"Optimisez vos assurances"}
+              </h2>
+            </div>
+            <p className="text-sm leading-relaxed text-card-foreground">
+              {"Certaines assurances peuvent améliorer votre protection financière tout en réduisant votre charge fiscale."}
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              {"Vérifiez si des optimisations supplémentaires sont possibles dans votre déclaration."}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-5 w-full"
+              asChild
+              onClick={handleInsuranceCta}
+            >
+              <a
+                href={PARTNER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {"Vérifier mes assurances"}
+                <ExternalLink className="ml-2 h-3.5 w-3.5" />
+              </a>
+            </Button>
+          </div>
+        </div>
+
+        {/* Tax Computation Card */}
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+              <Calculator className="h-5 w-4" />
+            </div>
+            <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+              {"Calcul d\u2019impôt estimé"}
+            </h2>
+          </div>
 
           {taxLoading && (
-            <div className="rounded-2xl border border-border bg-card p-8">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                Calcul en cours...
-              </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Calcul en cours...
             </div>
           )}
 
           {taxError && !taxLoading && (
-            <div className="rounded-2xl border border-border bg-card p-8">
-              <p className="text-sm text-destructive">{taxError}</p>
-            </div>
+            <p className="text-sm text-destructive">{taxError}</p>
           )}
 
           {taxResult && !taxLoading && (
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                {/* Taxable income */}
-                <div className="flex flex-col">
-                  <dt className="text-xs font-medium text-muted-foreground mb-2">Revenu imposable</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground">
+            <div className="space-y-6">
+              {/* Tax breakdown */}
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
                     {formatMoney(taxResult.taxableIncome)}
                   </dd>
                 </div>
-
-                {/* Fiscal adjustments */}
-                <div className="flex flex-col">
-                  <dt className="text-xs font-medium text-muted-foreground mb-2">Ajustements fiscaux</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-2xl font-bold text-accent">
-                    −{formatMoney(taxResult.deductionsApplied)}
+                <div>
+                  <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+                    -{formatMoney(taxResult.deductionsApplied)}
                   </dd>
                 </div>
-
-                {/* Estimated tax */}
-                <div className="flex flex-col">
-                  <dt className="text-xs font-medium text-muted-foreground mb-2">Impôt estimé</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
                     {formatMoney(taxResult.estimatedTax)}
                   </dd>
                 </div>
-
-                {/* Taxes already paid */}
-                <div className="flex flex-col">
-                  <dt className="text-xs font-medium text-muted-foreground mb-2">Impôts déjà payés</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground">
-                    {formatMoney(taxResult.taxesAlreadyPaid)}
+                <div>
+                  <dt className="text-xs text-muted-foreground">Taux effectif</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                    {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
                   </dd>
                 </div>
+              </dl>
 
-                {/* Balance - refund or amount due */}
-                <div
-                  className={cn(
-                    "flex flex-col rounded-lg p-4",
-                    taxResult.refundOrBalance >= 0
-                      ? "bg-accent/10"
-                      : "bg-destructive/10"
-                  )}
-                >
-                  <dt
-                    className={cn(
-                      "text-xs font-medium mb-2",
-                      taxResult.refundOrBalance >= 0
-                        ? "text-accent"
-                        : "text-destructive"
-                    )}
-                  >
-                    {taxResult.refundOrBalance >= 0
-                      ? "Remboursement estimé"
-                      : "Montant à payer"}
-                  </dt>
-                  <dd
-                    className={cn(
-                      "font-[family-name:var(--font-heading)] text-2xl font-bold",
-                      taxResult.refundOrBalance >= 0
-                        ? "text-accent"
-                        : "text-destructive"
-                    )}
-                  >
-                    {taxResult.refundOrBalance >= 0
-                      ? formatMoney(taxResult.refundOrBalance)
-                      : "−" + formatMoney(Math.abs(taxResult.refundOrBalance))}
-                  </dd>
+              {/* Withholding and balance summary */}
+              {(taxResult.taxesAlreadyPaid > 0 || taxResult.refundOrBalance !== 0) && (
+                <div className="border-t border-border pt-4">
+                  <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="rounded-lg bg-muted/30 p-4">
+                      <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
+                      <dd className="font-[family-name:var(--font-heading)] text-xl font-semibold text-card-foreground">
+                        {formatMoney(taxResult.taxesAlreadyPaid)}
+                      </dd>
+                    </div>
+                    <div
+                      className={cn(
+                        "rounded-lg p-4",
+                        taxResult.refundOrBalance >= 0
+                          ? "bg-accent/10"
+                          : "bg-destructive/10"
+                      )}
+                    >
+                      <dt
+                        className={cn(
+                          "text-xs mb-1",
+                          taxResult.refundOrBalance >= 0
+                            ? "text-accent"
+                            : "text-destructive"
+                        )}
+                      >
+                        {taxResult.refundOrBalance >= 0
+                          ? "Remboursement estimé"
+                          : "Montant encore dû"}
+                      </dt>
+                      <dd
+                        className={cn(
+                          "font-[family-name:var(--font-heading)] text-xl font-semibold",
+                          taxResult.refundOrBalance >= 0
+                            ? "text-accent"
+                            : "text-destructive"
+                        )}
+                      >
+                        {taxResult.refundOrBalance >= 0
+                          ? formatMoney(taxResult.refundOrBalance)
+                          : "−" + formatMoney(Math.abs(taxResult.refundOrBalance))}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
           {!taxResult && !taxLoading && !taxError && (
-            <div className="rounded-2xl border border-border bg-card p-8">
-              <p className="text-sm text-muted-foreground">
-                {"Complétez au moins votre région et votre revenu pour obtenir le calcul."}
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              {"Complétez au moins votre région et votre revenu pour obtenir le calcul."}
+            </p>
           )}
         </div>
 
-        {/* SECTION 2: CALCULATION BREAKDOWN */}
-        <div className="mb-12">
-          <h2 className="font-[family-name:var(--font-heading)] text-xl font-bold text-foreground mb-4">
-            Comment ce montant est calculé
-          </h2>
-
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-            {taxResult && !taxLoading && (
-              <div className="space-y-6">
-                {/* Calculation steps */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground mb-2">Revenu brut</dt>
-                    <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                      {formatMoney(answers.salaryIncome || 0)}
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground mb-2">Frais professionnels</dt>
-                    <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                      −{formatMoney(Math.max(0, (answers.salaryIncome || 0) * 0.30, 5930))}
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground mb-2">Revenu imposable</dt>
-                    <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                      {formatMoney(taxResult.taxableIncome)}
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground mb-2">Taux effectif d'imposition</dt>
-                    <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                      {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
-                    </dd>
-                  </div>
-                </div>
-
-                <div className="border-t border-border pt-6">
-                  <p className="text-xs text-muted-foreground mb-4">
-                    L'impôt estimé inclut l'impôt fédéral, les crédits fiscaux applicables et la surcharge régionale.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!taxResult && !taxLoading && !taxError && (
-              <p className="text-sm text-muted-foreground">
-                {"Les détails de calcul apparaîtront une fois vos informations complétées."}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* SECTION 3: OPTIMIZATION OPPORTUNITIES */}
-        <div className="mb-12">
-          <h2 className="font-[family-name:var(--font-heading)] text-xl font-bold text-foreground mb-2">
-            Optimisations fiscales potentielles
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Certaines actions peuvent encore réduire votre impôt.
-          </p>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            {/* Pension optimization card */}
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <h3 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                  Réduction pour épargne pension
-                </h3>
-              </div>
-              <p className="text-sm leading-relaxed text-card-foreground">
-                {"L'épargne-pension peut réduire significativement votre impôt via un crédit fiscal."}
-              </p>
-              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                {"Jusqu'à €990/an peuvent bénéficier d'une réduction fiscale."}
-              </p>
-              {isAuthenticated && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-5 w-full"
-                  asChild
-                >
-                  <Link href="/dashboard/optimisation">
-                    {"Voir les détails"}
-                    <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              )}
-              {!isAuthenticated && (
-                <Button
-                  size="sm"
-                  className="mt-5 w-full"
-                  asChild
-                  onClick={handleCreateSpace}
-                >
-                  <Link href="/auth/sign-up?from=results">
-                    {"Débloquer"}
-                    <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              )}
-            </div>
-
-            {/* Insurance optimization card */}
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <h3 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                  {"Optimisez vos assurances"}
-                </h3>
-              </div>
-              <p className="text-sm leading-relaxed text-card-foreground">
-                {"Certaines assurances peuvent améliorer votre protection financière tout en réduisant votre charge fiscale."}
-              </p>
-              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                {"Vérifiez si des optimisations supplémentaires sont possibles."}
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-5 w-full"
-                asChild
-                onClick={handleInsuranceCta}
-              >
-                <a
-                  href={PARTNER_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {"Vérifier mes assurances"}
-                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          {/* Optimization items breakdown */}
-          {availableItems.length > 0 && (
-            <div className="mt-8">
-              <h3 className="mb-4 font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
-                {"Détail de vos optimisations"}
-              </h3>
-
-              {/* Locked panel - shown when NOT authenticated */}
-              {!isAuthenticated && (
-                <div className="mb-4 rounded-xl border border-border bg-card p-5 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                      <Lock className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                        {"Débloquez le détail complet"}
-                      </h4>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {"Accédez aux montants précis, documents requis et prochaines actions."}
-                      </p>
-                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <Button
-                          size="sm"
-                          asChild
-                          onClick={handleCreateSpace}
-                        >
-                          <Link href="/auth/sign-up?from=results">
-                            {"Créer mon espace Magifin"}
-                            <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
-                        <span className="text-xs text-muted-foreground">
-                          {"Gratuit · Sans engagement · 5 minutes"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Items list */}
-              <div className="flex flex-col gap-3">
-                {availableItems.map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                      <div>
-                        <p className="font-medium text-card-foreground">{item.title}</p>
-                        {isAuthenticated ? (
-                          <p className="text-sm text-muted-foreground">{item.details}</p>
-                        ) : (
-                          <p className="text-sm italic text-muted-foreground/60">
-                            {"Détails disponibles après création de votre espace"}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {isAuthenticated ? (
-                      <span className="text-sm font-semibold text-accent">
-                        {formatMoneyRange(item.savingsMin, item.savingsMax)}
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {"Montant masqué"}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Call to action for unauthenticated users - moved here for prominence */}
-        {!isAuthenticated && (
-          <div className="mb-12 rounded-2xl border border-border/50 bg-card p-8 text-center">
-            <h3 className="font-[family-name:var(--font-heading)] text-xl font-bold text-card-foreground mb-2">
-              Accédez à votre tableau de bord
+        {/* Optimization items breakdown */}
+        {availableItems.length > 0 && (
+          <div className="mt-10">
+            <h3 className="mb-4 font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+              {"Détail de vos optimisations"}
             </h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-              Créez votre espace Magifin pour sauvegarder vos simulations, tracker vos optimisations et préparer votre déclaration.
-            </p>
-            <Button
-              size="lg"
-              className="h-12 px-8 text-base"
-              asChild
-              onClick={handleCreateSpace}
-            >
-              <Link href="/auth/sign-up?from=results">
-                {"Créer mon espace Magifin"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <p className="mt-3 text-xs text-muted-foreground">
-              {"Gratuit · Sans engagement · 5 minutes"}
-            </p>
-          </div>
-        )}
 
-        {isAuthenticated && (
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row justify-center">
-            <Button
-              size="lg"
-              className="h-12 px-8 text-base"
-              asChild
-            >
-              <Link href="/dashboard">
-                {"Accéder au tableau de bord"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 px-8 text-base"
-              asChild
-            >
-              <Link href="/dashboard/optimisation">
-                {"Voir mes optimisations"}
-              </Link>
-            </Button>
+            {/* Locked panel - shown when NOT authenticated */}
+            {!isAuthenticated && (
+              <div className="mb-4 rounded-xl border border-border bg-card p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+                      {"Débloquez le détail complet"}
+                    </h4>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {"Accédez aux montants précis, documents requis et prochaines actions."}
+                    </p>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Button
+                        size="sm"
+                        asChild
+                        onClick={handleCreateSpace}
+                      >
+                        <Link href="/auth/sign-up?from=results">
+                          {"Créer mon espace Magifin"}
+                          <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        {"Gratuit · Sans engagement · 5 minutes"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Items list */}
+            <div className="flex flex-col gap-3">
+              {availableItems.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
+                    <div>
+                      <p className="font-medium text-card-foreground">{item.title}</p>
+                      {isAuthenticated ? (
+                        <p className="text-sm text-muted-foreground">{item.details}</p>
+                      ) : (
+                        <p className="text-sm italic text-muted-foreground/60">
+                          {"Détails disponibles après création de votre espace"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {isAuthenticated ? (
+                    <span className="text-sm font-semibold text-accent">
+                      {formatMoneyRange(item.savingsMin, item.savingsMax)}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {"Montant masqué"}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
