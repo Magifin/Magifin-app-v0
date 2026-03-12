@@ -206,7 +206,7 @@ export function ResultsContent() {
               <Calendar className="h-4 w-4" />
               <span>
                 Déclaration <strong>{answers.taxYear}</strong>
-                {" · "}revenus {answers.taxYear - 1}
+                {" �� "}revenus {answers.taxYear - 1}
               </span>
             </div>
           )}
@@ -225,9 +225,7 @@ export function ResultsContent() {
               </h1>
               <div className="mt-6 flex items-baseline justify-center gap-3 sm:gap-4">
                 <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
-                  {taxResult.refundOrBalance >= 0
-                    ? formatMoney(taxResult.refundOrBalance)
-                    : "−" + formatMoney(Math.abs(taxResult.refundOrBalance))}
+                  {formatMoney(Math.abs(taxResult.refundOrBalance))}
                 </span>
               </div>
             </>
@@ -468,7 +466,7 @@ export function ResultsContent() {
                       >
                         {taxResult.refundOrBalance >= 0
                           ? "Remboursement estimé"
-                          : "Montant encore dû"}
+                          : "Montant à payer"}
                       </dt>
                       <dd
                         className={cn(
