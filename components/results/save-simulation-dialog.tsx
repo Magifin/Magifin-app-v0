@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Save, Calendar, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import type { TaxResult } from "@/lib/fiscal/belgium/types"
 interface SaveSimulationDialogProps {
   wizardAnswers: WizardAnswers
   taxResult: TaxResult
+  editingSimulationId?: string | null
   onSaved?: () => void
   trigger?: React.ReactNode
 }
@@ -28,6 +29,7 @@ interface SaveSimulationDialogProps {
 export function SaveSimulationDialog({
   wizardAnswers,
   taxResult,
+  editingSimulationId,
   onSaved,
   trigger,
 }: SaveSimulationDialogProps) {
@@ -35,6 +37,25 @@ export function SaveSimulationDialog({
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isLoadingName, setIsLoadingName] = useState(false)
+
+  // Fetch existing simulation name when dialog opens in edit mode
+  useEffect(() => {
+    if (!open || !editingSimulationId) return
+
+    setIsLoadingName(true)
+    fetch(`/api/simulations/${editingSimulationId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.simulation?.name) {
+          setName(data.simulation.name)
+        }
+      })
+      .catch(err => {
+        console.error("[save-dialog] failed to fetch simulation name", err)
+      })
+      .finally(() => setIsLoadingName(false))
+  }, [open, editingSimulationId])
 
   const handleSave = async () => {
     setError(null)
@@ -45,6 +66,7 @@ export function SaveSimulationDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          simulation_id: editingSimulationId ?? null,
           tax_year: wizardAnswers.taxYear ?? getDefaultTaxYear(),
           name: name.trim() || `Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`,
           wizard_answers: wizardAnswers,
@@ -84,10 +106,10 @@ export function SaveSimulationDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Save className="h-5 w-5 text-accent" />
-            Sauvegarder cette simulation
+            {editingSimulationId ? "Mettre à jour la simulation" : "Sauvegarder cette simulation"}
           </DialogTitle>
           <DialogDescription>
-            Enregistrez votre simulation pour la retrouver dans votre dashboard.
+            {editingSimulationId ? "Mettez à jour les détails de votre simulation." : "Enregistrez votre simulation pour la retrouver dans votre dashboard."}
           </DialogDescription>
         </DialogHeader>
 
@@ -108,6 +130,7 @@ export function SaveSimulationDialog({
               placeholder={`Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={isLoadingName}
               className="mt-2"
             />
           </div>
@@ -153,7 +176,7 @@ export function SaveSimulationDialog({
             Annuler
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Sauvegarde..." : "Sauvegarder"}
+            {isSaving ? (editingSimulationId ? "Mise à jour..." : "Sauvegarde...") : (editingSimulationId ? "Mettre à jour" : "Sauvegarder")}
           </Button>
         </DialogFooter>
       </DialogContent>

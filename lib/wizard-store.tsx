@@ -71,6 +71,7 @@ export interface WizardState {
   answers: WizardAnswers
   currentStepId: string
   completedStepIds: string[]
+  editingSimulationId: string | null
 }
 
 // === Step definitions ===
@@ -160,6 +161,7 @@ const defaultState: WizardState = {
   answers: defaultAnswers,
   currentStepId: "taxYear",
   completedStepIds: [],
+  editingSimulationId: null,
 }
 
 const STORAGE_KEY = "magifin_wizard_v1"
@@ -224,6 +226,7 @@ function createWizardStore() {
           answers: { ...defaultAnswers, ...parsed.answers },
           currentStepId: parsed.currentStepId || "taxYear",
           completedStepIds: parsed.completedStepIds || [],
+          editingSimulationId: parsed.editingSimulationId ?? null,
         }
         emit()
       }
@@ -315,6 +318,16 @@ function createWizardStore() {
       answers: mergedAnswers,
       currentStepId: nextStepId,
       completedStepIds: newCompletedStepIds,
+      editingSimulationId: state.editingSimulationId,
+    }
+    persist()
+    emit()
+  }
+
+  const setEditingSimulationId = (simulationId: string | null) => {
+    state = {
+      ...state,
+      editingSimulationId: simulationId,
     }
     persist()
     emit()
@@ -331,6 +344,7 @@ function createWizardStore() {
     markStepComplete,
     resetWizard,
     loadAnswers,
+    setEditingSimulationId,
     isHydrated: () => isHydrated,
   }
 }
@@ -402,6 +416,7 @@ interface WizardContextValue {
   markStepComplete: (stepId: string) => void
   resetWizard: () => void
   loadAnswers: (answers: Partial<WizardAnswers>) => void
+  setEditingSimulationId: (simulationId: string | null) => void
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null)
@@ -440,13 +455,17 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.loadAnswers(answers)
   }, [])
 
+  const setEditingSimulationId = useCallback((simulationId: string | null) => {
+    store.setEditingSimulationId(simulationId)
+  }, [])
+
   const resetHydrationFlag = useCallback(() => {
     store.resetHydrationFlag()
   }, [])
 
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers }}
+      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId }}
     >
       {children}
     </WizardContext.Provider>
