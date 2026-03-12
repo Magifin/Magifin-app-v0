@@ -206,7 +206,7 @@ export function ResultsContent() {
               <Calendar className="h-4 w-4" />
               <span>
                 Déclaration <strong>{answers.taxYear}</strong>
-                {" �� "}revenus {answers.taxYear - 1}
+                {" · "}revenus {answers.taxYear - 1}
               </span>
             </div>
           )}
