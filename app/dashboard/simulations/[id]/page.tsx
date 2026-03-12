@@ -255,7 +255,7 @@ export default function SimulationDetailPage({
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Déductions appliquées</dt>
+            <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
             <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
               -{formatMoney(tax_result.deductionsApplied)}
             </dd>

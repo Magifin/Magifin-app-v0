@@ -34,6 +34,7 @@ interface SimulationListItem {
   description: string | null
   created_at: string
   updated_at: string
+  wizard_answers: any
   tax_result: {
     taxableIncome: number
     estimatedTax: number
@@ -356,6 +357,11 @@ export default function SimulationsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/wizard?resume=${btoa(JSON.stringify(sim.wizard_answers))}&simulationId=${sim.id}`}>
+                      Modifier
+                    </Link>
+                  </Button>
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/simulations/${sim.id}`}>
                       Voir détails
