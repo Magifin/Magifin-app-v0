@@ -73,19 +73,20 @@ export function calculateRegionalSurcharge(
 }
 
 /**
- * Calculate total income tax (federal + regional)
+ * Calculate total income tax (federal + regional + quotité credit)
  *
- * P1 changes:
- *   - Quotité exemptée base credit is subtracted from federalTax to produce netFederal.
- *   - Regional surcharge is applied on netFederal (not on raw federalTax).
+ * Method B: Quotité exemptée is applied as a FIXED TAX CREDIT after brackets.
+ * 
+ * Calculation order:
+ * 1. Calculate federal tax on full taxable income (no income reduction)
+ * 2. Apply quotité as fixed credit: federalTax - quotiteCredit = netFederal
+ * 3. Apply regional surcharge on netFederal (post-credit)
+ * 4. Return netFederal + surcharge as totalTax
  *
- * Return type is additive (new fields: quotiteCredit, netFederal).
- * Existing destructuring of { totalTax, federalTax, regionalSurcharge } is unaffected.
- *
- * @param taxableIncome - Taxable income after income deductions
+ * @param taxableIncome - Taxable income BEFORE any quotité reduction
  * @param region        - The taxpayer's region
  * @param fiscalYear    - Declaration year. Defaults to 2026.
- * @returns Breakdown including federal tax, quotité credit, net federal, surcharge, and total
+ * @returns Federal tax, quotité credit, net federal, surcharge, and total
  */
 export function calculateTotalIncomeTax(
   taxableIncome: number,
@@ -100,14 +101,11 @@ export function calculateTotalIncomeTax(
 } {
   const federalTax = calculateFederalTax(taxableIncome, fiscalYear)
 
-  // P1: Apply quotité exemptée base credit (Art. 131 CIR 92)
-  // Subtracted from federal tax before the municipal surcharge is applied.
-  // Child supplement credit (P2) will be added here once implemented.
+  // Apply quotité exemptée as a fixed tax credit (Method B)
   const quotiteCredit = getQuotiteCredit(fiscalYear)
   const netFederal = Math.max(0, federalTax - quotiteCredit)
 
-  // P1: Surcharge applied on netFederal (post-credit), not on raw federalTax.
-  // ⚠️ Rate for Wallonia is currently 8% — will be corrected to 7.5% in P2.
+  // Regional surcharge applied on netFederal (post-credit)
   const regionalSurcharge = calculateRegionalSurcharge(netFederal, region)
 
   const totalTax = netFederal + regionalSurcharge

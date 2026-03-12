@@ -33,16 +33,29 @@ export interface DeductionRule {
  * Reference: Art. 1451, 1° CIR 92
  * Tax year 2024: Maximum €990 (standard) or €1270 (extended system)
  * 
+ * P2 Implementation: Pension is now a TAX CREDIT (30% of contribution)
+ * instead of a direct deduction. The credit is applied after tax calculation.
+ * 
  * MVP: Using standard maximum of €990
  */
 export const PENSION_SAVINGS_RULE: DeductionRule = {
   key: "pension_savings",
-  label: "Épargne-pension",
+  label: "Épargne-pension (crédit fiscal)",
   maxAmount: 990, // Standard maximum for 2024
   hasCap: true,
   certainty: "confirmed",
   reference: "Art. 1451, 1° CIR 92",
   eligibilityConditions: "Taxpayer aged 18-64 with taxable professional income",
+}
+
+/**
+ * Calculate pension savings TAX CREDIT (30% of contribution)
+ * P2: Pension is now applied as a credit after tax, not as a deduction before tax
+ */
+export function calculatePensionTaxCredit(contribution: number): number {
+  if (contribution <= 0) return 0
+  const cappedContribution = Math.min(contribution, PENSION_SAVINGS_RULE.maxAmount ?? contribution)
+  return cappedContribution * 0.30
 }
 
 /**
@@ -69,17 +82,13 @@ export const DONATIONS_RULE: DeductionRule = {
  * 
  * Reference: Art. 132-140 CIR 92
  * 
- * MVP: Using simplified €1,200 per dependent placeholder
- * Real values vary by number of dependents, disability status, etc.
+ * P2 Implementation: Children at charge increase the tax-free allowance
+ * instead of being treated as deductions.
  * 
- * Actual 2024 supplements for dependents (increases to tax-free amount):
- * - 1 child: €1,850
- * - 2 children: €4,760
- * - 3 children: €10,660
- * - 4 children: €17,250
- * - Per additional child: €6,590
- * 
- * TODO: Implement full dependent calculation
+ * Tax-free allowance supplements for dependents:
+ * - 1 child: €1,650
+ * - 2 children: €4,240
+ * - 3 children: €9,510
  */
 export const DEPENDENT_DEDUCTION_RULE: DeductionRule = {
   key: "dependents",
@@ -92,19 +101,37 @@ export const DEPENDENT_DEDUCTION_RULE: DeductionRule = {
 }
 
 /**
- * Per-dependent deduction amount (MVP simplified)
- * Maximum 6 dependents for MVP calculation
+ * Tax-free allowance supplements for children at charge
+ * These values are added to the base tax-free allowance
+ */
+export const CHILD_TAX_FREE_ALLOWANCE: Record<number, number> = {
+  1: 1650,
+  2: 4240,
+  3: 9510,
+}
+
+/**
+ * Calculate tax-free allowance supplement for children
+ * Uses table lookups for 1-3 children, then adds €6,270 per additional child
+ */
+export function getChildTaxFreeAllowanceSupplement(numChildren: number): number {
+  if (numChildren <= 0) return 0
+  if (numChildren <= 3) {
+    return CHILD_TAX_FREE_ALLOWANCE[numChildren] ?? 0
+  }
+  // For 4+ children: base for 3 + (numChildren - 3) * additional increment
+  const base3Children = CHILD_TAX_FREE_ALLOWANCE[3]
+  const additionalChildren = numChildren - 3
+  const additionalPerChild = 6270
+  return base3Children + (additionalChildren * additionalPerChild)
+}
+
+/**
+ * Per-dependent deduction amount (MVP simplified - DEPRECATED)
+ * Kept for backwards compatibility; should use getChildTaxFreeAllowanceSupplement instead
  */
 export const DEPENDENT_DEDUCTION_AMOUNT = 1200
 export const MAX_DEPENDENTS_MVP = 6
-
-/**
- * Calculate pension savings deduction with cap
- */
-export function calculatePensionDeduction(contribution: number): number {
-  if (contribution <= 0) return 0
-  return Math.min(contribution, PENSION_SAVINGS_RULE.maxAmount ?? contribution)
-}
 
 /**
  * Calculate donations deduction
@@ -117,7 +144,8 @@ export function calculateDonationsDeduction(donations: number): number {
 }
 
 /**
- * Calculate dependent deduction (simplified)
+ * Calculate dependent deduction (DEPRECATED - now handled as tax-free allowance)
+ * Kept for backwards compatibility only; use getChildTaxFreeAllowanceSupplement instead
  */
 export function calculateDependentDeduction(dependents: number): number {
   if (dependents <= 0) return 0

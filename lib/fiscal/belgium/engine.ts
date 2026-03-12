@@ -12,6 +12,7 @@ import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { createResultBuilder } from "@/lib/fiscal/core/result"
 import { calculateTotalIncomeTax } from "./calculators/incomeTax"
 import { calculateAllDeductions } from "./calculators/deductions"
+import { calculateAllTaxCredits } from "./calculators/taxCredits"
 import { calculateEffectiveRate } from "./calculators/effectiveRate"
 import { ENGINE_VERSION, SUPPORTED_FISCAL_YEARS } from "./rules/assumptions"
 import { calculateProfessionalExpenses } from "./rules/brackets"
@@ -19,8 +20,10 @@ import { calculateProfessionalExpenses } from "./rules/brackets"
 /**
  * Compute Belgium tax with basic result
  * 
- * This is the main computation function that maintains backwards compatibility
- * with the existing API contract.
+ * Method B Implementation:
+ * Quotité exemptée is a fixed tax credit applied AFTER federal brackets.
+ * Children are NOT included in deductions.
+ * Pension is a 30% tax credit.
  * 
  * @param input - Tax computation input
  * @returns Tax computation result
@@ -28,42 +31,50 @@ import { calculateProfessionalExpenses } from "./rules/brackets"
 export function computeBelgiumTax(input: TaxInput): TaxResult {
   const region: BelgiumRegion = input.region
 
-  // Sanitize inputs
-  const salaryIncome = clampNonNegative(input.salaryIncome)
-  const dependents = clampNonNegative(input.dependents)
+  // === Stage 1: Sanitize and normalize inputs ===
+  const grossIncome = clampNonNegative(input.salaryIncome)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
   const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
-  // P1: Professional expenses deduction (Art. 51 CIR 92)
-  // MIN(salary × 30%, cap_by_year). Caps for 2024/2025 are PROVISIONAL.
-  const profExpenses = calculateProfessionalExpenses(salaryIncome, input.fiscalYear)
+  // === Stage 2: Calculate net income ===
+  // Professional expenses deduction (Art. 51 CIR 92)
+  // MIN(salary × 30%, cap_by_year)
+  const profExpenses = calculateProfessionalExpenses(grossIncome, input.fiscalYear)
+  const netIncome = clampNonNegative(grossIncome - profExpenses)
 
-  // Income deductions (pension + dependents — UNCHANGED in P1)
-  // ⚠️ TODO P2: pension will become a tax credit; dependent will use quotité supplement
+  // === Stage 3: Calculate deductions (donations only - NOT pension, NOT dependents) ===
   const deductionResult = calculateAllDeductions({
-    pensionContribution,
+    pensionContribution: 0, // Pension is applied as tax credit, not deduction
     donations,
-    dependents,
+    dependents: 0, // Dependents do NOT reduce income; quotité credit handles this
   })
 
-  // Calculate taxable income
-  const taxableIncome = clampNonNegative(salaryIncome - profExpenses - deductionResult.totalDeductions)
+  // === Stage 4: Calculate taxable income ===
+  // Method B: Taxable income = net_income - donations (no quotité reduction)
+  const taxableIncome = clampNonNegative(netIncome - deductionResult.totalDeductions)
 
-  // Calculate income tax (federal + regional)
-  const { totalTax: estimatedTax } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
+  // === Stage 5: Calculate tax before credits ===
+  // Includes quotité credit, regional surcharge, all in Method B order
+  const { totalTax: taxBeforeCredits } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
 
-  // Calculate effective rate
-  const effectiveTaxRate = calculateEffectiveRate(estimatedTax, taxableIncome)
+  // === Stage 6: Apply non-quotité tax credits ===
+  // Pension is applied as 30% credit
+  const taxCredits = calculateAllTaxCredits({ pensionContribution })
+  const estimatedTax = clampNonNegative(taxBeforeCredits - taxCredits.totalCredits)
 
-  // Calculate refund or balance owed
-  // Positive = refund to recover, negative = still owe
+  // === Stage 7: Calculate effective rate and balance ===
+  const effectiveTaxRate = calculateEffectiveRate(estimatedTax, grossIncome)
   const refundOrBalance = taxesAlreadyPaid - estimatedTax
+
+  // Total deductions shown to user (donations + professional expenses only)
+  // NOTE: Quotité and children adjustments are NOT deductions; they're applied as credits
+  const totalDeductionsApplied = profExpenses + deductionResult.totalDeductions
 
   return {
     taxableIncome,
     estimatedTax,
-    deductionsApplied: profExpenses + deductionResult.totalDeductions,
+    deductionsApplied: totalDeductionsApplied,
     effectiveTaxRate,
     taxesAlreadyPaid,
     refundOrBalance,
@@ -73,8 +84,8 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 /**
  * Compute Belgium tax with detailed breakdown
  * 
- * Extended computation that provides full deduction breakdown and
- * optimization suggestions. Use this for detailed analysis views.
+ * Method B: Quotité credit applied after brackets.
+ * Children and pensioner status do NOT reduce income.
  * 
  * @param input - Tax computation input
  * @returns Detailed tax computation result
@@ -82,39 +93,40 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const region: BelgiumRegion = input.region
 
-  // Sanitize inputs
-  const salaryIncome = clampNonNegative(input.salaryIncome)
-  const dependents = clampNonNegative(input.dependents)
+  // === Stage 1: Sanitize and normalize inputs ===
+  const grossIncome = clampNonNegative(input.salaryIncome)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
 
-  // P1: Professional expenses deduction (Art. 51 CIR 92)
-  // MIN(salary × 30%, cap_by_year). Caps for 2024/2025 are PROVISIONAL.
-  const profExpenses = calculateProfessionalExpenses(salaryIncome, input.fiscalYear)
+  // === Stage 2: Calculate net income ===
+  const profExpenses = calculateProfessionalExpenses(grossIncome, input.fiscalYear)
+  const netIncome = clampNonNegative(grossIncome - profExpenses)
 
-  // Income deductions (pension + dependents — UNCHANGED in P1)
-  // ⚠️ TODO P2: pension will become a tax credit; dependent will use quotité supplement
+  // === Stage 3: Calculate deductions ===
   const deductionResult = calculateAllDeductions({
-    pensionContribution,
+    pensionContribution: 0,
     donations,
-    dependents,
+    dependents: 0,
   })
 
-  // Calculate taxable income
-  const taxableIncome = clampNonNegative(salaryIncome - profExpenses - deductionResult.totalDeductions)
+  // === Stage 4: Calculate taxable income ===
+  // Method B: NO quotité reduction here; it's applied as a tax credit
+  const taxableIncome = clampNonNegative(netIncome - deductionResult.totalDeductions)
 
-  // Calculate income tax with breakdown
-  const { federalTax, regionalSurcharge, totalTax } = calculateTotalIncomeTax(
-    taxableIncome,
-    region,
-    input.fiscalYear
-  )
+  // === Stage 5: Calculate tax before credits ===
+  const { totalTax } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
 
-  // Build detailed result
+  // === Stage 6: Apply tax credits ===
+  const taxCredits = calculateAllTaxCredits({ pensionContribution })
+  const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits)
+
+  // === Stage 7: Build detailed result ===
+  const totalDeductionsApplied = profExpenses + deductionResult.totalDeductions
+
   const builder = createResultBuilder()
     .setTaxableIncome(taxableIncome)
-    .setEstimatedTax(totalTax)
-    .setDeductionsApplied(profExpenses + deductionResult.totalDeductions)
+    .setEstimatedTax(finalTax)
+    .setDeductionsApplied(totalDeductionsApplied)
 
   // Add each deduction to the breakdown
   for (const deduction of deductionResult.appliedDeductions) {
