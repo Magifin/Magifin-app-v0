@@ -6,34 +6,27 @@ import { Button } from "@/components/ui/button"
 import { useWizard } from "@/lib/wizard-store"
 
 /**
- * Reusable banner component that displays when there's unsaved wizard state.
- * Smart logic: 
- * - If wizard has answers but no current step (fresh state), suggests going back
- * - If wizard is mid-progress, allows resuming at correct step
- * - If wizard reached results, shows "Reprendre" to results
+ * Reusable banner component that displays ONLY when there's a real unsaved draft.
+ * 
+ * CANONICAL RULES:
+ * - Shows ONLY if user has entered data AND it hasn't been saved yet (hasUnsavedChanges)
+ * - Does NOT show for previously saved simulations (unless user made changes since)
+ * - Resume logic: routes to /results if already reached results, else /wizard
  */
 export function UnsavedSimulationBanner() {
-  const { state } = useWizard()
+  const { state, hasUnsavedChanges } = useWizard()
 
-  // Detect if there's meaningful unsaved state (beyond first step)
-  const hasUnsavedState =
-    state.answers &&
-    Object.values(state.answers).some(
-      (v) => v !== null && v !== undefined && v !== 0 && v !== ""
-    )
+  // Only show banner if there's a REAL unsaved draft
+  const hasUnsavedDraft = hasUnsavedChanges()
 
-  if (!hasUnsavedState) {
+  if (!hasUnsavedDraft) {
     return null
   }
 
   // Smart resume logic:
-  // 1. If currentStepId is "taxYear" or empty, user was viewing results → go to /results
-  // 2. If currentStepId is something else, user was in middle of wizard → go to /wizard
-  //    (the wizard will restore to correct step via the store)
-  const resumeHref =
-    state.currentStepId && state.currentStepId !== "taxYear"
-      ? "/wizard"
-      : "/results"
+  // 1. If currentStepId is "taxYear", user was viewing results → go to /results
+  // 2. If currentStepId is anything else, user was in wizard → go to /wizard
+  const resumeHref = state.currentStepId === "taxYear" ? "/results" : "/wizard"
 
   return (
     <div className="mb-6 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 p-4">
@@ -46,7 +39,7 @@ export function UnsavedSimulationBanner() {
       <Button size="sm" asChild className="gap-2">
         <Link href={resumeHref}>
           <ArrowRight className="h-4 w-4" />
-          Reprendre
+          Reprendre ma simulation
         </Link>
       </Button>
     </div>

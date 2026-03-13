@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
+import { useWizard } from "@/lib/wizard-store"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
@@ -33,6 +34,7 @@ export function SaveSimulationDialog({
   onSaved,
   trigger,
 }: SaveSimulationDialogProps) {
+  const { markAsSaved } = useWizard()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
@@ -89,6 +91,9 @@ export function SaveSimulationDialog({
         setIsSaving(false)
         return
       }
+
+      // Mark as saved to clear the "unsaved draft" state
+      markAsSaved()
 
       setOpen(false)
       setName("")
