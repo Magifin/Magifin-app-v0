@@ -98,7 +98,8 @@ function WizardContent() {
     } else {
       resetWizard()
     }
-  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer, goToStep])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep omitted: effect is one-time (hasProcessedResume guard)
+  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
 
   // Track wizard start
   useEffect(() => {
