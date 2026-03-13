@@ -236,7 +236,8 @@ function OptimisationContent() {
       )}
       </div>
     </div>
-  }
+  )
+}
 
 export default function OptimisationPage() {
   return (
