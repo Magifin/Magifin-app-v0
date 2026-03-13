@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import type { Simulation } from "@/lib/supabase/types"
+import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 
 export default function SimulationDetailPage({
   params,
@@ -40,34 +41,25 @@ export default function SimulationDetailPage({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log("[v0] SimulationDetail: route id =", id)
-    console.log("[v0] SimulationDetail: auth user present =", !!user, "authLoading =", authLoading)
-    
     if (authLoading) return
     if (!user) {
-      console.log("[v0] SimulationDetail: no user, redirecting to login")
       router.push(`/auth/login?redirect=/dashboard/simulations/${id}`)
       return
     }
 
     const fetchSimulation = async () => {
-      console.log("[v0] SimulationDetail: starting fetch for id =", id)
       setIsLoading(true)
       try {
         const res = await fetch(`/api/simulations/${id}`)
-        console.log("[v0] SimulationDetail: API response status =", res.status)
         const data = await res.json()
 
         if (!res.ok) {
-          console.log("[v0] SimulationDetail: API error, setting error =", data.error)
           setError(data.error || "Simulation non trouvée")
           return
         }
 
-        console.log("[v0] SimulationDetail: simulation data null/undefined?", data.simulation == null)
         setSimulation(data.simulation)
       } catch (err) {
-        console.log("[v0] SimulationDetail: fetch exception =", err instanceof Error ? err.message : "Unknown error")
         setError("Erreur de connexion")
       } finally {
         setIsLoading(false)
@@ -80,7 +72,6 @@ export default function SimulationDetailPage({
   // Timeout fallback: if still loading after 2 seconds, force resolution to prevent infinite spinner
   useEffect(() => {
     if (isLoading) {
-      console.log("[v0] SimulationDetail: timeout - forcing loading state resolution after 2s")
       const timeout = setTimeout(() => {
         setIsLoading(false)
         if (!simulation && !error) {
@@ -162,6 +153,8 @@ export default function SimulationDetailPage({
 
   return (
     <div>
+      <UnsavedSimulationBanner />
+
       {/* Header with navigation */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">

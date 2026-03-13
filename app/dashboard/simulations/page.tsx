@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/auth-context"
 import { getDefaultTaxYear } from "@/lib/supabase/types"
 import { useWizard } from "@/lib/wizard-store"
 import { cn } from "@/lib/utils"
+import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 
 interface SimulationListItem {
   id: string
@@ -49,7 +50,6 @@ export default function SimulationsPage() {
   const router = useRouter()
   const { user, isLoading: authLoading } = useAuth()
   const { state } = useWizard()
-  const hasUnsavedState = state.answers && Object.values(state.answers).some(v => v !== null && v !== undefined && v !== 0 && v !== '')
 
   const [simulations, setSimulations] = useState<SimulationListItem[]>([])
   const [availableYears, setAvailableYears] = useState<number[]>([])
@@ -114,16 +114,37 @@ export default function SimulationsPage() {
     }
   }, [selectedYear, router])
 
-  // Delete simulation
+  // Delete simulation - preserve selected year filter
   const deleteSimulation = async (id: string) => {
     try {
       const res = await fetch(`/api/simulations/${id}`, { method: "DELETE" })
       if (res.ok) {
+        // Remove from local state immediately
         setSimulations((prev) => prev.filter((s) => s.id !== id))
-        // Refresh years but preserve current selectedYear filter
-        await fetchYears()
-        // Refresh simulations for the current year (preserving the filter)
-        await fetchSimulations()
+        
+        // Refresh available years
+        try {
+          const yearsRes = await fetch("/api/simulations/years")
+          const yearsData = await yearsRes.json()
+          if (yearsRes.ok && yearsData.years) {
+            setAvailableYears(yearsData.years)
+          }
+        } catch {
+          // Silently fail
+        }
+        
+        // Re-fetch simulations for the CURRENT selected year (preserves filter)
+        if (selectedYear !== null) {
+          try {
+            const simRes = await fetch(`/api/simulations/list?tax_year=${selectedYear}`)
+            const simData = await simRes.json()
+            if (simRes.ok) {
+              setSimulations(simData.simulations || [])
+            }
+          } catch {
+            // Silently fail
+          }
+        }
       }
     } catch {
       // Silently fail
@@ -204,27 +225,7 @@ export default function SimulationsPage() {
 
   return (
     <div>
-      {/* Return to unsaved result banner */}
-      {hasUnsavedState && (
-        <div className="mb-6 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 p-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-accent" />
-            <p className="text-sm text-card-foreground">
-              Vous avez une simulation en cours non sauvegardée.
-            </p>
-          </div>
-          <Button
-            size="sm"
-            asChild
-            className="gap-2"
-          >
-            <Link href="/results">
-              <ArrowRight className="h-4 w-4" />
-              Reprendre
-            </Link>
-          </Button>
-        </div>
-      )}
+      <UnsavedSimulationBanner />
 
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

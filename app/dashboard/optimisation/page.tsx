@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
+import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 
 function OptimisationContent() {
   const searchParams = useSearchParams()
@@ -97,7 +98,10 @@ function OptimisationContent() {
         </Button>
       </div>
 
-      {!hasData || isLoadingSimulation ? (
+      <div>
+        <UnsavedSimulationBanner />
+
+        {!hasData || isLoadingSimulation ? (
         // Empty state - no wizard data yet
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -230,9 +234,9 @@ function OptimisationContent() {
           )}
         </>
       )}
+      </div>
     </div>
-  )
-}
+  }
 
 export default function OptimisationPage() {
   return (
