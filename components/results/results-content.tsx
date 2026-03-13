@@ -97,7 +97,13 @@ export function ResultsContent() {
   const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(answers))}`
+    // Encode full wizard state in URL for complete restoration
+    const resumeData = {
+      answers,
+      currentStepId: editingSimulationId ? "taxYear" : getLastCompletedStepId(completedStepIds, answers),
+      completedStepIds,
+    }
+    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(resumeData))}`
     router.push(resumeUrl)
   }
 
@@ -206,7 +212,7 @@ export function ResultsContent() {
               <Calendar className="h-4 w-4" />
               <span>
                 Déclaration <strong>{answers.taxYear}</strong>
-                {" · "}revenus {answers.taxYear - 1}
+                {" �� "}revenus {answers.taxYear - 1}
               </span>
             </div>
           )}

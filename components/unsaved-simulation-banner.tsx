@@ -7,12 +7,15 @@ import { useWizard } from "@/lib/wizard-store"
 
 /**
  * Reusable banner component that displays when there's unsaved wizard state.
- * Intelligently routes to /results if a result exists, or /wizard if still in progress.
+ * Smart logic: 
+ * - If wizard has answers but no current step (fresh state), suggests going back
+ * - If wizard is mid-progress, allows resuming at correct step
+ * - If wizard reached results, shows "Reprendre" to results
  */
 export function UnsavedSimulationBanner() {
   const { state } = useWizard()
 
-  // Detect if there's unsaved state
+  // Detect if there's meaningful unsaved state (beyond first step)
   const hasUnsavedState =
     state.answers &&
     Object.values(state.answers).some(
@@ -24,8 +27,9 @@ export function UnsavedSimulationBanner() {
   }
 
   // Smart resume logic:
-  // - If currentStepId exists AND is not the first step, user is in wizard progress → go to /wizard
-  // - Otherwise, user likely reached results page → go to /results
+  // 1. If currentStepId is "taxYear" or empty, user was viewing results → go to /results
+  // 2. If currentStepId is something else, user was in middle of wizard → go to /wizard
+  //    (the wizard will restore to correct step via the store)
   const resumeHref =
     state.currentStepId && state.currentStepId !== "taxYear"
       ? "/wizard"
