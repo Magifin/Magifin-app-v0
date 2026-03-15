@@ -103,7 +103,7 @@ function WizardContent() {
     } else {
       // Only reset if there's no state in localStorage
       // This allows the wizard to resume after navigation from the banner
-      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("wizard-state")
+      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
       if (!hasStoredState) {
         resetWizard()
       }
