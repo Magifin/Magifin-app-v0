@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/auth-context"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
+import { formatDeclarationYear } from "@/lib/format-declaration-year"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
@@ -207,15 +208,12 @@ export function ResultsContent() {
             Votre situation analysée
           </p>
 
-          {answers.taxYear && (
-            <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>
-                Déclaration <strong>{answers.taxYear}</strong>
-                {" �� "}revenus {answers.taxYear - 1}
-              </span>
-            </div>
-          )}
+              {answers.taxYear && (
+                <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{formatDeclarationYear(answers.taxYear - 1)}</span>
+                </div>
+              )}
 
           <p className="mb-3 mt-6 text-sm font-semibold uppercase tracking-widest text-accent">
             Votre estimation fiscale
