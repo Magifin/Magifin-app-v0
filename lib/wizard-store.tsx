@@ -229,6 +229,7 @@ function createWizardStore() {
           currentStepId: parsed.currentStepId || "taxYear",
           completedStepIds: parsed.completedStepIds || [],
           editingSimulationId: parsed.editingSimulationId ?? null,
+          lastSavedAnswers: parsed.lastSavedAnswers || null,
         }
         emit()
       }
@@ -278,37 +279,19 @@ function createWizardStore() {
   }
 
   const loadAnswers = (answers: Partial<WizardAnswers>) => {
-    // Rebuild state from defaultAnswers with loaded answers on top
-    const mergedAnswers = { ...defaultAnswers, ...answers }
+    // Rebuild state from existing answers, overlaying loaded answers on top
+    // Do NOT use defaultAnswers as the base - preserve existing field values
+    // This prevents losing values like serviceVouchersAmount (100 -> 98 bug)
+    const mergedAnswers = { ...state.answers, ...answers }
     
-    // Recompute completedStepIds based on what answers we have
-    const availableSteps = getAvailableSteps(mergedAnswers)
-    const newCompletedStepIds = availableSteps
-      .filter((step) => {
-        // Map step ID to the corresponding answer key
-        const answerKey = STEP_ID_TO_ANSWER_KEY[step.id]
-
-        if (!answerKey) {
-          return false
-        }
-
-        const value = mergedAnswers[answerKey]
-        
-        // Treat different types appropriately
-        if (value === null || value === undefined) return false
-        if (typeof value === 'string' && value === '') return false
-        if (typeof value === 'number' && value === 0) {
-          // For numeric fields, 0 is valid (e.g., children: 0, costs: 0)
-          // But we check if the field was explicitly set in the loaded answers
-          return answerKey in answers
-        }
-        return true
-      })
-      .map((step) => step.id)
+    // IMPORTANT: Do NOT recompute completedStepIds from answer values
+    // The completedStepIds comes from localStorage and must be preserved
+    // This prevents the bug where future steps show as completed prematurely
     
     // Find the first incomplete step, or use the last available if all are complete
     let nextStepId = "taxYear"
-    const firstIncomplete = availableSteps.find((step) => !newCompletedStepIds.includes(step.id))
+    const availableSteps = getAvailableSteps(mergedAnswers)
+    const firstIncomplete = availableSteps.find((step) => !state.completedStepIds.includes(step.id))
     if (firstIncomplete) {
       nextStepId = firstIncomplete.id
     } else if (availableSteps.length > 0) {
@@ -319,8 +302,9 @@ function createWizardStore() {
     state = {
       answers: mergedAnswers,
       currentStepId: nextStepId,
-      completedStepIds: newCompletedStepIds,
+      completedStepIds: state.completedStepIds,  // PRESERVE existing completedStepIds
       editingSimulationId: state.editingSimulationId,
+      lastSavedAnswers: state.lastSavedAnswers,
     }
     persist()
     emit()

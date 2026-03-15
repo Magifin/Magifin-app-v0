@@ -11,7 +11,7 @@ import { useWizard } from "@/lib/wizard-store"
  * CANONICAL RULES:
  * - Shows ONLY if user has entered data AND it hasn't been saved yet (hasUnsavedChanges)
  * - Does NOT show for previously saved simulations (unless user made changes since)
- * - Resume logic: routes to /results if already reached results, else /wizard
+ * - Resume logic: routes to /results if already reached results, else /wizard with full state encoded
  */
 export function UnsavedSimulationBanner() {
   const { state, hasUnsavedChanges } = useWizard()
@@ -24,9 +24,21 @@ export function UnsavedSimulationBanner() {
   }
 
   // Smart resume logic:
-  // 1. If currentStepId is "taxYear", user was viewing results → go to /results
-  // 2. If currentStepId is anything else, user was in wizard → go to /wizard
-  const resumeHref = state.currentStepId === "taxYear" ? "/results" : "/wizard"
+  // 1. If currentStepId is "taxYear", user was viewing results → go to /results (state in localStorage)
+  // 2. If currentStepId is anything else, user was in wizard → go to /wizard with state encoded in URL
+  //    (ensures state persists even if localStorage is cleared)
+  const resumeHref = (() => {
+    if (state.currentStepId === "taxYear") {
+      return "/results"
+    }
+    // Encode full state in URL so wizard can restore it
+    const resumeData = {
+      answers: state.answers,
+      currentStepId: state.currentStepId,
+      completedStepIds: state.completedStepIds,
+    }
+    return `/wizard?resume=${btoa(JSON.stringify(resumeData))}`
+  })()
 
   return (
     <div className="mb-6 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 p-4">
@@ -45,3 +57,4 @@ export function UnsavedSimulationBanner() {
     </div>
   )
 }
+
