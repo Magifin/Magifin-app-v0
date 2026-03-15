@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { AlertCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useWizard, getAvailableSteps } from "@/lib/wizard-store"
+import { useWizard } from "@/lib/wizard-store"
 
 /**
  * Reusable banner component that displays ONLY when there's a real unsaved draft.
@@ -24,20 +24,14 @@ export function UnsavedSimulationBanner() {
   }
 
   // Smart resume logic:
-  // 1. Check if user completed all available steps (reached results)
-  // 2. If so, resume directly to /results
-  // 3. Otherwise, resume to /wizard with state encoded in URL
+  // 1. If currentStepId is "taxYear", user was viewing results → go to /results (state in localStorage)
+  // 2. If currentStepId is anything else, user was in wizard → go to /wizard with state encoded in URL
+  //    (ensures state persists even if localStorage is cleared)
   const resumeHref = (() => {
-    const availableSteps = getAvailableSteps(state.answers)
-    const hasReachedResults = availableSteps.length > 0 && 
-      state.completedStepIds.length === availableSteps.length
-    
-    if (hasReachedResults) {
-      // User reached results - go back to results page
+    if (state.currentStepId === "taxYear") {
       return "/results"
     }
-    
-    // User is mid-wizard - encode full state in URL
+    // Encode full state in URL so wizard can restore it
     const resumeData = {
       answers: state.answers,
       currentStepId: state.currentStepId,
@@ -45,7 +39,6 @@ export function UnsavedSimulationBanner() {
     }
     return `/wizard?resume=${btoa(JSON.stringify(resumeData))}`
   })()
-
 
   return (
     <div className="mb-6 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 p-4">
@@ -64,3 +57,4 @@ export function UnsavedSimulationBanner() {
     </div>
   )
 }
+
