@@ -3,7 +3,7 @@
 import { useEffect, useMemo, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Eye } from "lucide-react"
+import { ArrowLeft, Eye, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { StepTaxYear } from "@/components/wizard/step-tax-year"
@@ -29,6 +29,7 @@ import {
 } from "@/lib/wizard-store"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import { useUser } from "@/lib/user-store"
+import { useAuth } from "@/lib/auth-context"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { track } from "@/lib/track"
 
@@ -37,6 +38,7 @@ function WizardContent() {
   const searchParams = useSearchParams()
   const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved } = useWizard()
   const { user } = useUser()
+  const { user: authUser, isLoading: authLoading } = useAuth()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
 
   const availableSteps = getAvailableSteps(answers)
@@ -338,15 +340,34 @@ function WizardContent() {
             <ArrowLeft className="h-4 w-4" />
             Retour
           </Link>
-          <div className="flex items-center gap-2">
+          
+          {/* Logo - clickable with auth-aware navigation */}
+          <Link
+            href={authUser ? "/dashboard" : "/"}
+            className="flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary"
+            title={authUser ? "Aller au tableau de bord" : "Retour à l'accueil"}
+          >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
               <span className="text-xs font-bold text-primary-foreground">M</span>
             </div>
-            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight">
               Magifin
             </span>
+          </Link>
+          
+          {/* Right side: Dashboard link when authenticated (optional UX improvement) */}
+          <div className="flex items-center gap-2">
+            {authUser && !authLoading && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                title="Aller au tableau de bord"
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Tableau de bord</span>
+              </Link>
+            )}
           </div>
-          <div className="w-16" />
         </div>
       </header>
 
