@@ -35,7 +35,7 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved } = useWizard()
   const { user } = useUser()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
 
@@ -88,6 +88,9 @@ function WizardContent() {
         // Store simulation ID if editing an existing simulation
         if (simulationId) {
           setEditingSimulationId(simulationId)
+          // Mark as saved so we know this was loaded from database
+          // and don't show unsaved banner just because it's being edited
+          markAsSaved()
         }
 
         window.history.replaceState(null, '', '/wizard')
@@ -98,7 +101,7 @@ function WizardContent() {
     } else {
       resetWizard()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep omitted: effect is one-time (hasProcessedResume guard)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
   }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
 
   // Track wizard start

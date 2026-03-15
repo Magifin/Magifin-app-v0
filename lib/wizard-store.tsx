@@ -229,6 +229,7 @@ function createWizardStore() {
           currentStepId: parsed.currentStepId || "taxYear",
           completedStepIds: parsed.completedStepIds || [],
           editingSimulationId: parsed.editingSimulationId ?? null,
+          lastSavedAnswers: parsed.lastSavedAnswers || null,
         }
         emit()
       }
