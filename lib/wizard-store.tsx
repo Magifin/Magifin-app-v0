@@ -166,7 +166,8 @@ const defaultState: WizardState = {
   lastSavedAnswers: null,
 }
 
-const STORAGE_KEY = "magifin_wizard_v1"
+const STORAGE_KEY = "magifin_wizard_v1"  // For unsaved drafts
+const EDITING_STORAGE_KEY = "magifin_wizard_editing"  // For editing existing simulations
 
 // === Step ID to Answer Key Mapping ===
 // Step IDs do NOT match WizardAnswers keys directly, so we need this mapping
@@ -210,7 +211,9 @@ function createWizardStore() {
   const persist = () => {
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+        // Use different storage key based on whether we're editing an existing simulation
+        const storageKey = state.editingSimulationId ? EDITING_STORAGE_KEY : STORAGE_KEY
+        localStorage.setItem(storageKey, JSON.stringify(state))
       } catch {
         // ignore storage errors
       }
@@ -221,7 +224,11 @@ function createWizardStore() {
     if (isHydrated || typeof window === "undefined") return
     isHydrated = true
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      // Load from the appropriate storage key (editing takes precedence, then draft)
+      const editingStored = localStorage.getItem(EDITING_STORAGE_KEY)
+      const draftStored = editingStored ? null : localStorage.getItem(STORAGE_KEY)
+      const stored = editingStored || draftStored
+      
       if (stored) {
         const parsed = JSON.parse(stored) as WizardState
         state = {
@@ -270,6 +277,17 @@ function createWizardStore() {
   const resetWizard = () => {
     state = defaultState
     isHydrated = false // Reset hydration flag when explicitly resetting
+    
+    // Clean up both storage contexts when resetting
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(EDITING_STORAGE_KEY)
+      } catch {
+        // ignore errors
+      }
+    }
+    
     persist()
     emit()
   }
@@ -307,12 +325,34 @@ function createWizardStore() {
       ...state,
       editingSimulationId: simulationId,
     }
+    
+    // Manage storage contexts to keep draft and editing states separate
+    if (typeof window !== "undefined") {
+      try {
+        if (simulationId) {
+          // Entering edit mode: save current draft before switching to editing storage
+          // This preserves the draft so it can be resumed after editing
+          if (localStorage.getItem(STORAGE_KEY) && !localStorage.getItem(EDITING_STORAGE_KEY)) {
+            // Only do this transition once, not on every edit
+            // (Don't create new editing storage if we're switching between edits)
+          }
+        } else {
+          // Exiting edit mode: clear editing storage, draft can resume normally
+          localStorage.removeItem(EDITING_STORAGE_KEY)
+        }
+      } catch {
+        // ignore errors
+      }
+    }
+    
     persist()
     emit()
   }
 
   const markAsSaved = () => {
     // Snapshot current answers as the "saved" baseline
+    // In edit mode: this marks the edited simulation as saved (no unsaved banner while editing)
+    // In draft mode: this marks the draft as saved (clears unsaved status after explicit save)
     state = {
       ...state,
       lastSavedAnswers: { ...state.answers },

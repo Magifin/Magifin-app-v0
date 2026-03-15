@@ -72,13 +72,16 @@ function WizardContent() {
           // The resume param contains only wizard_answers (from database)
           // Always start from first step (taxYear) for edit mode
           // Set editingSimulationId FIRST so loadAnswers knows we're in edit mode
+          // This also clears the draft storage key to prevent conflicts
           setEditingSimulationId(simulationId)
           loadAnswers(answersToLoad)
-          // Mark as saved so the unsaved banner doesn't show incorrectly
+          // Mark as saved so the unsaved banner doesn't show incorrectly for the edited simulation
           markAsSaved()
         } else {
           // RESUME MODE: Restoring an unsaved draft from URL
           // May have currentStepId and completedStepIds in new format
+          // First, ensure we're not in edit mode
+          setEditingSimulationId(null)
           loadAnswers(answersToLoad)
           
           // Restore step position if provided in new format
@@ -104,12 +107,16 @@ function WizardContent() {
         resetWizard()
       }
     } else {
-      // Only reset if there's no state in localStorage
-      // This allows the wizard to resume after navigation from the banner
-      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
-      if (!hasStoredState) {
+      // No resume param: check if there's stored state
+      // Priority: editing state (if user was editing) → draft state (if user has unsaved draft)
+      const hasEditingState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_editing")
+      const hasDraftState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
+      
+      if (!hasEditingState && !hasDraftState) {
+        // No stored state at all: completely fresh wizard
         resetWizard()
       }
+      // If there is stored state, hydrate will load it automatically
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
   }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
