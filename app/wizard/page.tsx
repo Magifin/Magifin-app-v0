@@ -99,7 +99,12 @@ function WizardContent() {
         resetWizard()
       }
     } else {
-      resetWizard()
+      // Only reset if there's no state in localStorage
+      // This allows the wizard to resume after navigation from the banner
+      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("wizard-state")
+      if (!hasStoredState) {
+        resetWizard()
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
   }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
