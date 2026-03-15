@@ -26,6 +26,7 @@ import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import type { Simulation } from "@/lib/supabase/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
+import { formatDeclarationYear } from "@/lib/format-declaration-year"
 
 export default function SimulationDetailPage({
   params,
@@ -187,7 +188,7 @@ export default function SimulationDetailPage({
                   </h1>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    Déclaration {simulation.tax_year} · revenus {simulation.tax_year - 1}
+                    {formatDeclarationYear(simulation.tax_year - 1)}
                   </span>
                 </div>
                 <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
