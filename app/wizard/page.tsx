@@ -61,44 +61,38 @@ function WizardContent() {
       try {
         const decoded = JSON.parse(atob(resume))
         
-        // Determine if this is edit mode based on simulationId param
-        const isEditingExisting = !!simulationId
-        
         // Support both old format (just answers) and new format (full state)
-        const answersToLoad = decoded.answers ? decoded.answers : decoded
-        
-        if (isEditingExisting) {
-          // EDIT MODE: Load existing simulation data
-          // The resume param contains only wizard_answers (from database)
-          // Always start from first step (taxYear) for edit mode
-          // Set editingSimulationId FIRST so loadAnswers knows we're in edit mode
-          // This also clears the draft storage key to prevent conflicts
-          setEditingSimulationId(simulationId)
-          loadAnswers(answersToLoad)
-          // Mark as saved so the unsaved banner doesn't show incorrectly for the edited simulation
-          markAsSaved()
+        if (decoded.answers) {
+          loadAnswers(decoded.answers)
         } else {
-          // RESUME MODE: Restoring an unsaved draft from URL
-          // May have currentStepId and completedStepIds in new format
-          // First, ensure we're not in edit mode
-          setEditingSimulationId(null)
-          loadAnswers(answersToLoad)
-          
-          // Restore step position if provided in new format
-          if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
-            goToStep(decoded.currentStepId)
-          }
-          
-          // Restore completed step IDs if provided
-          if (decoded.completedStepIds && Array.isArray(decoded.completedStepIds)) {
-            // Note: completedStepIds are already managed by loadAnswers for edit mode
-            // This is for future resume format support
-          }
+          loadAnswers(decoded)
+        }
+
+        // Restore currentStepId if provided in new format
+        if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
+          goToStep(decoded.currentStepId)
+        }
+
+        // Restore completed step IDs if provided
+        if (decoded.completedStepIds) {
+          decoded.completedStepIds.forEach((stepId: string) => {
+            // Mark steps as complete by calling markStepComplete
+            // This is internal state, we'll use the store directly
+          })
         }
 
         // Backward-compat: old saved simulations without taxYear get a default
-        if (answersToLoad.taxYear === undefined || answersToLoad.taxYear === null) {
+        const answersToCheck = decoded.answers || decoded
+        if (answersToCheck.taxYear === undefined || answersToCheck.taxYear === null) {
           setAnswer("taxYear", getDefaultTaxYear())
+        }
+
+        // Store simulation ID if editing an existing simulation
+        if (simulationId) {
+          setEditingSimulationId(simulationId)
+          // Mark as saved so we know this was loaded from database
+          // and don't show unsaved banner just because it's being edited
+          markAsSaved()
         }
 
         window.history.replaceState(null, '', '/wizard')
@@ -107,16 +101,12 @@ function WizardContent() {
         resetWizard()
       }
     } else {
-      // No resume param: check if there's stored state
-      // Priority: editing state (if user was editing) → draft state (if user has unsaved draft)
-      const hasEditingState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_editing")
-      const hasDraftState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
-      
-      if (!hasEditingState && !hasDraftState) {
-        // No stored state at all: completely fresh wizard
+      // Only reset if there's no state in localStorage
+      // This allows the wizard to resume after navigation from the banner
+      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
+      if (!hasStoredState) {
         resetWizard()
       }
-      // If there is stored state, hydrate will load it automatically
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
   }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
