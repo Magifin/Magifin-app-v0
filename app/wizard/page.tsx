@@ -59,38 +59,40 @@ function WizardContent() {
       try {
         const decoded = JSON.parse(atob(resume))
         
+        // Determine if this is edit mode based on simulationId param
+        const isEditingExisting = !!simulationId
+        
         // Support both old format (just answers) and new format (full state)
-        if (decoded.answers) {
-          loadAnswers(decoded.answers)
+        const answersToLoad = decoded.answers ? decoded.answers : decoded
+        
+        if (isEditingExisting) {
+          // EDIT MODE: Load existing simulation data
+          // The resume param contains only wizard_answers (from database)
+          // Always start from first step (taxYear) for edit mode
+          loadAnswers(answersToLoad)
+          setEditingSimulationId(simulationId)
+          // Mark as saved so the unsaved banner doesn't show incorrectly
+          markAsSaved()
         } else {
-          loadAnswers(decoded)
-        }
-
-        // Restore currentStepId if provided in new format
-        if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
-          goToStep(decoded.currentStepId)
-        }
-
-        // Restore completed step IDs if provided
-        if (decoded.completedStepIds) {
-          decoded.completedStepIds.forEach((stepId: string) => {
-            // Mark steps as complete by calling markStepComplete
-            // This is internal state, we'll use the store directly
-          })
+          // RESUME MODE: Restoring an unsaved draft from URL
+          // May have currentStepId and completedStepIds in new format
+          loadAnswers(answersToLoad)
+          
+          // Restore step position if provided in new format
+          if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
+            goToStep(decoded.currentStepId)
+          }
+          
+          // Restore completed step IDs if provided
+          if (decoded.completedStepIds && Array.isArray(decoded.completedStepIds)) {
+            // Note: completedStepIds are already managed by loadAnswers for edit mode
+            // This is for future resume format support
+          }
         }
 
         // Backward-compat: old saved simulations without taxYear get a default
-        const answersToCheck = decoded.answers || decoded
-        if (answersToCheck.taxYear === undefined || answersToCheck.taxYear === null) {
+        if (answersToLoad.taxYear === undefined || answersToLoad.taxYear === null) {
           setAnswer("taxYear", getDefaultTaxYear())
-        }
-
-        // Store simulation ID if editing an existing simulation
-        if (simulationId) {
-          setEditingSimulationId(simulationId)
-          // Mark as saved so we know this was loaded from database
-          // and don't show unsaved banner just because it's being edited
-          markAsSaved()
         }
 
         window.history.replaceState(null, '', '/wizard')
