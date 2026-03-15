@@ -1,9 +1,10 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { AlertCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useWizard } from "@/lib/wizard-store"
+import { useWizard, wizardStore } from "@/lib/wizard-store"
 
 /**
  * Reusable banner component that displays ONLY when there's a real unsaved draft.
@@ -15,9 +16,17 @@ import { useWizard } from "@/lib/wizard-store"
  */
 export function UnsavedSimulationBanner() {
   const { state, hasUnsavedChanges } = useWizard()
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Hydrate wizard state from localStorage on mount
+  // This allows the banner to detect unsaved drafts
+  useEffect(() => {
+    wizardStore.hydrate()
+    setIsHydrated(true)
+  }, [])
 
   // Only show banner if there's a REAL unsaved draft
-  const hasUnsavedDraft = hasUnsavedChanges()
+  const hasUnsavedDraft = isHydrated && hasUnsavedChanges()
 
   if (!hasUnsavedDraft) {
     return null
