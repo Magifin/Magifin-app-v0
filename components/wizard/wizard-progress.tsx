@@ -61,7 +61,7 @@ export function WizardProgress({
                 <div
                   className={cn(
                     "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors",
-                    isCompleted || isCurrent
+                    isCompleted
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"
                   )}
@@ -75,8 +75,10 @@ export function WizardProgress({
                 <span
                   className={cn(
                     "text-xs font-medium truncate max-w-[80px]",
-                    isCompleted || isCurrent
+                    isCompleted
                       ? "text-foreground"
+                      : isCurrent
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground"
                   )}
                 >
