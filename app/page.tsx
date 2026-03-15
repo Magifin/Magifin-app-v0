@@ -11,7 +11,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <UnsavedSimulationBanner />
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-16 pb-20">
+        <UnsavedSimulationBanner />
+      </div>
       <main>
         <Hero />
         <HowItWorks />
