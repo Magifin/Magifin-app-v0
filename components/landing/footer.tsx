@@ -46,11 +46,6 @@ export function Footer() {
                   Assurances
                 </a>
               </li>
-              <li>
-                <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-                  Dashboard
-                </Link>
-              </li>
             </ul>
           </div>
 

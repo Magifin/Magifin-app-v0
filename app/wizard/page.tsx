@@ -194,13 +194,7 @@ function WizardContent() {
 
   const handleViewResults = () => {
     track("wizard_view_results_clicked", { stepId: currentStepId, isFullySupported })
-    if (editingSimulationId) {
-      // Edit mode: navigate to results for the current simulation
-      router.push(`/results?simulationId=${editingSimulationId}`)
-    } else {
-      // New wizard mode: go to results page
-      router.push("/results")
-    }
+    router.push("/results")
   }
 
   const renderStep = () => {
@@ -361,8 +355,6 @@ function WizardContent() {
         currentStepId={currentStepId}
         completedStepIds={completedStepIds}
         onStepClick={handleStepClick}
-        editingSimulationId={editingSimulationId}
-        onViewResults={handleViewResults}
       />
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10">
