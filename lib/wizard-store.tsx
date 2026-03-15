@@ -284,25 +284,12 @@ function createWizardStore() {
     // This prevents losing values like serviceVouchersAmount (100 -> 98 bug)
     const mergedAnswers = { ...state.answers, ...answers }
     
-    // IMPORTANT: Do NOT recompute completedStepIds from answer values
-    // The completedStepIds comes from localStorage and must be preserved
-    // This prevents the bug where future steps show as completed prematurely
-    
-    // Find the first incomplete step, or use the last available if all are complete
-    let nextStepId = "taxYear"
-    const availableSteps = getAvailableSteps(mergedAnswers)
-    const firstIncomplete = availableSteps.find((step) => !state.completedStepIds.includes(step.id))
-    if (firstIncomplete) {
-      nextStepId = firstIncomplete.id
-    } else if (availableSteps.length > 0) {
-      // All steps are complete, go to the last one
-      nextStepId = availableSteps[availableSteps.length - 1].id
-    }
-    
+    // When loading a saved simulation for editing, reset completed steps
+    // This ensures we start fresh from taxYear and don't skip steps
     state = {
       answers: mergedAnswers,
-      currentStepId: nextStepId,
-      completedStepIds: state.completedStepIds,  // PRESERVE existing completedStepIds
+      currentStepId: "taxYear",
+      completedStepIds: [],  // Reset completed steps when loading a saved simulation
       editingSimulationId: state.editingSimulationId,
       lastSavedAnswers: state.lastSavedAnswers,
     }
