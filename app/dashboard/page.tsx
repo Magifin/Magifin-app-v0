@@ -47,15 +47,8 @@ const nextActions = [
 export default function DashboardPage() {
   const { profile } = useAuth()
   const { results, hasWizardData } = useOptimizations()
-  const { hydrate } = useWizard()
   const [latestSimulation, setLatestSimulation] = useState<Simulation | null>(null)
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
-
-  // Hydrate wizard state from localStorage on mount
-  // This allows the banner to detect unsaved drafts
-  useEffect(() => {
-    hydrate()
-  }, [hydrate])
 
   // Fetch latest saved simulation
   useEffect(() => {
