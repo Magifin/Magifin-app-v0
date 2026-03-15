@@ -97,7 +97,13 @@ export function ResultsContent() {
   const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(answers))}`
+    // Encode full wizard state in URL for complete restoration
+    const resumeData = {
+      answers,
+      currentStepId: editingSimulationId ? "taxYear" : getLastCompletedStepId(completedStepIds, answers),
+      completedStepIds,
+    }
+    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(resumeData))}`
     router.push(resumeUrl)
   }
 
@@ -195,10 +201,10 @@ export function ResultsContent() {
       )}
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-16">
-        {/* Hero estimate - totals always visible */}
+        {/* Hero estimate - totals and final balance (RESTORED) */}
         <div className="mb-14 flex flex-col items-center text-center">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Magi a analysé votre situation
+            Votre situation analysée
           </p>
 
           {answers.taxYear && (
@@ -206,26 +212,37 @@ export function ResultsContent() {
               <Calendar className="h-4 w-4" />
               <span>
                 Déclaration <strong>{answers.taxYear}</strong>
-                {" · "}revenus {answers.taxYear - 1}
+                {" �� "}revenus {answers.taxYear - 1}
               </span>
             </div>
           )}
 
           <p className="mb-3 mt-6 text-sm font-semibold uppercase tracking-widest text-accent">
-            Votre estimation
+            Votre estimation fiscale
           </p>
-          <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
-            {"Vous pourriez récupérer entre"}
-          </h1>
-          <div className="mt-6 flex items-baseline justify-center gap-3 sm:gap-4">
-            <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
-              {formatMoney(results.totalMin)}
-            </span>
-            <span className="text-xl font-medium text-muted-foreground sm:text-2xl">et</span>
-            <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
-              {formatMoney(results.totalMax)}
-            </span>
-          </div>
+          
+          {/* Primary focus: show final balance/result */}
+          {taxResult && !taxLoading && (
+            <>
+              <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance mb-2">
+                {taxResult.refundOrBalance >= 0
+                  ? "Remboursement estimé"
+                  : "Montant estimé à payer"}
+              </h1>
+              <div className="mt-6 flex items-baseline justify-center gap-3 sm:gap-4">
+                <span className="font-[family-name:var(--font-heading)] text-6xl font-extrabold tracking-tight text-primary sm:text-7xl">
+                  {formatMoney(Math.abs(taxResult.refundOrBalance))}
+                </span>
+              </div>
+            </>
+          )}
+
+          {!taxResult && !taxLoading && !taxError && (
+            <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
+              Complétez vos informations
+            </h1>
+          )}
+
           <p className="mt-4 text-sm text-muted-foreground">
             {"*Estimation basée sur les informations fournies. Le montant réel peut varier."}
           </p>
@@ -273,20 +290,9 @@ export function ResultsContent() {
               </Button>
             </div>
           )}
-
-          {/* Notes about region/status */}
-          {results.notes.length > 0 && (
-            <div className="mt-6 max-w-md">
-              {results.notes.map((note, i) => (
-                <p key={i} className="text-xs text-muted-foreground/70 leading-relaxed">
-                  {note}
-                </p>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Cards */}
+        {/* Cards grid - Left: Optimizations | Right: Insurance */}
         <div className="grid gap-6 sm:grid-cols-2">
           {/* Left: Unlock optimisations */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -390,7 +396,7 @@ export function ResultsContent() {
         <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
-              <Calculator className="h-5 w-5" />
+              <Calculator className="h-5 w-4" />
             </div>
             <h2 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
               {"Calcul d\u2019impôt estimé"}
@@ -418,12 +424,12 @@ export function ResultsContent() {
                     {formatMoney(taxResult.taxableIncome)}
                   </dd>
                 </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-              -{formatMoney(taxResult.deductionsApplied)}
-            </dd>
-          </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
+                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+                    -{formatMoney(taxResult.deductionsApplied)}
+                  </dd>
+                </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
                   <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
@@ -466,7 +472,7 @@ export function ResultsContent() {
                       >
                         {taxResult.refundOrBalance >= 0
                           ? "Remboursement estimé"
-                          : "Montant encore dû"}
+                          : "Montant à payer"}
                       </dt>
                       <dd
                         className={cn(
@@ -545,20 +551,17 @@ export function ResultsContent() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
                     <div>
-                      {/* Title always visible */}
                       <p className="font-medium text-card-foreground">{item.title}</p>
-                      {/* Description: show real text if unlocked, placeholder if not */}
-{isAuthenticated ? (
-                  <p className="text-sm text-muted-foreground">{item.details}</p>
-                ) : (
-                  <p className="text-sm italic text-muted-foreground/60">
-                    {"Détails disponibles après création de votre espace"}
-                  </p>
-                )}
+                      {isAuthenticated ? (
+                        <p className="text-sm text-muted-foreground">{item.details}</p>
+                      ) : (
+                        <p className="text-sm italic text-muted-foreground/60">
+                          {"Détails disponibles après création de votre espace"}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  {/* Amount: show real value if unlocked, placeholder if not */}
-{isAuthenticated ? (
+                  {isAuthenticated ? (
                     <span className="text-sm font-semibold text-accent">
                       {formatMoneyRange(item.savingsMin, item.savingsMax)}
                     </span>

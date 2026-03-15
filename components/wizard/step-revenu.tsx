@@ -111,7 +111,7 @@ export function StepRevenu({
             <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="number"
-              placeholder="8 000"
+              placeholder="0"
               value={taxesAlreadyPaid || ""}
               onChange={handleTaxesPaidChange}
               className="pl-8"

@@ -72,6 +72,7 @@ export interface WizardState {
   currentStepId: string
   completedStepIds: string[]
   editingSimulationId: string | null
+  lastSavedAnswers: WizardAnswers | null  // Track saved state to detect unsaved changes
 }
 
 // === Step definitions ===
@@ -162,6 +163,7 @@ const defaultState: WizardState = {
   currentStepId: "taxYear",
   completedStepIds: [],
   editingSimulationId: null,
+  lastSavedAnswers: null,
 }
 
 const STORAGE_KEY = "magifin_wizard_v1"
@@ -333,6 +335,29 @@ function createWizardStore() {
     emit()
   }
 
+  const markAsSaved = () => {
+    // Snapshot current answers as the "saved" baseline
+    state = {
+      ...state,
+      lastSavedAnswers: { ...state.answers },
+    }
+    persist()
+    emit()
+  }
+
+  const hasUnsavedChanges = (): boolean => {
+    // If lastSavedAnswers is null, this is a fresh unsaved draft
+    if (state.lastSavedAnswers === null) {
+      // Check if user has entered any meaningful data
+      return Object.values(state.answers).some(
+        (v) => v !== null && v !== undefined && v !== 0 && v !== ""
+      )
+    }
+
+    // If lastSavedAnswers exists, compare current to saved
+    return JSON.stringify(state.answers) !== JSON.stringify(state.lastSavedAnswers)
+  }
+
   return {
     getSnapshot,
     getServerSnapshot,
@@ -345,6 +370,8 @@ function createWizardStore() {
     resetWizard,
     loadAnswers,
     setEditingSimulationId,
+    markAsSaved,
+    hasUnsavedChanges,
     isHydrated: () => isHydrated,
   }
 }
@@ -417,6 +444,8 @@ interface WizardContextValue {
   resetWizard: () => void
   loadAnswers: (answers: Partial<WizardAnswers>) => void
   setEditingSimulationId: (simulationId: string | null) => void
+  markAsSaved: () => void
+  hasUnsavedChanges: () => boolean
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null)
@@ -459,13 +488,21 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.setEditingSimulationId(simulationId)
   }, [])
 
+  const markAsSaved = useCallback(() => {
+    store.markAsSaved()
+  }, [])
+
+  const hasUnsavedChanges = useCallback(() => {
+    return store.hasUnsavedChanges()
+  }, [])
+
   const resetHydrationFlag = useCallback(() => {
     store.resetHydrationFlag()
   }, [])
 
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId }}
+      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId, markAsSaved, hasUnsavedChanges }}
     >
       {children}
     </WizardContext.Provider>

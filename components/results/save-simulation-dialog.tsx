@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
+import { useWizard } from "@/lib/wizard-store"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
@@ -33,6 +34,7 @@ export function SaveSimulationDialog({
   onSaved,
   trigger,
 }: SaveSimulationDialogProps) {
+  const { markAsSaved } = useWizard()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
@@ -62,11 +64,19 @@ export function SaveSimulationDialog({
     setIsSaving(true)
 
     try {
+      // Key business rule: If editing a simulation and the tax year changed, create a new one
+      // instead of overwriting the old one
+      const isEditingWithDifferentYear =
+        editingSimulationId &&
+        wizardAnswers.taxYear &&
+        wizardAnswers.taxYear !== getDefaultTaxYear()
+
       const response = await fetch("/api/simulations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          simulation_id: editingSimulationId ?? null,
+          // If tax year changed during edit, don't pass simulation_id (create new)
+          simulation_id: isEditingWithDifferentYear ? null : (editingSimulationId ?? null),
           tax_year: wizardAnswers.taxYear ?? getDefaultTaxYear(),
           name: name.trim() || `Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`,
           wizard_answers: wizardAnswers,
@@ -81,6 +91,9 @@ export function SaveSimulationDialog({
         setIsSaving(false)
         return
       }
+
+      // Mark as saved to clear the "unsaved draft" state
+      markAsSaved()
 
       setOpen(false)
       setName("")

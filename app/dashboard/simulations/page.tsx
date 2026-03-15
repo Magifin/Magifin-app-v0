@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Plus,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,7 +26,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useAuth } from "@/lib/auth-context"
 import { getDefaultTaxYear } from "@/lib/supabase/types"
+import { useWizard } from "@/lib/wizard-store"
 import { cn } from "@/lib/utils"
+import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 
 interface SimulationListItem {
   id: string
@@ -46,6 +49,7 @@ interface SimulationListItem {
 export default function SimulationsPage() {
   const router = useRouter()
   const { user, isLoading: authLoading } = useAuth()
+  const { state } = useWizard()
 
   const [simulations, setSimulations] = useState<SimulationListItem[]>([])
   const [availableYears, setAvailableYears] = useState<number[]>([])
@@ -54,30 +58,22 @@ export default function SimulationsPage() {
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
 
-  console.log("[v0] SimulationsPage render: user=", !!user, "authLoading=", authLoading, "selectedYear=", selectedYear, "isLoading=", isLoading, "initialized=", initialized)
-
   // Fetch available years
   const fetchYears = useCallback(async () => {
-    console.log("[v0] fetchYears: starting")
     try {
       const res = await fetch("/api/simulations/years")
-      console.log("[v0] fetchYears: API response status=", res.status)
       const data = await res.json()
-      console.log("[v0] fetchYears: data.years=", data.years)
       if (res.ok && data.years) {
         setAvailableYears(data.years)
         // Default to first available year or current year
         const yearToSelect = data.years.length > 0 ? data.years[0] : getDefaultTaxYear()
-        console.log("[v0] fetchYears: setting selectedYear=", yearToSelect)
         setSelectedYear(yearToSelect)
       } else {
         // No simulations yet - still set default year
-        console.log("[v0] fetchYears: no years, using default")
         setAvailableYears([])
         setSelectedYear(getDefaultTaxYear())
       }
     } catch (e) {
-      console.log("[v0] fetchYears: exception=", e instanceof Error ? e.message : "unknown")
       // Silently fail - will use default year
       setSelectedYear(getDefaultTaxYear())
     }
@@ -86,55 +82,69 @@ export default function SimulationsPage() {
   // Fetch simulations for selected year
   const fetchSimulations = useCallback(async () => {
     if (!selectedYear) {
-      console.log("[v0] fetchSimulations: selectedYear is null, skipping")
       return
     }
 
-    console.log("[v0] fetchSimulations: starting with year=", selectedYear)
     setIsLoading(true)
     setError(null)
 
     try {
       const url = `/api/simulations/list?tax_year=${selectedYear}`
-      console.log("[v0] fetchSimulations: fetching from", url)
       const res = await fetch(url)
-      console.log("[v0] fetchSimulations: API response status=", res.status)
       const data = await res.json()
-      console.log("[v0] fetchSimulations: simulations count=", data.simulations ? data.simulations.length : 0)
 
       if (!res.ok) {
         if (res.status === 401) {
-          console.log("[v0] fetchSimulations: 401, redirecting to login")
           router.push("/auth/login?redirect=/dashboard/simulations")
           return
         }
-        console.log("[v0] fetchSimulations: error response=", data.error)
         setError(data.error || "Erreur lors du chargement")
         setIsLoading(false)
         setInitialized(true)
         return
       }
 
-      console.log("[v0] fetchSimulations: success, clearing loading")
       setSimulations(data.simulations || [])
       setIsLoading(false)
       setInitialized(true)
     } catch (e) {
-      console.log("[v0] fetchSimulations: exception=", e instanceof Error ? e.message : "unknown")
       setError("Erreur de connexion")
       setIsLoading(false)
       setInitialized(true)
     }
   }, [selectedYear, router])
 
-  // Delete simulation
+  // Delete simulation - preserve selected year filter
   const deleteSimulation = async (id: string) => {
     try {
       const res = await fetch(`/api/simulations/${id}`, { method: "DELETE" })
       if (res.ok) {
+        // Remove from local state immediately
         setSimulations((prev) => prev.filter((s) => s.id !== id))
-        // Refresh years if this was the last simulation for a year
-        fetchYears()
+        
+        // Refresh available years
+        try {
+          const yearsRes = await fetch("/api/simulations/years")
+          const yearsData = await yearsRes.json()
+          if (yearsRes.ok && yearsData.years) {
+            setAvailableYears(yearsData.years)
+          }
+        } catch {
+          // Silently fail
+        }
+        
+        // Re-fetch simulations for the CURRENT selected year (preserves filter)
+        if (selectedYear !== null) {
+          try {
+            const simRes = await fetch(`/api/simulations/list?tax_year=${selectedYear}`)
+            const simData = await simRes.json()
+            if (simRes.ok) {
+              setSimulations(simData.simulations || [])
+            }
+          } catch {
+            // Silently fail
+          }
+        }
       }
     } catch {
       // Silently fail
@@ -143,18 +153,14 @@ export default function SimulationsPage() {
 
   // Initialize years and auth check
   useEffect(() => {
-    console.log("[v0] useEffect[auth]: authLoading=", authLoading, "user=", !!user)
     if (!authLoading && user) {
-      console.log("[v0] useEffect[auth]: calling fetchYears")
       fetchYears()
     }
   }, [authLoading, user, fetchYears])
 
   // Fetch simulations when year is selected - use minimal dependencies
   useEffect(() => {
-    console.log("[v0] useEffect[year]: selectedYear=", selectedYear, "user=", !!user)
     if (selectedYear !== null && user) {
-      console.log("[v0] useEffect[year]: calling fetchSimulations")
       fetchSimulations()
     }
   }, [selectedYear, user])
@@ -162,17 +168,14 @@ export default function SimulationsPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      console.log("[v0] useEffect[auth-redirect]: redirecting to login")
       router.push("/auth/login?redirect=/dashboard/simulations")
     }
   }, [authLoading, user, router])
 
   // Timeout fallback: if still loading after 2 seconds, force initialized state
   useEffect(() => {
-    console.log("[v0] useEffect[timeout]: isLoading=", isLoading, "initialized=", initialized)
     if (isLoading && !initialized) {
       const timeout = setTimeout(() => {
-        console.log("[v0] useEffect[timeout]: forcing initialized=true after 2s")
         setIsLoading(false)
         setInitialized(true)
       }, 2000)
@@ -222,6 +225,8 @@ export default function SimulationsPage() {
 
   return (
     <div>
+      <UnsavedSimulationBanner />
+
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
@@ -387,10 +392,7 @@ export default function SimulationsPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteSimulation(sim.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
+                        <AlertDialogAction onClick={() => deleteSimulation(sim.id)}>
                           Supprimer
                         </AlertDialogAction>
                       </AlertDialogFooter>

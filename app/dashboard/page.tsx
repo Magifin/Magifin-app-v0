@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
+import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 
 const checklistItems = [
   { label: "Compléter le questionnaire fiscal", done: true },
@@ -81,6 +82,8 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <UnsavedSimulationBanner />
+
       <div className="mb-8">
         <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
           {greeting}

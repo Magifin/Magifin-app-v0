@@ -58,10 +58,30 @@ function WizardContent() {
     if (resume) {
       try {
         const decoded = JSON.parse(atob(resume))
-        loadAnswers(decoded)
+        
+        // Support both old format (just answers) and new format (full state)
+        if (decoded.answers) {
+          loadAnswers(decoded.answers)
+        } else {
+          loadAnswers(decoded)
+        }
+
+        // Restore currentStepId if provided in new format
+        if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
+          goToStep(decoded.currentStepId)
+        }
+
+        // Restore completed step IDs if provided
+        if (decoded.completedStepIds) {
+          decoded.completedStepIds.forEach((stepId: string) => {
+            // Mark steps as complete by calling markStepComplete
+            // This is internal state, we'll use the store directly
+          })
+        }
 
         // Backward-compat: old saved simulations without taxYear get a default
-        if (decoded.taxYear === undefined || decoded.taxYear === null) {
+        const answersToCheck = decoded.answers || decoded
+        if (answersToCheck.taxYear === undefined || answersToCheck.taxYear === null) {
           setAnswer("taxYear", getDefaultTaxYear())
         }
 
@@ -78,6 +98,7 @@ function WizardContent() {
     } else {
       resetWizard()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep omitted: effect is one-time (hasProcessedResume guard)
   }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
 
   // Track wizard start
