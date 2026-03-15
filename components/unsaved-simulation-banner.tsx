@@ -50,19 +50,21 @@ export function UnsavedSimulationBanner() {
   })()
 
   return (
-    <div className="mb-6 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 p-4">
-      <div className="flex items-center gap-3">
-        <AlertCircle className="h-5 w-5 text-accent" />
-        <p className="text-sm text-card-foreground">
-          Vous avez une simulation en cours non sauvegardée.
-        </p>
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-16 pb-20">
+      <div className="mb-6 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 p-4">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-accent" />
+          <p className="text-sm text-card-foreground">
+            Vous avez une simulation en cours non sauvegardée.
+          </p>
+        </div>
+        <Button size="sm" asChild className="gap-2">
+          <Link href={resumeHref}>
+            <ArrowRight className="h-4 w-4" />
+            Reprendre ma simulation
+          </Link>
+        </Button>
       </div>
-      <Button size="sm" asChild className="gap-2">
-        <Link href={resumeHref}>
-          <ArrowRight className="h-4 w-4" />
-          Reprendre ma simulation
-        </Link>
-      </Button>
     </div>
   )
 }
