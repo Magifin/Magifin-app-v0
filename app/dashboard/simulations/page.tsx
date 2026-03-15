@@ -392,10 +392,7 @@ export default function SimulationsPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteSimulation(sim.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
+                        <AlertDialogAction onClick={() => deleteSimulation(sim.id)}>
                           Supprimer
                         </AlertDialogAction>
                       </AlertDialogFooter>

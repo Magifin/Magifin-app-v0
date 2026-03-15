@@ -216,10 +216,7 @@ export default function SimulationDetailPage({
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
+                <AlertDialogAction onClick={handleDelete}>
                   Supprimer
                 </AlertDialogAction>
               </AlertDialogFooter>
