@@ -1,6 +1,7 @@
 "use client"
 
 import { Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { WizardStep } from "@/lib/wizard-store"
 
@@ -9,6 +10,8 @@ interface WizardProgressProps {
   currentStepId: string
   completedStepIds: string[]
   onStepClick: (stepId: string) => void
+  editingSimulationId?: string | null
+  onViewResults?: () => void
 }
 
 export function WizardProgress({
@@ -16,6 +19,8 @@ export function WizardProgress({
   currentStepId,
   completedStepIds,
   onStepClick,
+  editingSimulationId,
+  onViewResults,
 }: WizardProgressProps) {
   const currentIndex = steps.findIndex((s) => s.id === currentStepId)
   const progress = ((currentIndex + 1) / steps.length) * 100
@@ -30,6 +35,20 @@ export function WizardProgress({
   return (
     <div className="border-b border-border/50 bg-card px-6 py-6">
       <div className="mx-auto max-w-3xl">
+        {/* Edit mode button in header */}
+        {editingSimulationId && (
+          <div className="mb-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onViewResults}
+              className="text-sm"
+            >
+              Voir les résultats
+            </Button>
+          </div>
+        )}
+
         {/* Progress bar */}
         <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div
