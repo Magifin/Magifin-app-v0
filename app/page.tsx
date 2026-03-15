@@ -12,7 +12,9 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="pt-20">
-        <UnsavedSimulationBanner />
+        <div className="px-4 sm:px-6 lg:px-8">
+          <UnsavedSimulationBanner />
+        </div>
         <main>
           <Hero />
           <HowItWorks />
