@@ -360,6 +360,28 @@ function createWizardStore() {
   }
 }
 
+    // If lastSavedAnswers exists, compare current to saved
+    return JSON.stringify(state.answers) !== JSON.stringify(state.lastSavedAnswers)
+  }
+
+  return {
+    getSnapshot,
+    getServerSnapshot,
+    subscribe,
+    hydrate,
+    resetHydrationFlag,
+    setAnswer,
+    goToStep,
+    markStepComplete,
+    resetWizard,
+    loadAnswers,
+    setEditingSimulationId,
+    markAsSaved,
+    hasUnsavedChanges,
+    isHydrated: () => isHydrated,
+  }
+}
+
 const store = createWizardStore()
 
 // === Helper functions ===
