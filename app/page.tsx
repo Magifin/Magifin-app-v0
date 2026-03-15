@@ -11,12 +11,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <UnsavedSimulationBanner />
-      <main>
-        <Hero />
-        <HowItWorks />
-        <ProductEntry />
-      </main>
+      <div className="pt-20">
+        <UnsavedSimulationBanner />
+        <main>
+          <Hero />
+          <HowItWorks />
+          <ProductEntry />
+        </main>
+      </div>
       <Footer />
     </div>
   )
