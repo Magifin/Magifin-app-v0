@@ -237,7 +237,7 @@ export default function SimulationsPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/wizard">
+          <Link href="/wizard?new=true">
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle simulation
           </Link>
@@ -291,7 +291,7 @@ export default function SimulationsPage() {
             Créez une nouvelle simulation pour estimer vos économies fiscales.
           </p>
           <Button asChild className="mt-6">
-            <Link href="/wizard">
+            <Link href="/wizard?new=true">
               <Plus className="mr-2 h-4 w-4" />
               Créer une simulation
             </Link>

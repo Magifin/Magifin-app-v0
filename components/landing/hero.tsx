@@ -32,7 +32,7 @@ export function Hero() {
             <>
               {/* Logged in: two action buttons */}
               <Button size="lg" className="h-12 px-8 text-base" asChild>
-                <Link href="/wizard">
+                <Link href="/wizard?new=true">
                   <Calculator className="mr-2 h-4 w-4" />
                   Nouvelle simulation
                   <ArrowRight className="ml-2 h-4 w-4" />
