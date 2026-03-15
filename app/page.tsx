@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-3 pb-8">
         <UnsavedSimulationBanner />
       </div>
       <main className={isBannerVisible ? "[&>*:first-child]:pt-0" : ""}>
