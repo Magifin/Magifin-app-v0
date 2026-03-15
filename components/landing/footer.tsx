@@ -27,7 +27,7 @@ export function Footer() {
             </h4>
             <ul className="flex flex-col gap-3">
               <li>
-                <Link href="/wizard" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/wizard?new=true" className="text-sm text-muted-foreground hover:text-foreground">
                   Optimisation fiscale
                 </Link>
               </li>

@@ -49,7 +49,7 @@ export function Hero() {
             <>
               {/* Logged out: single main CTA */}
               <Button size="lg" className="h-12 px-8 text-base" asChild>
-                <Link href="/wizard">
+                <Link href="/wizard?new=true">
                   Estimer mon remboursement
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
