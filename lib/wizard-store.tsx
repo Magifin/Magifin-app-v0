@@ -284,12 +284,17 @@ function createWizardStore() {
     // This prevents losing values like serviceVouchersAmount (100 -> 98 bug)
     const mergedAnswers = { ...state.answers, ...answers }
     
-    // When loading a saved simulation for editing, reset completed steps
-    // This ensures we start fresh from taxYear and don't skip steps
+    // When loading a saved simulation for editing, mark all available steps as completed for visual display
+    // This shows the stepper as fully green/completed since the user is editing an existing simulation
+    // Get all available steps based on the loaded answers, then mark them all as completed
+    const completedStepIds = state.editingSimulationId 
+      ? getAvailableSteps(mergedAnswers).map(s => s.id)  // Edit mode: mark all steps completed for visual display
+      : []  // New/resume mode: start with empty, user will complete steps as they go
+    
     state = {
       answers: mergedAnswers,
       currentStepId: "taxYear",
-      completedStepIds: [],  // Reset completed steps when loading a saved simulation
+      completedStepIds: completedStepIds,
       editingSimulationId: state.editingSimulationId,
       lastSavedAnswers: state.lastSavedAnswers,
     }

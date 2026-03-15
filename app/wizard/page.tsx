@@ -69,8 +69,9 @@ function WizardContent() {
           // EDIT MODE: Load existing simulation data
           // The resume param contains only wizard_answers (from database)
           // Always start from first step (taxYear) for edit mode
-          loadAnswers(answersToLoad)
+          // Set editingSimulationId FIRST so loadAnswers knows we're in edit mode
           setEditingSimulationId(simulationId)
+          loadAnswers(answersToLoad)
           // Mark as saved so the unsaved banner doesn't show incorrectly
           markAsSaved()
         } else {
