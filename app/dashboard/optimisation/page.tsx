@@ -212,7 +212,7 @@ function OptimisationContent() {
                 {"Aucune optimisation détectée. Complétez le questionnaire pour affiner l'analyse."}
               </p>
               <Button variant="outline" className="mt-4" asChild>
-                <Link href="/wizard">
+                <Link href="/wizard?new=true">
                   {"Compléter le questionnaire"}
                 </Link>
               </Button>
