@@ -309,17 +309,6 @@ function createWizardStore() {
     persist()
     emit()
   }
-    
-    state = {
-      answers: mergedAnswers,
-      currentStepId: nextStepId,
-      completedStepIds: state.completedStepIds,  // PRESERVE existing completedStepIds
-      editingSimulationId: state.editingSimulationId,
-      lastSavedAnswers: state.lastSavedAnswers,
-    }
-    persist()
-    emit()
-  }
 
   const setEditingSimulationId = (simulationId: string | null) => {
     state = {
