@@ -350,7 +350,7 @@ export function ResultsContent() {
             {isAuthenticated && (
               <Button
                 size="sm"
-                className="mt-5 w-full bg-green-600 text-white hover:bg-green-700"
+                className="mt-5 w-full bg-accent text-accent-foreground hover:bg-accent/90"
                 asChild
               >
                 <Link href="/dashboard/optimisation">
@@ -430,8 +430,8 @@ export function ResultsContent() {
 
               {/* Optimizations value */}
               <div className="flex items-center justify-between border-b border-border py-3">
-                <dt className="text-sm text-green-700">Optimisations fiscales détectées</dt>
-                <dd className="font-[family-name:var(--font-heading)] font-semibold text-green-700">
+                <dt className="text-sm text-muted-foreground">Optimisations fiscales détectées</dt>
+                <dd className="font-[family-name:var(--font-heading)] font-semibold text-accent">
                   −{formatMoney(taxResult.deductionsApplied)}
                 </dd>
               </div>
@@ -453,7 +453,7 @@ export function ResultsContent() {
                       className={cn(
                         "font-[family-name:var(--font-heading)] text-lg font-bold",
                         taxResult.refundOrBalance >= 0
-                          ? "text-green-700"
+                          ? "text-accent"
                           : "text-destructive"
                       )}
                     >
