@@ -9,6 +9,7 @@ import {
   Calculator,
   FileText,
   Trash2,
+  Copy,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -413,6 +414,12 @@ export default function SimulationDetailPage({
           <Link href={`/dashboard/optimisation?simulationId=${id}`}>
             <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
             Voir optimisations
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}`}>
+            <Copy className="mr-2 h-4 w-4" />
+            Dupliquer
           </Link>
         </Button>
         <Button asChild>
