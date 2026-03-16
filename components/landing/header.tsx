@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Menu, X, LogOut, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
+import { AccountDropdown } from "@/components/account-dropdown"
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -85,10 +86,7 @@ export function Header() {
                   Tableau de bord
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Se déconnecter
-              </Button>
+              <AccountDropdown />
             </>
           )}
         </div>
