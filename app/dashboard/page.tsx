@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Clock,
   AlertCircle,
+  Plus,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -84,13 +85,21 @@ export default function DashboardPage() {
     <div>
       <UnsavedSimulationBanner />
 
-      <div className="mb-8">
-        <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-          {greeting}
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {"Voici un aperçu de votre optimisation fiscale."}
-        </p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
+            {greeting}
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            {"Voici un aperçu de votre optimisation fiscale."}
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/wizard?new=true">
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle simulation
+          </Link>
+        </Button>
       </div>
 
       {/* Estimated gain card */}
