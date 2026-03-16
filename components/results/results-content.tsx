@@ -18,6 +18,8 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { AccountDropdown } from "@/components/account-dropdown"
+import { useWizard, wizardStore } from "@/lib/wizard-store"
+import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
