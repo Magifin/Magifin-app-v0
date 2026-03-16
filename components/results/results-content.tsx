@@ -24,6 +24,7 @@ import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
+import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
