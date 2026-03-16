@@ -36,7 +36,7 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved, setCompletedStepIds } = useWizard()
   const { user } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
@@ -81,10 +81,7 @@ function WizardContent() {
 
         // Restore completed step IDs if provided
         if (decoded.completedStepIds) {
-          decoded.completedStepIds.forEach((stepId: string) => {
-            // Mark steps as complete by calling markStepComplete
-            // This is internal state, we'll use the store directly
-          })
+          setCompletedStepIds(decoded.completedStepIds)
         }
 
         // Backward-compat: old saved simulations without taxYear get a default
