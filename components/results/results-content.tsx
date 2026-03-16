@@ -350,9 +350,8 @@ export function ResultsContent() {
             {isAuthenticated && (
               <Button
                 size="sm"
-                className="mt-5 w-full"
+                className="mt-5 w-full bg-green-600 text-white hover:bg-green-700"
                 asChild
-                variant="outline"
               >
                 <Link href="/dashboard/optimisation">
                   {"Voir mes optimisations"}
