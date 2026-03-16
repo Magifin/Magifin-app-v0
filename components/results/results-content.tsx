@@ -478,7 +478,17 @@ export function ResultsContent() {
         </div>
 
         {/* Optimization items breakdown */}
-        {availableItems.length > 0 && (
+        {(() => {
+          const validItems = availableItems.filter((item) => {
+            const min = item.savingsMin
+            const max = item.savingsMax
+            return (
+              min != null && max != null &&
+              !Number.isNaN(min) && !Number.isNaN(max)
+            )
+          })
+          if (validItems.length === 0) return null
+          return (
           <div className="mt-10">
             <h3 className="mb-4 font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
               {"Détail de vos optimisations"}
@@ -520,14 +530,7 @@ export function ResultsContent() {
 
             {/* Items list */}
             <div className="flex flex-col gap-3">
-              {availableItems.filter((item) => {
-                const min = item.savingsMin
-                const max = item.savingsMax
-                return (
-                  min != null && max != null &&
-                  !Number.isNaN(min) && !Number.isNaN(max)
-                )
-              }).map((item) => (
+              {validItems.map((item) => (
                 <div
                   key={item.key}
                   className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
@@ -558,7 +561,8 @@ export function ResultsContent() {
               ))}
             </div>
           </div>
-        )}
+          )
+        })()}
 
         {/* Disclaimer */}
         <div className="mt-12 flex flex-col items-center gap-3 text-center">
