@@ -420,100 +420,47 @@ export function ResultsContent() {
           )}
 
           {taxResult && !taxLoading && (
-            <div className="space-y-6">
-              {/* Tax calculation breakdown: before → optimizations → after */}
-              <div className="space-y-3">
-                {/* Tax without optimizations */}
-                <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
-                  <dt className="text-sm text-muted-foreground">Impôt estimé sans optimisation</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-muted-foreground">
-                    {formatMoney(taxResult.estimatedTax + taxResult.deductionsApplied)}
-                  </dd>
-                </div>
-
-                {/* Optimizations value */}
-                <div className="flex items-center justify-between rounded-lg border border-green-200/50 bg-green-50/50 p-4">
-                  <dt className="text-sm text-green-900">Optimisations fiscales détectées</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-green-700">
-                    −{formatMoney(taxResult.deductionsApplied)}
-                  </dd>
-                </div>
-
-                {/* Tax after optimizations */}
-                <div className="flex items-center justify-between rounded-lg border border-green-300/50 bg-green-100/50 p-4">
-                  <dt className="text-sm font-medium text-green-900">Impôt estimé après optimisation</dt>
-                  <dd className="font-[family-name:var(--font-heading)] text-xl font-bold text-green-800">
-                    {formatMoney(taxResult.estimatedTax)}
-                  </dd>
-                </div>
+            <div className="space-y-3">
+              {/* Tax without optimizations */}
+              <div className="flex items-center justify-between border-b border-border py-3">
+                <dt className="text-sm text-muted-foreground">Impôt estimé sans optimisation</dt>
+                <dd className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
+                  {formatMoney(taxResult.estimatedTax + taxResult.deductionsApplied)}
+                </dd>
               </div>
 
-              {/* Additional details */}
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 border-t border-border pt-6">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
-                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                    {formatMoney(taxResult.taxableIncome)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Ajustements appliqués</dt>
-                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-                    −{formatMoney(taxResult.deductionsApplied)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Taux effectif</dt>
-                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                    {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
-                  </dd>
-                </div>
-              </dl>
+              {/* Optimizations value */}
+              <div className="flex items-center justify-between border-b border-border py-3">
+                <dt className="text-sm text-green-700">Optimisations fiscales détectées</dt>
+                <dd className="font-[family-name:var(--font-heading)] font-semibold text-green-700">
+                  −{formatMoney(taxResult.deductionsApplied)}
+                </dd>
+              </div>
 
-              {/* Withholding and balance summary */}
-              {(taxResult.taxesAlreadyPaid > 0 || taxResult.refundOrBalance !== 0) && (
-                <div className="border-t border-border pt-4">
-                  <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="rounded-lg bg-muted/30 p-4">
-                      <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
-                      <dd className="font-[family-name:var(--font-heading)] text-xl font-semibold text-card-foreground">
-                        {formatMoney(taxResult.taxesAlreadyPaid)}
-                      </dd>
-                    </div>
-                    <div
-                      className={cn(
-                        "rounded-lg p-4",
-                        taxResult.refundOrBalance >= 0
-                          ? "bg-accent/10"
-                          : "bg-destructive/10"
-                      )}
-                    >
-                      <dt
-                        className={cn(
-                          "text-xs mb-1",
-                          taxResult.refundOrBalance >= 0
-                            ? "text-accent"
-                            : "text-destructive"
-                        )}
-                      >
-                        {taxResult.refundOrBalance >= 0
-                          ? "Remboursement estimé"
-                          : "Montant à payer"}
-                      </dt>
-                      <dd
-                        className={cn(
-                          "font-[family-name:var(--font-heading)] text-xl font-semibold",
-                          taxResult.refundOrBalance >= 0
-                            ? "text-accent"
-                            : "text-destructive"
-                        )}
-                      >
-                        {taxResult.refundOrBalance >= 0
-                          ? formatMoney(taxResult.refundOrBalance)
-                          : "−" + formatMoney(Math.abs(taxResult.refundOrBalance))}
-                      </dd>
-                    </div>
-                  </dl>
+              {/* Tax after optimizations */}
+              <div className="flex items-center justify-between border-b border-border py-3">
+                <dt className="text-sm font-medium text-card-foreground">Impôt estimé après optimisation</dt>
+                <dd className="font-[family-name:var(--font-heading)] text-lg font-bold text-card-foreground">
+                  {formatMoney(taxResult.estimatedTax)}
+                </dd>
+              </div>
+
+              {/* Estimated refund or balance */}
+              {taxResult.refundOrBalance !== 0 && (
+                <div className="flex items-center justify-between pt-2">
+                  <dt className="text-sm font-medium text-card-foreground">Remboursement estimé</dt>
+                  <dd
+                    className={cn(
+                      "font-[family-name:var(--font-heading)] text-lg font-bold",
+                      taxResult.refundOrBalance >= 0
+                        ? "text-green-700"
+                        : "text-destructive"
+                    )}
+                  >
+                    {taxResult.refundOrBalance >= 0
+                      ? `+${formatMoney(taxResult.refundOrBalance)}`
+                      : formatMoney(taxResult.refundOrBalance)}
+                  </dd>
                 </div>
               )}
             </div>
