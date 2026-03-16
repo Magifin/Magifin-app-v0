@@ -446,20 +446,25 @@ export function ResultsContent() {
 
               {/* Estimated refund or balance */}
               {taxResult.refundOrBalance !== 0 && (
-                <div className="flex items-center justify-between pt-2">
-                  <dt className="text-sm font-medium text-card-foreground">Remboursement estimé</dt>
-                  <dd
-                    className={cn(
-                      "font-[family-name:var(--font-heading)] text-lg font-bold",
-                      taxResult.refundOrBalance >= 0
-                        ? "text-green-700"
-                        : "text-destructive"
-                    )}
-                  >
-                    {taxResult.refundOrBalance >= 0
-                      ? `+${formatMoney(taxResult.refundOrBalance)}`
-                      : formatMoney(taxResult.refundOrBalance)}
-                  </dd>
+                <div>
+                  <div className="flex items-center justify-between pt-2">
+                    <dt className="text-sm font-medium text-card-foreground">Remboursement estimé</dt>
+                    <dd
+                      className={cn(
+                        "font-[family-name:var(--font-heading)] text-lg font-bold",
+                        taxResult.refundOrBalance >= 0
+                          ? "text-green-700"
+                          : "text-destructive"
+                      )}
+                    >
+                      {taxResult.refundOrBalance >= 0
+                        ? `+${formatMoney(taxResult.refundOrBalance)}`
+                        : formatMoney(taxResult.refundOrBalance)}
+                    </dd>
+                  </div>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Estimation basée sur les informations que vous avez fournies.
+                  </p>
                 </div>
               )}
             </div>
