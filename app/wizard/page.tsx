@@ -60,7 +60,13 @@ function WizardContent() {
     if (resume) {
       try {
         const decoded = JSON.parse(atob(resume))
-        
+
+        // FIX: set editingSimulationId BEFORE loadAnswers so the store reads
+        // the correct value when computing completedStepIds
+        if (simulationId) {
+          setEditingSimulationId(simulationId)
+        }
+
         // Support both old format (just answers) and new format (full state)
         if (decoded.answers) {
           loadAnswers(decoded.answers)
@@ -87,11 +93,8 @@ function WizardContent() {
           setAnswer("taxYear", getDefaultTaxYear())
         }
 
-        // Store simulation ID if editing an existing simulation
+        // Mark as saved so we don't show unsaved banner for a freshly loaded simulation
         if (simulationId) {
-          setEditingSimulationId(simulationId)
-          // Mark as saved so we know this was loaded from database
-          // and don't show unsaved banner just because it's being edited
           markAsSaved()
         }
 
@@ -101,11 +104,17 @@ function WizardContent() {
         resetWizard()
       }
     } else {
-      // Only reset if there's no state in localStorage
-      // This allows the wizard to resume after navigation from the banner
-      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
-      if (!hasStoredState) {
+      // FIX: handle ?new=true — always reset regardless of localStorage
+      const isNew = searchParams.get("new") === "true"
+      if (isNew) {
         resetWizard()
+      } else {
+        // Only reset if there's no state in localStorage
+        // This allows the wizard to resume after navigation from the banner
+        const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
+        if (!hasStoredState) {
+          resetWizard()
+        }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
