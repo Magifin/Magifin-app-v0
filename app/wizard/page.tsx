@@ -3,7 +3,7 @@
 import { useEffect, useMemo, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Eye } from "lucide-react"
+import { ArrowLeft, Eye, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { StepTaxYear } from "@/components/wizard/step-tax-year"
@@ -29,14 +29,16 @@ import {
 } from "@/lib/wizard-store"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import { useUser } from "@/lib/user-store"
+import { useAuth } from "@/lib/auth-context"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { track } from "@/lib/track"
 
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved, setCompletedStepIds } = useWizard()
   const { user } = useUser()
+  const { user: authUser, isLoading: authLoading } = useAuth()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
 
   const availableSteps = getAvailableSteps(answers)
@@ -58,42 +60,39 @@ function WizardContent() {
     if (resume) {
       try {
         const decoded = JSON.parse(atob(resume))
-        
-        // Determine if this is edit mode based on simulationId param
-        const isEditingExisting = !!simulationId
-        
-        // Support both old format (just answers) and new format (full state)
-        const answersToLoad = decoded.answers ? decoded.answers : decoded
-        
-        if (isEditingExisting) {
-          // EDIT MODE: Load existing simulation data
-          // The resume param contains only wizard_answers (from database)
-          // Always start from first step (taxYear) for edit mode
-          // Set editingSimulationId FIRST so loadAnswers knows we're in edit mode
+
+        // FIX: set editingSimulationId BEFORE loadAnswers so the store reads
+        // the correct value when computing completedStepIds
+        if (simulationId) {
           setEditingSimulationId(simulationId)
-          loadAnswers(answersToLoad)
-          // Mark as saved so the unsaved banner doesn't show incorrectly
-          markAsSaved()
+        }
+
+        // Support both old format (just answers) and new format (full state)
+        if (decoded.answers) {
+          loadAnswers(decoded.answers)
         } else {
-          // RESUME MODE: Restoring an unsaved draft from URL
-          // May have currentStepId and completedStepIds in new format
-          loadAnswers(answersToLoad)
-          
-          // Restore step position if provided in new format
-          if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
-            goToStep(decoded.currentStepId)
-          }
-          
-          // Restore completed step IDs if provided
-          if (decoded.completedStepIds && Array.isArray(decoded.completedStepIds)) {
-            // Note: completedStepIds are already managed by loadAnswers for edit mode
-            // This is for future resume format support
-          }
+          loadAnswers(decoded)
+        }
+
+        // Restore currentStepId if provided in new format
+        if (decoded.currentStepId && decoded.currentStepId !== "taxYear") {
+          goToStep(decoded.currentStepId)
+        }
+
+        // Restore completed step IDs if provided
+        if (decoded.completedStepIds) {
+          setCompletedStepIds(decoded.completedStepIds)
         }
 
         // Backward-compat: old saved simulations without taxYear get a default
-        if (answersToLoad.taxYear === undefined || answersToLoad.taxYear === null) {
+        const answersToCheck = decoded.answers || decoded
+        if (answersToCheck.taxYear === undefined || answersToCheck.taxYear === null) {
           setAnswer("taxYear", getDefaultTaxYear())
+        }
+
+        // Mark as saved so we don't show unsaved banner for a freshly loaded simulation
+        if (simulationId) {
+          markAsSaved()
         }
 
         window.history.replaceState(null, '', '/wizard')
@@ -102,11 +101,17 @@ function WizardContent() {
         resetWizard()
       }
     } else {
-      // Only reset if there's no state in localStorage
-      // This allows the wizard to resume after navigation from the banner
-      const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
-      if (!hasStoredState) {
+      // FIX: handle ?new=true — always reset regardless of localStorage
+      const isNew = searchParams.get("new") === "true"
+      if (isNew) {
         resetWizard()
+      } else {
+        // Only reset if there's no state in localStorage
+        // This allows the wizard to resume after navigation from the banner
+        const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
+        if (!hasStoredState) {
+          resetWizard()
+        }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
@@ -338,15 +343,34 @@ function WizardContent() {
             <ArrowLeft className="h-4 w-4" />
             Retour
           </Link>
-          <div className="flex items-center gap-2">
+          
+          {/* Logo - clickable with auth-aware navigation */}
+          <Link
+            href={authUser ? "/dashboard" : "/"}
+            className="flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary"
+            title={authUser ? "Aller au tableau de bord" : "Retour à l'accueil"}
+          >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
               <span className="text-xs font-bold text-primary-foreground">M</span>
             </div>
-            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+            <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight">
               Magifin
             </span>
+          </Link>
+          
+          {/* Right side: Dashboard link when authenticated (optional UX improvement) */}
+          <div className="flex items-center gap-2">
+            {authUser && !authLoading && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                title="Aller au tableau de bord"
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Tableau de bord</span>
+              </Link>
+            )}
           </div>
-          <div className="w-16" />
         </div>
       </header>
 

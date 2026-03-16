@@ -59,7 +59,7 @@ export function Header() {
             Produits
           </Link>
           <Link
-            href="/wizard"
+            href="/wizard?new=true"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Optimisation fiscale
@@ -124,7 +124,7 @@ export function Header() {
               Produits
             </Link>
             <Link
-              href="/wizard"
+              href="/wizard?new=true"
               className="text-sm font-medium text-muted-foreground"
               onClick={() => setMobileOpen(false)}
             >

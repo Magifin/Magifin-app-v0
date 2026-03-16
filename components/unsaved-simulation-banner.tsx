@@ -37,7 +37,7 @@ export function UnsavedSimulationBanner() {
   // 2. If currentStepId is anything else, user was in wizard → go to /wizard with state encoded in URL
   //    (ensures state persists even if localStorage is cleared)
   const resumeHref = (() => {
-    if (state.currentStepId === "taxYear") {
+    if (state.currentStepId === "taxYear" && state.completedStepIds.length > 0) {
       return "/results"
     }
     // Encode full state in URL so wizard can restore it

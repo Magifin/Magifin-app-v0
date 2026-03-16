@@ -267,6 +267,15 @@ function createWizardStore() {
     }
   }
 
+  const setCompletedStepIds = (stepIds: string[]) => {
+    state = {
+      ...state,
+      completedStepIds: stepIds,
+    }
+    persist()
+    emit()
+  }
+
   const resetWizard = () => {
     state = defaultState
     isHydrated = false // Reset hydration flag when explicitly resetting
@@ -343,6 +352,7 @@ function createWizardStore() {
     setAnswer,
     goToStep,
     markStepComplete,
+    setCompletedStepIds,
     resetWizard,
     loadAnswers,
     setEditingSimulationId,
@@ -417,6 +427,7 @@ interface WizardContextValue {
   ) => void
   goToStep: (stepId: string) => void
   markStepComplete: (stepId: string) => void
+  setCompletedStepIds: (stepIds: string[]) => void
   resetWizard: () => void
   loadAnswers: (answers: Partial<WizardAnswers>) => void
   setEditingSimulationId: (simulationId: string | null) => void
@@ -452,6 +463,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.markStepComplete(stepId)
   }, [])
 
+  const setCompletedStepIds = useCallback((stepIds: string[]) => {
+    store.setCompletedStepIds(stepIds)
+  }, [])
+
   const resetWizard = useCallback(() => {
     store.resetWizard()
   }, [])
@@ -478,7 +493,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, resetWizard, loadAnswers, setEditingSimulationId, markAsSaved, hasUnsavedChanges }}
+      value={{ state, setAnswer, goToStep, markStepComplete, setCompletedStepIds, resetWizard, loadAnswers, setEditingSimulationId, markAsSaved, hasUnsavedChanges }}
     >
       {children}
     </WizardContext.Provider>

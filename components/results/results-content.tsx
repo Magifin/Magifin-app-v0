@@ -37,7 +37,7 @@ const PARTNER_URL =
 
 export function ResultsContent() {
   const router = useRouter()
-  const { state, goToStep } = useWizard()
+  const { state, goToStep, markAsSaved } = useWizard()
   const { answers, completedStepIds, editingSimulationId } = state
   const { results } = useOptimizations()
   const { user: authUser, isLoading: authLoading } = useAuth()
@@ -118,6 +118,7 @@ export function ResultsContent() {
 
   const handleSimulationSaved = () => {
     setSavedSuccess(true)
+    markAsSaved()
     track("simulation_saved")
     setTimeout(() => setSavedSuccess(false), 3000)
   }

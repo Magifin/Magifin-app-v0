@@ -11,7 +11,7 @@ const products = [
     description:
       "Estimez votre gain fiscal potentiel en quelques minutes. Notre algorithme analyse votre situation et identifie les déductions que vous pourriez avoir manquées.",
     icon: Calculator,
-    href: "/wizard",
+    href: "/wizard?new=true",
     cta: "Commencer l'analyse",
     active: true,
   },
