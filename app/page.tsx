@@ -25,10 +25,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className={`mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${isBannerVisible ? "pt-4 pb-4" : "pt-16"}`}>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-16">
         <UnsavedSimulationBanner />
       </div>
-      <main>
+      <main className={isBannerVisible ? "[&>*:first-child]:pt-0" : ""}>
         <Hero />
         <HowItWorks />
         <ProductEntry />
