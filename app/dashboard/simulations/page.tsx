@@ -152,6 +152,37 @@ export default function SimulationsPage() {
     }
   }
 
+  // Duplicate simulation - creates a new simulation immediately and refreshes list
+  const duplicateSimulation = async (id: string) => {
+    try {
+      const res = await fetch("/api/simulations/duplicate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ simulationId: id }),
+      })
+
+      if (!res.ok) {
+        console.error("Failed to duplicate simulation")
+        return
+      }
+
+      // Refresh the simulations list to show the duplicated simulation
+      if (selectedYear !== null) {
+        try {
+          const simRes = await fetch(`/api/simulations/list?tax_year=${selectedYear}`)
+          const simData = await simRes.json()
+          if (simRes.ok) {
+            setSimulations(simData.simulations || [])
+          }
+        } catch {
+          // Silently fail - list won't update but duplication succeeded
+        }
+      }
+    } catch (error) {
+      console.error("Error duplicating simulation:", error)
+    }
+  }
+
   // Initialize years and auth check
   useEffect(() => {
     if (!authLoading && user) {
@@ -374,11 +405,13 @@ export default function SimulationsPage() {
                       <ArrowRight className="ml-2 h-3.5 w-3.5" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/wizard?resume=${btoa(JSON.stringify(sim.wizard_answers))}`}>
-                      <Copy className="mr-2 h-3.5 w-3.5" />
-                      Dupliquer
-                    </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => duplicateSimulation(sim.id)}
+                  >
+                    <Copy className="mr-2 h-3.5 w-3.5" />
+                    Dupliquer
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
