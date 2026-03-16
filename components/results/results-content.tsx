@@ -516,7 +516,14 @@ export function ResultsContent() {
 
             {/* Items list */}
             <div className="flex flex-col gap-3">
-              {availableItems.map((item) => (
+              {availableItems.filter((item) => {
+                const min = item.savingsMin
+                const max = item.savingsMax
+                return (
+                  min != null && max != null &&
+                  !Number.isNaN(min) && !Number.isNaN(max)
+                )
+              }).map((item) => (
                 <div
                   key={item.key}
                   className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
