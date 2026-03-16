@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -41,6 +41,7 @@ export default function SimulationDetailPage({
   const [simulation, setSimulation] = useState<Simulation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDuplicating, setIsDuplicating] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -92,6 +93,33 @@ export default function SimulationDetailPage({
       }
     } catch {
       // Silently fail
+    }
+  }
+
+  const handleDuplicate = async () => {
+    setIsDuplicating(true)
+    try {
+      const res = await fetch("/api/simulations/duplicate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ simulationId: id }),
+      })
+
+      if (!res.ok) {
+        console.error("Failed to duplicate simulation")
+        setIsDuplicating(false)
+        return
+      }
+
+      const data = await res.json()
+      const duplicatedId = data.simulation?.id
+
+      if (duplicatedId) {
+        router.push(`/dashboard/simulations/${duplicatedId}`)
+      }
+    } catch (error) {
+      console.error("Error duplicating simulation:", error)
+      setIsDuplicating(false)
     }
   }
 
@@ -416,14 +444,16 @@ export default function SimulationDetailPage({
             Voir optimisations
           </Link>
         </Button>
-        <Button variant="outline" asChild>
-          <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}`}>
-            <Copy className="mr-2 h-4 w-4" />
-            Dupliquer
-          </Link>
+        <Button
+          variant="outline"
+          onClick={handleDuplicate}
+          disabled={isDuplicating}
+        >
+          <Copy className="mr-2 h-4 w-4" />
+          {isDuplicating ? "Duplication..." : "Dupliquer"}
         </Button>
         <Button asChild>
-          <Link href={`/wizard?resume=${btoa(JSON.stringify(wizard_answers))}&simulationId=${id}`}>
+          <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation?.wizard_answers))}&simulationId=${id}`}>
             <Calculator className="mr-2 h-4 w-4" />
             {"Mettre à jour cette simulation"}
           </Link>
