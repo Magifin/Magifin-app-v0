@@ -152,7 +152,7 @@ export default function SimulationsPage() {
     }
   }
 
-  // Duplicate simulation - creates a new simulation immediately and redirects
+  // Duplicate simulation - creates a new simulation immediately and refreshes list
   const duplicateSimulation = async (id: string) => {
     try {
       const res = await fetch("/api/simulations/duplicate", {
@@ -166,12 +166,17 @@ export default function SimulationsPage() {
         return
       }
 
-      const data = await res.json()
-      const duplicatedId = data.simulation?.id
-
-      if (duplicatedId) {
-        // Redirect to the duplicated simulation's detail page
-        router.push(`/dashboard/simulations/${duplicatedId}`)
+      // Refresh the simulations list to show the duplicated simulation
+      if (selectedYear !== null) {
+        try {
+          const simRes = await fetch(`/api/simulations/list?tax_year=${selectedYear}`)
+          const simData = await simRes.json()
+          if (simRes.ok) {
+            setSimulations(simData.simulations || [])
+          }
+        } catch {
+          // Silently fail - list won't update but duplication succeeded
+        }
       }
     } catch (error) {
       console.error("Error duplicating simulation:", error)
