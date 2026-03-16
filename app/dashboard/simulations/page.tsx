@@ -11,6 +11,7 @@ import {
   Plus,
   AlertCircle,
   ArrowLeft,
+  Copy,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -371,6 +372,12 @@ export default function SimulationsPage() {
                     <Link href={`/dashboard/simulations/${sim.id}`}>
                       Voir détails
                       <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/wizard?resume=${btoa(JSON.stringify(sim.wizard_answers))}`}>
+                      <Copy className="mr-2 h-3.5 w-3.5" />
+                      Dupliquer
                     </Link>
                   </Button>
                   <AlertDialog>
