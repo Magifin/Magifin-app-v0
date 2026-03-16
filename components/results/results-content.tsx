@@ -16,16 +16,8 @@ import {
   Calendar,
   LayoutDashboard,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import {
-  useWizard,
-  getLastCompletedStepId,
-  getAvailableSteps,
-  wizardStore,
-} from "@/lib/wizard-store"
-import { useOptimizations } from "@/lib/useOptimizations"
 import { useAuth } from "@/lib/auth-context"
+import { AccountDropdown } from "@/components/account-dropdown"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
@@ -173,10 +165,7 @@ export function ResultsContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Loading state while auth initializes - but resolve after 2 seconds */}
-            {authLoading && !authInitialized && (
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            )}
+            {isAuthenticated && <AccountDropdown />}
             {/* Save button for authenticated users */}
             {authInitialized && !!authUser && taxResult && (
               <SaveSimulationDialog
