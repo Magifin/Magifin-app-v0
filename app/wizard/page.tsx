@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ArrowLeft, Eye, LayoutDashboard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
+import { AccountDropdown } from "@/components/account-dropdown"
 import { StepTaxYear } from "@/components/wizard/step-tax-year"
 import { StepRegion } from "@/components/wizard/step-region"
 import { StepStatus } from "@/components/wizard/step-status"
@@ -361,14 +362,17 @@ function WizardContent() {
           {/* Right side: Dashboard link when authenticated (optional UX improvement) */}
           <div className="flex items-center gap-2">
             {authUser && !authLoading && (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                title="Aller au tableau de bord"
-              >
-                <LayoutDashboard className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Tableau de bord</span>
-              </Link>
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  title="Aller au tableau de bord"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Tableau de bord</span>
+                </Link>
+                <AccountDropdown />
+              </>
             )}
           </div>
         </div>

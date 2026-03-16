@@ -14,22 +14,19 @@ import {
   Calculator,
   Save,
   Calendar,
+  LayoutDashboard,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import {
-  useWizard,
-  getLastCompletedStepId,
-  getAvailableSteps,
-  wizardStore,
-} from "@/lib/wizard-store"
-import { useOptimizations } from "@/lib/useOptimizations"
 import { useAuth } from "@/lib/auth-context"
+import { AccountDropdown } from "@/components/account-dropdown"
+import { useWizard, wizardStore, getLastCompletedStepId } from "@/lib/wizard-store"
+import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
+import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
+import { cn } from "@/lib/utils"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 const PARTNER_URL =
@@ -151,6 +148,18 @@ export function ResultsContent() {
               Modifier
             </button>
             <span className="text-border">|</span>
+            {isAuthenticated && (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Tableau de bord
+                </Link>
+                <span className="text-border">|</span>
+              </>
+            )}
             <Link
               href="/"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -160,10 +169,7 @@ export function ResultsContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Loading state while auth initializes - but resolve after 2 seconds */}
-            {authLoading && !authInitialized && (
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            )}
+            {isAuthenticated && <AccountDropdown />}
             {/* Save button for authenticated users */}
             {authInitialized && !!authUser && taxResult && (
               <SaveSimulationDialog
