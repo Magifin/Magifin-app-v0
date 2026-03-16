@@ -421,8 +421,35 @@ export function ResultsContent() {
 
           {taxResult && !taxLoading && (
             <div className="space-y-6">
-              {/* Tax breakdown */}
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+              {/* Tax calculation breakdown: before → optimizations → after */}
+              <div className="space-y-3">
+                {/* Tax without optimizations */}
+                <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+                  <dt className="text-sm text-muted-foreground">Impôt estimé sans optimisation</dt>
+                  <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-muted-foreground">
+                    {formatMoney(taxResult.estimatedTax + taxResult.deductionsApplied)}
+                  </dd>
+                </div>
+
+                {/* Optimizations value */}
+                <div className="flex items-center justify-between rounded-lg border border-green-200/50 bg-green-50/50 p-4">
+                  <dt className="text-sm text-green-900">Optimisations fiscales détectées</dt>
+                  <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-green-700">
+                    −{formatMoney(taxResult.deductionsApplied)}
+                  </dd>
+                </div>
+
+                {/* Tax after optimizations */}
+                <div className="flex items-center justify-between rounded-lg border border-green-300/50 bg-green-100/50 p-4">
+                  <dt className="text-sm font-medium text-green-900">Impôt estimé après optimisation</dt>
+                  <dd className="font-[family-name:var(--font-heading)] text-xl font-bold text-green-800">
+                    {formatMoney(taxResult.estimatedTax)}
+                  </dd>
+                </div>
+              </div>
+
+              {/* Additional details */}
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 border-t border-border pt-6">
                 <div>
                   <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
                   <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
@@ -430,15 +457,9 @@ export function ResultsContent() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
+                  <dt className="text-xs text-muted-foreground">Ajustements appliqués</dt>
                   <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-                    -{formatMoney(taxResult.deductionsApplied)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
-                  <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                    {formatMoney(taxResult.estimatedTax)}
+                    −{formatMoney(taxResult.deductionsApplied)}
                   </dd>
                 </div>
                 <div>
