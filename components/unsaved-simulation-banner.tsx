@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { AlertCircle, ArrowRight } from "lucide-react"
+import { AlertCircle, ArrowRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useWizard, wizardStore } from "@/lib/wizard-store"
 
@@ -15,8 +15,9 @@ import { useWizard, wizardStore } from "@/lib/wizard-store"
  * - Resume logic: routes to /results if already reached results, else /wizard with full state encoded
  */
 export function UnsavedSimulationBanner() {
-  const { state, hasUnsavedChanges } = useWizard()
+  const { state, hasUnsavedChanges, resetWizard } = useWizard()
   const [isHydrated, setIsHydrated] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false)
 
   // Hydrate wizard state from localStorage on mount
   // This allows the banner to detect unsaved drafts
@@ -25,11 +26,18 @@ export function UnsavedSimulationBanner() {
     setIsHydrated(true)
   }, [])
 
-  // Only show banner if there's a REAL unsaved draft
-  const hasUnsavedDraft = isHydrated && hasUnsavedChanges()
+  // Only show banner if there's a REAL unsaved draft and it hasn't been dismissed
+  const hasUnsavedDraft = isHydrated && hasUnsavedChanges() && !isDismissed
 
   if (!hasUnsavedDraft) {
     return null
+  }
+
+  const handleDismiss = () => {
+    // Completely discard the draft
+    resetWizard()
+    // Mark as dismissed so it doesn't reappear until a new draft is created
+    setIsDismissed(true)
   }
 
   // Smart resume logic:
@@ -57,12 +65,23 @@ export function UnsavedSimulationBanner() {
           Vous avez une simulation en cours non sauvegardée.
         </p>
       </div>
-      <Button size="sm" asChild className="gap-2">
-        <Link href={resumeHref}>
-          <ArrowRight className="h-4 w-4" />
-          Reprendre ma simulation
-        </Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button size="sm" asChild className="gap-2">
+          <Link href={resumeHref}>
+            <ArrowRight className="h-4 w-4" />
+            Reprendre ma simulation
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          onClick={handleDismiss}
+          title="Supprimer le brouillon"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }
