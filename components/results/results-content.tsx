@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { AccountDropdown } from "@/components/account-dropdown"
-import { useWizard, wizardStore } from "@/lib/wizard-store"
+import { useWizard, wizardStore, getLastCompletedStepId } from "@/lib/wizard-store"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
@@ -26,6 +26,7 @@ import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
 import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
+import { cn } from "@/lib/cn"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 const PARTNER_URL =
