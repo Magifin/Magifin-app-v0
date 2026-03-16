@@ -46,9 +46,9 @@ export function AccountDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-background shadow-lg">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-medium text-foreground">{user.email}</p>
+        <div className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-background shadow-lg z-50">
+          <div className="border-b border-border px-4 py-3 overflow-hidden">
+            <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
           </div>
 
           <nav className="py-1">
