@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { LogOut, User, FileText, Settings } from "lucide-react"
+import { LogOut, User, FileText, Settings, LayoutDashboard } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 export function AccountDropdown() {
@@ -52,6 +52,15 @@ export function AccountDropdown() {
           </div>
 
           <nav className="py-1">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={() => setIsOpen(false)}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Tableau de bord
+            </Link>
+
             <Link
               href="/dashboard/profil"
               className="flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"

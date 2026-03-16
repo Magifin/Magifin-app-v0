@@ -14,6 +14,7 @@ import {
   Calculator,
   Save,
   Calendar,
+  LayoutDashboard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -151,6 +152,18 @@ export function ResultsContent() {
               Modifier
             </button>
             <span className="text-border">|</span>
+            {isAuthenticated && (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Tableau de bord
+                </Link>
+                <span className="text-border">|</span>
+              </>
+            )}
             <Link
               href="/"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
