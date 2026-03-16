@@ -360,7 +360,7 @@ function WizardContent() {
           </Link>
           
           {/* Right side: Dashboard link when authenticated (optional UX improvement) */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             {authUser && !authLoading && (
               <>
                 <Link
