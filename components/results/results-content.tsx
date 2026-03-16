@@ -26,7 +26,7 @@ import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
 import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
-import { cn } from "@/lib/cn"
+import { cn } from "@/lib/utils"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 const PARTNER_URL =
