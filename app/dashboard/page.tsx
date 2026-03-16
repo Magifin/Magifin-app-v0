@@ -8,6 +8,7 @@ import {
   Clock,
   AlertCircle,
   Plus,
+  Zap,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -50,8 +51,9 @@ export default function DashboardPage() {
   const { results, hasWizardData } = useOptimizations()
   const [latestSimulation, setLatestSimulation] = useState<Simulation | null>(null)
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
+  const [simulationCount, setSimulationCount] = useState(0)
 
-  // Fetch latest saved simulation
+  // Fetch latest saved simulation and count
   useEffect(() => {
     const fetchLatestSimulation = async () => {
       try {
@@ -59,6 +61,7 @@ export default function DashboardPage() {
         const data = await res.json()
         if (res.ok && data.simulations && data.simulations.length > 0) {
           setLatestSimulation(data.simulations[0])
+          setSimulationCount(data.simulations.length)
         }
       } catch (error) {
         console.error("Error fetching latest simulation:", error)
@@ -145,6 +148,54 @@ export default function DashboardPage() {
 
       {/* Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Quick actions */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:col-span-1">
+          <h2 className="mb-4 font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+            Actions rapides
+          </h2>
+          <div className="flex flex-col gap-2">
+            <Button asChild className="w-full">
+              <Link href="/wizard?new=true">
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle simulation
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/dashboard/simulations">
+                <FileText className="mr-2 h-4 w-4" />
+                Voir mes simulations
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Status overview */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:col-span-1">
+          <h2 className="mb-4 font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+            Aperçu
+          </h2>
+          <div className="flex flex-col gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Simulations</p>
+              <p className="text-2xl font-bold text-foreground">{simulationCount}</p>
+            </div>
+            {latestSimulation && (
+              <div>
+                <p className="text-xs text-muted-foreground">Dernière mise à jour</p>
+                <p className="text-sm font-medium text-foreground">
+                  {new Date(latestSimulation.updated_at).toLocaleDateString("fr-BE")}
+                </p>
+              </div>
+            )}
+            <div className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-3 py-2">
+              <Zap className="h-4 w-4 text-accent" />
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Optimisations</p>
+                <p className="text-sm font-medium text-foreground">Détectées</p>
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Checklist */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:col-span-1">
           <h2 className="mb-4 font-[family-name:var(--font-heading)] font-bold text-card-foreground">
