@@ -91,6 +91,20 @@ export function ResultsContent() {
 
   const availableItems = results.items.filter((i) => i.available)
 
+  // Filter to items with valid numeric amounts — uses correct field names (amountMin/amountMax)
+  const validItems = availableItems.filter((item) => {
+    const min = item.amountMin
+    const max = item.amountMax
+    return (
+      min != null && max != null &&
+      !Number.isNaN(min) && !Number.isNaN(max)
+    )
+  })
+
+  // Total equals exact sum of visible rows
+  const optimizationTotalMin = validItems.reduce((sum, item) => sum + item.amountMin, 0)
+  const optimizationTotalMax = validItems.reduce((sum, item) => sum + item.amountMax, 0)
+
   // Consistent auth check used throughout the app
   const isAuthenticated = authInitialized && !!authUser
 
@@ -420,25 +434,9 @@ export function ResultsContent() {
 
           {taxResult && !taxLoading && (
             <div className="space-y-3">
-              {/* Tax without optimizations */}
+              {/* Tax estimate */}
               <div className="flex items-center justify-between border-b border-border py-3">
-                <dt className="text-sm text-muted-foreground">Impôt estimé sans optimisation</dt>
-                <dd className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">
-                  {formatMoney(taxResult.estimatedTax + taxResult.deductionsApplied)}
-                </dd>
-              </div>
-
-              {/* Optimizations value */}
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <dt className="text-sm text-muted-foreground">Optimisations fiscales détectées</dt>
-                <dd className="font-[family-name:var(--font-heading)] font-semibold text-primary">
-                  −{formatMoney(taxResult.deductionsApplied)}
-                </dd>
-              </div>
-
-              {/* Tax after optimizations */}
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <dt className="text-sm font-medium text-card-foreground">Impôt estimé après optimisation</dt>
+                <dt className="text-sm font-medium text-card-foreground">Impôt estimé</dt>
                 <dd className="font-[family-name:var(--font-heading)] text-lg font-bold text-card-foreground">
                   {formatMoney(taxResult.estimatedTax)}
                 </dd>
@@ -448,7 +446,9 @@ export function ResultsContent() {
               {taxResult.refundOrBalance !== 0 && (
                 <div>
                   <div className="flex items-center justify-between pt-2">
-                    <dt className="text-sm font-medium text-card-foreground">Remboursement estimé</dt>
+                    <dt className="text-sm font-medium text-card-foreground">
+                      {taxResult.refundOrBalance >= 0 ? "Remboursement estimé" : "Complément à payer"}
+                    </dt>
                     <dd
                       className={cn(
                         "font-[family-name:var(--font-heading)] text-lg font-bold",
@@ -478,21 +478,16 @@ export function ResultsContent() {
         </div>
 
         {/* Optimization items breakdown */}
-        {(() => {
-          const validItems = availableItems.filter((item) => {
-            const min = item.savingsMin
-            const max = item.savingsMax
-            return (
-              min != null && max != null &&
-              !Number.isNaN(min) && !Number.isNaN(max)
-            )
-          })
-          if (validItems.length === 0) return null
-          return (
+        {validItems.length > 0 && (
           <div className="mt-10">
-            <h3 className="mb-4 font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
-              {"Détail de vos optimisations"}
-            </h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+                {"Optimisations fiscales détectées"}
+              </h3>
+              <span className="font-[family-name:var(--font-heading)] font-semibold text-primary">
+                {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
+              </span>
+            </div>
 
             {/* Locked panel - shown when NOT authenticated */}
             {!isAuthenticated && (
@@ -540,7 +535,7 @@ export function ResultsContent() {
                     <div>
                       <p className="font-medium text-card-foreground">{item.title}</p>
                       {isAuthenticated ? (
-                        <p className="text-sm text-muted-foreground">{item.details}</p>
+                        <p className="text-sm text-muted-foreground">{item.reason}</p>
                       ) : (
                         <p className="text-sm italic text-muted-foreground/60">
                           {"Détails disponibles après création de votre espace"}
@@ -550,7 +545,7 @@ export function ResultsContent() {
                   </div>
                   {isAuthenticated ? (
                     <span className="text-sm font-semibold text-accent">
-                      {formatMoneyRange(item.savingsMin, item.savingsMax)}
+                      {formatMoneyRange(item.amountMin, item.amountMax)}
                     </span>
                   ) : (
                     <span className="text-xs font-medium text-muted-foreground">
@@ -561,8 +556,7 @@ export function ResultsContent() {
               ))}
             </div>
           </div>
-          )
-        })()}
+        )}
 
         {/* Disclaimer */}
         <div className="mt-12 flex flex-col items-center gap-3 text-center">

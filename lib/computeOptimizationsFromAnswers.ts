@@ -121,15 +121,16 @@ export function computeOptimizationsFromAnswers(
       reason: "Réduction de 30% (max 1.020€) ou 25% (max 1.310€).",
     })
   } else if (answers.pensionSaving === "Non") {
-    // Suggest pension saving optimization - user doesn't have one yet
+    // Advisory only: user has no pension saving — amounts are speculative
+    // available: false → excluded from availableItems UI filter and fiscal totals
     items.push({
       key: "pension_suggestion",
       title: "Potentiel épargne pension",
       category: "pension",
       amountMin: 250,
       amountMax: 320,
-      available: true,
-      precision: "confirmed",
+      available: false,
+      precision: "advisory",
       reason:
         "Une épargne pension pourrait vous faire économiser jusqu'à 320€/an.",
     })
@@ -309,22 +310,6 @@ export function computeOptimizationsFromAnswers(
 
   let totalMin = fiscalItems.reduce((sum, item) => sum + item.amountMin, 0)
   let totalMax = fiscalItems.reduce((sum, item) => sum + item.amountMax, 0)
-
-  // If no optimizations found, provide baseline estimates
-  if (fiscalItems.length === 0) {
-    items.push({
-      key: "baseline_analysis",
-      title: "Analyse des réductions standards",
-      category: "other",
-      amountMin: 100,
-      amountMax: 300,
-      available: true,
-      precision: "estimated",
-      reason: "Estimation basée sur votre profil fiscal général.",
-    })
-    totalMin = 100
-    totalMax = 300
-  }
 
   // Round totals once
   totalMin = Math.round(totalMin)
