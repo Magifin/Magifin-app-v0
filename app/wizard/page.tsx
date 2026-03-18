@@ -27,6 +27,7 @@ import {
   getStepIndex,
   getNextStepId,
   getPreviousStepId,
+  resolveWizardMode,
 } from "@/lib/wizard-store"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import { useUser } from "@/lib/user-store"
@@ -37,7 +38,7 @@ import { track } from "@/lib/track"
 function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, markAsSaved, setCompletedStepIds } = useWizard()
+  const { state, setAnswer, goToStep, markStepComplete, loadAnswers, resetWizard, setEditingSimulationId, setWizardMode, markAsSaved, setCompletedStepIds } = useWizard()
   const { user } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
@@ -57,6 +58,12 @@ function WizardContent() {
 
     const resume = searchParams.get("resume")
     const simulationId = searchParams.get("simulationId")
+    const hasDraft =
+      typeof window !== "undefined" &&
+      !!localStorage.getItem("magifin_wizard_v1")
+
+    const mode = resolveWizardMode({ searchParams, simulationId, hasDraft })
+    setWizardMode(mode)
 
     if (resume) {
       try {
@@ -64,8 +71,8 @@ function WizardContent() {
 
         // FIX: set editingSimulationId BEFORE loadAnswers so the store reads
         // the correct value when computing completedStepIds
-        if (simulationId) {
-          setEditingSimulationId(simulationId)
+        if (mode === "edit") {
+          setEditingSimulationId(simulationId!)
         }
 
         // Support both old format (just answers) and new format (full state)
@@ -92,7 +99,7 @@ function WizardContent() {
         }
 
         // Mark as saved so we don't show unsaved banner for a freshly loaded simulation
-        if (simulationId) {
+        if (mode === "edit") {
           markAsSaved()
         }
 
@@ -102,21 +109,12 @@ function WizardContent() {
         resetWizard()
       }
     } else {
-      // FIX: handle ?new=true — always reset regardless of localStorage
-      const isNew = searchParams.get("new") === "true"
-      if (isNew) {
+      if (mode === "new") {
         resetWizard()
-      } else {
-        // Only reset if there's no state in localStorage
-        // This allows the wizard to resume after navigation from the banner
-        const hasStoredState = typeof window !== "undefined" && localStorage.getItem("magifin_wizard_v1")
-        if (!hasStoredState) {
-          resetWizard()
-        }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- goToStep/markAsSaved omitted: effect is one-time (hasProcessedResume guard)
-  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setAnswer])
+  }, [searchParams, loadAnswers, resetWizard, setEditingSimulationId, setWizardMode, setAnswer])
 
   // Track wizard start
   useEffect(() => {

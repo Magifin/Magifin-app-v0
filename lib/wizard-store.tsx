@@ -67,12 +67,15 @@ export interface WizardAnswers {
 
 export type MortgageInsuranceCategory = "solde_restant_du" | "other" | null
 
+export type WizardMode = "new" | "draft" | "edit" | "duplicate"
+
 export interface WizardState {
   answers: WizardAnswers
   currentStepId: string
   completedStepIds: string[]
   editingSimulationId: string | null
   lastSavedAnswers: WizardAnswers | null  // Track saved state to detect unsaved changes
+  wizardMode: WizardMode | null
 }
 
 // === Step definitions ===
@@ -164,6 +167,7 @@ const defaultState: WizardState = {
   completedStepIds: [],
   editingSimulationId: null,
   lastSavedAnswers: null,
+  wizardMode: null,
 }
 
 const STORAGE_KEY = "magifin_wizard_v1"
@@ -230,6 +234,7 @@ function createWizardStore() {
           completedStepIds: parsed.completedStepIds || [],
           editingSimulationId: parsed.editingSimulationId ?? null,
           lastSavedAnswers: parsed.lastSavedAnswers || null,
+          wizardMode: null,
         }
         emit()
       }
@@ -296,9 +301,10 @@ function createWizardStore() {
     // When loading a saved simulation for editing, mark all available steps as completed for visual display
     // This shows the stepper as fully green/completed since the user is editing an existing simulation
     // Get all available steps based on the loaded answers, then mark them all as completed
-    const completedStepIds = state.editingSimulationId 
-      ? getAvailableSteps(mergedAnswers).map(s => s.id)  // Edit mode: mark all steps completed for visual display
-      : []  // New/resume mode: start with empty, user will complete steps as they go
+    const completedStepIds =
+      (state.wizardMode === "edit" || state.editingSimulationId)
+        ? getAvailableSteps(mergedAnswers).map(s => s.id)  // Edit mode: mark all steps completed for visual display
+        : []  // New/resume mode: start with empty, user will complete steps as they go
     
     state = {
       answers: mergedAnswers,
@@ -316,6 +322,12 @@ function createWizardStore() {
       ...state,
       editingSimulationId: simulationId,
     }
+    persist()
+    emit()
+  }
+
+  const setWizardMode = (mode: WizardMode) => {
+    state = { ...state, wizardMode: mode }
     persist()
     emit()
   }
@@ -356,6 +368,7 @@ function createWizardStore() {
     resetWizard,
     loadAnswers,
     setEditingSimulationId,
+    setWizardMode,
     markAsSaved,
     hasUnsavedChanges,
     isHydrated: () => isHydrated,
@@ -363,6 +376,22 @@ function createWizardStore() {
 }
 
 const store = createWizardStore()
+
+// === Resolver function ===
+export function resolveWizardMode({
+  searchParams,
+  simulationId,
+  hasDraft,
+}: {
+  searchParams: { get: (key: string) => string | null }
+  simulationId: string | null
+  hasDraft: boolean
+}): WizardMode {
+  if (simulationId) return "edit"
+  if (searchParams.get("new") === "true") return "new"
+  if (searchParams.get("resume") || hasDraft) return "draft"
+  return "new"
+}
 
 // === Helper functions ===
 export function getAvailableSteps(answers: WizardAnswers): WizardStep[] {
@@ -431,6 +460,7 @@ interface WizardContextValue {
   resetWizard: () => void
   loadAnswers: (answers: Partial<WizardAnswers>) => void
   setEditingSimulationId: (simulationId: string | null) => void
+  setWizardMode: (mode: WizardMode) => void
   markAsSaved: () => void
   hasUnsavedChanges: () => boolean
 }
@@ -479,6 +509,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     store.setEditingSimulationId(simulationId)
   }, [])
 
+  const setWizardMode = useCallback((mode: WizardMode) => {
+    store.setWizardMode(mode)
+  }, [])
+
   const markAsSaved = useCallback(() => {
     store.markAsSaved()
   }, [])
@@ -493,7 +527,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   return (
     <WizardContext.Provider
-      value={{ state, setAnswer, goToStep, markStepComplete, setCompletedStepIds, resetWizard, loadAnswers, setEditingSimulationId, markAsSaved, hasUnsavedChanges }}
+      value={{ state, setAnswer, goToStep, markStepComplete, setCompletedStepIds, resetWizard, loadAnswers, setEditingSimulationId, setWizardMode, markAsSaved, hasUnsavedChanges }}
     >
       {children}
     </WizardContext.Provider>
