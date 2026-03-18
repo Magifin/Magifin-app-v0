@@ -59,7 +59,7 @@ export function Hero() {
         </div>
 
         <p className="mt-6 max-w-lg text-xs leading-relaxed text-muted-foreground/70">
-          {"Estimation indicative basée sur les informations fournies. Magifin ne remplace pas un conseiller fiscal. Vérifiez toujours votre déclaration avant envoi."}
+          {`Estimation indicative bas\u00E9e sur les informations fournies. Magifin ne remplace pas un conseiller fiscal. V\u00E9rifiez toujours votre d\u00E9claration avant envoi.`}
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
