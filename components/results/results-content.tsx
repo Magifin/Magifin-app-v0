@@ -103,6 +103,10 @@ export function ResultsContent() {
 
   useEffect(() => {
     if (simulationId) return
+
+    if (!answers || Object.keys(answers).length === 0) return
+    if (!answers.taxYear) return
+
     const input = mapAnswersToTaxInput(answers)
     if (!input) return
 
@@ -188,6 +192,18 @@ export function ResultsContent() {
     !results.isFullySupported || availableItems.length > 0
       ? "Débloquez votre optimisation fiscale complète"
       : "Vérification complète de vos droits fiscaux"
+
+  // Early return for saved simulation loading state
+  if (simulationId && simulationLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Chargement de la simulation...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

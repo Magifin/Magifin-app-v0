@@ -53,7 +53,7 @@ function OptimisationContent() {
   const hasData = currentSimulation || hasWizardData
 
   // Build display results from saved simulation wizard_answers OR current wizard session
-  const displayResults = currentSimulation
+  const displayResults = currentSimulation?.wizard_answers
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
     : results
 
