@@ -155,6 +155,15 @@ export function ResultsContent() {
   const optimizationTotalMin = validItems.reduce((sum, item) => sum + item.amountMin, 0)
   const optimizationTotalMax = validItems.reduce((sum, item) => sum + item.amountMax, 0)
 
+  // Compute optimized refund projection
+  const optimizationGain =
+    results?.totalMax && results.totalMax > 0 ? results.totalMax : 0
+
+  const optimizedRefund =
+    taxResult?.refundOrBalance != null
+      ? taxResult.refundOrBalance + optimizationGain
+      : null
+
   // Consistent auth check used throughout the app
   const isAuthenticated = authInitialized && !!authUser
 
@@ -533,6 +542,24 @@ export function ResultsContent() {
                         ? `+${formatMoney(taxResult.refundOrBalance)}`
                         : formatMoney(taxResult.refundOrBalance)}
                     </p>
+                  </div>
+                )}
+
+                {/* With full optimization projection */}
+                {taxResult && optimizationGain > 0 && (
+                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                    <p className="text-xs font-medium text-primary mb-1">
+                      Avec optimisation complète
+                    </p>
+
+                    <div className="flex items-end gap-2">
+                      <span className="font-[family-name:var(--font-heading)] text-xl font-semibold text-primary">
+                        {formatMoney(optimizedRefund)}
+                      </span>
+                      <span className="text-sm text-primary/80">
+                        (+{formatMoney(optimizationGain)})
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
