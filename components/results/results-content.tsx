@@ -478,6 +478,43 @@ export function ResultsContent() {
           )}
         </div>
 
+        {/* Optimizations preview section */}
+        {validItems.length > 0 && (
+          <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+                {"Optimisations fiscales détectées"}
+              </h3>
+              <span className="font-[family-name:var(--font-heading)] font-semibold text-primary">
+                {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
+              </span>
+            </div>
+
+            {/* Preview list - compact, no descriptions */}
+            <div className="space-y-2 mb-4">
+              {validItems.slice(0, 3).map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
+                >
+                  <p className="text-sm font-medium text-card-foreground">{item.title}</p>
+                  <span className="text-sm font-semibold text-primary">
+                    {formatMoneyRange(item.amountMin, item.amountMax)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA to see all optimizations */}
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/dashboard/optimisation">
+                Voir toutes les optimisations
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {/* Optimization items breakdown */}
         {validItems.length > 0 && (
           <div className="mt-10">
