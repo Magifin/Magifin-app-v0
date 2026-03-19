@@ -64,9 +64,9 @@ function OptimisationContent() {
 
   return (
     <div>
-      {/* Back navigation */}
+      {/* Back navigation - preserve simulationId if present */}
       <Link
-        href="/results"
+        href={simulationId ? `/results?simulationId=${simulationId}` : "/results"}
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
