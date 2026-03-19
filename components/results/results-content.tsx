@@ -520,13 +520,13 @@ export function ResultsContent() {
 
                 {/* Remboursement estimé or Complément à payer */}
                 {taxResult.refundOrBalance !== 0 && (
-                  <div className={cn("rounded-lg border-2 px-3 py-2", taxResult.refundOrBalance >= 0 ? "border-primary bg-primary/10" : "border-destructive bg-destructive/5")}>
+                  <div className={cn("rounded-lg border-2 px-3 py-2", taxResult.refundOrBalance >= 0 ? "border-primary/35 bg-primary/8" : "border-destructive bg-destructive/5")}>
                     <p className={cn("text-xs font-medium mb-0.5", taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive")}>
                       {taxResult.refundOrBalance >= 0 ? "Remboursement" : "Complément"}
                     </p>
                     <p
                       className={cn(
-                        "font-[family-name:var(--font-heading)] text-sm font-bold",
+                        "font-[family-name:var(--font-heading)] text-sm font-semibold",
                         taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive"
                       )}
                     >
@@ -550,12 +550,15 @@ export function ResultsContent() {
 
                 {/* Avec optimisation complète */}
                 {optimizationGain > 0 && (
-                  <div className="rounded-lg border-2 border-primary/40 bg-primary/12 px-3 py-2">
-                    <p className="text-xs font-medium text-primary mb-0.5">
-                      Avec optimisation complète
-                    </p>
+                  <div className="rounded-lg border-2 border-primary/50 bg-primary/15 px-3 py-2">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                      <p className="text-xs font-semibold text-primary">
+                        Avec optimisation complète
+                      </p>
+                    </div>
                     <div className="flex items-end gap-1.5">
-                      <span className="font-[family-name:var(--font-heading)] text-sm font-bold text-primary">
+                      <span className="font-[family-name:var(--font-heading)] text-base font-bold text-primary">
                         {formatMoney(optimizedRefund)}
                       </span>
                       <span className="text-xs text-primary/70">
