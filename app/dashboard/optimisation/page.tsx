@@ -1,11 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useMemo, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
@@ -49,22 +50,15 @@ function OptimisationContent() {
 
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
-  
-  // Build display results from saved simulation OR current wizard session
-  const displayResults = currentSimulation?.tax_result ? {
-    items: (currentSimulation.tax_result.items || []) as Array<{
-      key: string
-      label: string
-      details: string
-      savingsMin: number
-      savingsMax: number
-      available: boolean
-    }>,
-    totalMin: currentSimulation.tax_result.refundOrBalance || 0,
-    totalMax: currentSimulation.tax_result.refundOrBalance || 0,
-    notes: [] as string[],
-    isFullySupported: true,
-  } : results
+
+  // Single source of truth: always recompute optimisation items from wizard_answers.
+  // TaxResult does not store optimisation items.
+  const displayResults = useMemo(() => {
+    if (currentSimulation?.wizard_answers) {
+      return computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
+    }
+    return results
+  }, [currentSimulation, results])
 
   const availableItems = displayResults.items.filter((i) => i.available)
 
@@ -101,7 +95,7 @@ function OptimisationContent() {
       <div>
         <UnsavedSimulationBanner />
 
-        {!hasData || isLoadingSimulation ? (
+        {!hasData || (isLoadingSimulation && !hasWizardData) ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <AlertCircle className="h-6 w-6 text-muted-foreground" />

@@ -56,7 +56,12 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 
   // === Stage 5: Calculate tax before credits ===
   // Includes quotité credit, regional surcharge, all in Method B order
-  const { totalTax: taxBeforeCredits } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
+  const { totalTax: taxBeforeCredits } = calculateTotalIncomeTax(
+    taxableIncome,
+    region,
+    input.fiscalYear,
+    input.dependents,
+  )
 
   // === Stage 6: Apply non-quotité tax credits ===
   // Pension is applied as 30% credit
@@ -114,7 +119,12 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const taxableIncome = clampNonNegative(netIncome - deductionResult.totalDeductions)
 
   // === Stage 5: Calculate tax before credits ===
-  const { totalTax } = calculateTotalIncomeTax(taxableIncome, region, input.fiscalYear)
+  const { totalTax } = calculateTotalIncomeTax(
+    taxableIncome,
+    region,
+    input.fiscalYear,
+    input.dependents,
+  )
 
   // === Stage 6: Apply tax credits ===
   const taxCredits = calculateAllTaxCredits({ pensionContribution })

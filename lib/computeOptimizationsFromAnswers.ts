@@ -1,4 +1,5 @@
 import type { WizardAnswers } from "./wizard-store"
+import { getChildTaxFreeAllowanceSupplement } from "@/lib/fiscal/belgium/rules/deductions"
 
 export type OptimizationPrecision = "confirmed" | "estimated" | "advisory"
 export type OptimizationCategory =
@@ -163,32 +164,26 @@ export function computeOptimizationsFromAnswers(
 
   // === LEVEL 2: ESTIMATED REALISTIC OPTIMISATIONS ===
 
-  // 4. Children impact
+  // 4. Children impact — derived from real engine logic
   if (answers.children > 0) {
-    let amountMin: number
-    let amountMax: number
-
-    if (answers.children === 1) {
-      amountMin = 150
-      amountMax = 250
-    } else if (answers.children === 2) {
-      amountMin = 400
-      amountMax = 650
-    } else {
-      // 3+ children
-      amountMin = 800
-      amountMax = 1200
+    const SURCHARGE_BY_REGION: Record<string, number> = {
+      Wallonie: 0.075,
+      Bruxelles: 0.08,
+      Flandre: 0.07,
     }
+    const surchargeRate = SURCHARGE_BY_REGION[answers.region ?? ""] ?? 0.075
+    const supplement = getChildTaxFreeAllowanceSupplement(answers.children)
+    const amount = Math.round(supplement * 0.25 * (1 + surchargeRate))
 
     items.push({
       key: "children",
       title: `Avantage pour ${answers.children} enfant(s) à charge`,
       category: "family",
-      amountMin,
-      amountMax,
+      amountMin: amount,
+      amountMax: amount,
       available: true,
-      precision: "estimated",
-      reason: "Impact fiscal estimé lié aux personnes à charge.",
+      precision: "confirmed",
+      reason: "Réduction via supplément à la quotité exemptée (Art. 132-140 CIR 92).",
     })
   }
 

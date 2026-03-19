@@ -8,6 +8,7 @@ import type { TaxBracket } from "@/lib/fiscal/core/types"
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { getFederalBrackets, getRegionalSurchargeRate, type BelgiumRegion } from "../rules/brackets"
 import { getQuotiteCredit } from "../rules/credits"
+import { getChildTaxFreeAllowanceSupplement } from "../rules/deductions"
 
 /**
  * Calculate progressive tax using tax brackets
@@ -91,7 +92,8 @@ export function calculateRegionalSurcharge(
 export function calculateTotalIncomeTax(
   taxableIncome: number,
   region: BelgiumRegion,
-  fiscalYear?: number
+  fiscalYear?: number,
+  dependents?: number,
 ): {
   federalTax: number
   quotiteCredit: number
@@ -102,7 +104,12 @@ export function calculateTotalIncomeTax(
   const federalTax = calculateFederalTax(taxableIncome, fiscalYear)
 
   // Apply quotité exemptée as a fixed tax credit (Method B)
-  const quotiteCredit = getQuotiteCredit(fiscalYear)
+  // Base personal allowance + child supplement
+  // Supplement converted to credit at 25% (lowest federal bracket rate)
+  const baseCredit = getQuotiteCredit(fiscalYear)
+  const childSupplement = getChildTaxFreeAllowanceSupplement(dependents ?? 0)
+  const quotiteCredit = baseCredit + childSupplement * 0.25
+
   const netFederal = Math.max(0, federalTax - quotiteCredit)
 
   // Regional surcharge applied on netFederal (post-credit)
