@@ -7,6 +7,7 @@ import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lu
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
@@ -51,14 +52,10 @@ function OptimisationContent() {
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
 
-  // Single source of truth: always recompute optimisation items from wizard_answers.
-  // TaxResult does not store optimisation items.
-  const displayResults = useMemo(() => {
-    if (currentSimulation?.wizard_answers) {
-      return computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
-    }
-    return results
-  }, [currentSimulation, results])
+  // Build display results from saved simulation wizard_answers OR current wizard session
+  const displayResults = currentSimulation
+    ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
+    : results
 
   const availableItems = displayResults.items.filter((i) => i.available)
 
@@ -146,9 +143,9 @@ function OptimisationContent() {
           <div className="mb-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-accent" />
-              <span className="text-sm font-medium text-muted-foreground">
-                {currentSimulation ? "Optimisations fiscales détectées" : "Gain total estimé"}
-              </span>
+            <span className="text-sm font-medium text-muted-foreground">
+              Économies potentielles
+            </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
               {formatMoneyRange(displayResults.totalMin, displayResults.totalMax)}

@@ -75,10 +75,15 @@ export default function DashboardPage() {
 
   // Determine what to show: latest saved simulation or wizard data
   const hasData = latestSimulation || hasWizardData
-  const estimatedGain = latestSimulation ? {
-    min: latestSimulation.tax_result?.refundOrBalance || 0,
-    max: latestSimulation.tax_result?.refundOrBalance || 0,
-  } : results
+  const estimatedGain = latestSimulation
+    ? {
+        min: latestSimulation.tax_result?.refundOrBalance || 0,
+        max: latestSimulation.tax_result?.refundOrBalance || 0,
+      }
+    : {
+        min: results.totalMin,
+        max: results.totalMax,
+      }
 
   const greeting = profile?.full_name 
     ? `Bonjour, ${profile.full_name.split(' ')[0]}`
