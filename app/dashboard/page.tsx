@@ -142,6 +142,13 @@ export default function DashboardPage() {
                 </Link>
               </Button>
             )}
+            {latestSimulation && (
+              <Button variant="outline" asChild>
+                <Link href="/results">
+                  Voir les résultats
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
