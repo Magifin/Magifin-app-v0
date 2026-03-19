@@ -138,7 +138,7 @@ function OptimisationContent() {
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-accent" />
               <span className="text-sm font-medium text-muted-foreground">
-                {currentSimulation ? "Remboursement estimé" : "Gain total estimé"}
+                {currentSimulation ? "Optimisations fiscales détectées" : "Gain total estimé"}
               </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
