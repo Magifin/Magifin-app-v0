@@ -360,7 +360,7 @@ export function ResultsContent() {
                 className="h-12 px-8 text-base"
                 asChild
               >
-                <Link href="/dashboard/optimisation">
+                <Link href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}>
                   {"Voir mes optimisations"}
                 </Link>
               </Button>
@@ -424,7 +424,7 @@ export function ResultsContent() {
                 className="mt-5 w-full"
                 asChild
               >
-                <Link href="/dashboard/optimisation">
+                <Link href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}>
                   {"Voir mes optimisations"}
                   <ArrowRight className="ml-2 h-3.5 w-3.5" />
                 </Link>
@@ -640,7 +640,7 @@ export function ResultsContent() {
 
             {/* CTA to see all optimizations */}
             <Button variant="outline" asChild className="mt-4 w-full">
-              <Link href="/dashboard/optimisation">
+              <Link href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}>
                 Voir toutes les optimisations
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

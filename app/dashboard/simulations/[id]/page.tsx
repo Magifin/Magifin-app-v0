@@ -62,6 +62,11 @@ export default function SimulationDetailPage({
         }
 
         setSimulation(data.simulation)
+
+        // Track as last viewed so dashboard and optimisation default to this simulation
+        if (typeof window !== "undefined") {
+          localStorage.setItem("magifin_last_viewed_simulation_id", id)
+        }
       } catch (err) {
         setError("Erreur de connexion")
       } finally {

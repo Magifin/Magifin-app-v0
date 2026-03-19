@@ -92,6 +92,12 @@ export function SaveSimulationDialog({
         return
       }
 
+      // Track the saved/updated simulation as the last viewed so that
+      // dashboard and optimisation immediately reflect the correct context.
+      if (data.simulation?.id && typeof window !== "undefined") {
+        localStorage.setItem("magifin_last_viewed_simulation_id", data.simulation.id)
+      }
+
       // Mark as saved to clear the "unsaved draft" state
       markAsSaved()
 
