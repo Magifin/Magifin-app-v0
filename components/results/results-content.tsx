@@ -503,16 +503,16 @@ export function ResultsContent() {
               {/* Row 1: Montant déjà prélevé, Impôt estimé, Remboursement estimé */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {/* Montant déjà prélevé */}
-                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Montant déjà prélevé</p>
+                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
+                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Montant déjà prélevé</p>
                   <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
                     {formatMoney(answers.taxesAlreadyPaid || 0)}
                   </p>
                 </div>
 
                 {/* Impôt estimé */}
-                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Impôt estimé</p>
+                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
+                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Impôt estimé</p>
                   <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
                     {formatMoney(taxResult.estimatedTax)}
                   </p>
@@ -520,7 +520,7 @@ export function ResultsContent() {
 
                 {/* Remboursement estimé or Complément à payer */}
                 {taxResult.refundOrBalance !== 0 && (
-                  <div className={cn("rounded-lg border-2 px-3 py-2", taxResult.refundOrBalance >= 0 ? "border-primary bg-primary/5" : "border-destructive bg-destructive/5")}>
+                  <div className={cn("rounded-lg border-2 px-3 py-2", taxResult.refundOrBalance >= 0 ? "border-primary bg-primary/10" : "border-destructive bg-destructive/5")}>
                     <p className={cn("text-xs font-medium mb-0.5", taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive")}>
                       {taxResult.refundOrBalance >= 0 ? "Remboursement" : "Complément"}
                     </p>
@@ -541,16 +541,16 @@ export function ResultsContent() {
               {/* Row 2: Économies supplémentaires potentielles, Avec optimisation complète */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {/* Économies supplémentaires potentielles */}
-                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Économies supplémentaires potentielles</p>
-                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-primary">
+                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
+                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Économies supplémentaires potentielles</p>
+                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-foreground">
                     {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
                   </p>
                 </div>
 
                 {/* Avec optimisation complète */}
                 {optimizationGain > 0 && (
-                  <div className="rounded-lg border-2 border-primary/30 bg-primary/5 px-3 py-2">
+                  <div className="rounded-lg border-2 border-primary/40 bg-primary/12 px-3 py-2">
                     <p className="text-xs font-medium text-primary mb-0.5">
                       Avec optimisation complète
                     </p>
@@ -567,10 +567,10 @@ export function ResultsContent() {
               </div>
 
               {/* Footer: Effective tax rate and disclaimer */}
-              <div className="space-y-2 border-t border-border pt-3">
+              <div className="space-y-2 border-t border-border/40 pt-2.5">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground">Taux effectif</p>
-                  <p className="font-[family-name:var(--font-heading)] text-xs font-semibold text-card-foreground">
+                  <p className="text-xs font-medium text-muted-foreground/60">Taux effectif</p>
+                  <p className="font-[family-name:var(--font-heading)] text-xs font-semibold text-muted-foreground">
                     {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
                   </p>
                 </div>
