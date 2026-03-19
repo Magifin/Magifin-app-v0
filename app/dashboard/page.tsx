@@ -144,7 +144,7 @@ export default function DashboardPage() {
             )}
             {latestSimulation && (
               <Button variant="outline" asChild>
-                <Link href="/results">
+                <Link href={`/results?simulationId=${latestSimulation.id}`}>
                   Voir les résultats
                 </Link>
               </Button>

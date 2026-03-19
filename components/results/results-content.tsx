@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowRight,
@@ -34,7 +34,8 @@ const PARTNER_URL =
 
 export function ResultsContent() {
   const router = useRouter()
-  const { state, goToStep, markAsSaved } = useWizard()
+  const searchParams = useSearchParams()
+  const { state, goToStep, markAsSaved, loadAnswers } = useWizard()
   const { answers, completedStepIds, editingSimulationId } = state
   const { results } = useOptimizations()
   const { user: authUser, isLoading: authLoading } = useAuth()
@@ -44,6 +45,37 @@ export function ResultsContent() {
   const [taxResult, setTaxResult] = useState<TaxResult | null>(null)
   const [taxLoading, setTaxLoading] = useState(false)
   const [taxError, setTaxError] = useState<string | null>(null)
+
+  // Track if page was loaded from saved simulation
+  const [isLoadedFromSavedSimulation, setIsLoadedFromSavedSimulation] = useState(false)
+  const [simulationIdLoading, setSimulationIdLoading] = useState(false)
+
+  // Restore answers from localStorage if store is empty (e.g. after page refresh)
+  useEffect(() => {
+    wizardStore.hydrate()
+  }, [])
+
+  // Load saved simulation by simulationId if present in URL
+  useEffect(() => {
+    const simulationId = searchParams.get("simulationId")
+    if (!simulationId) return
+
+    setSimulationIdLoading(true)
+    fetch(`/api/simulations/${simulationId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && data.simulation) {
+          // Load wizard answers into store
+          loadAnswers(data.simulation.wizard_answers)
+          // Set tax result directly
+          setTaxResult(data.simulation.tax_result)
+          // Mark as loaded from saved simulation so we don't recompute
+          setIsLoadedFromSavedSimulation(true)
+        }
+      })
+      .catch((err) => console.error("Error loading saved simulation:", err))
+      .finally(() => setSimulationIdLoading(false))
+  }, [searchParams])
 
   // Restore answers from localStorage if store is empty (e.g. after page refresh)
   useEffect(() => {
@@ -66,6 +98,9 @@ export function ResultsContent() {
   }, [authLoading, authUser])
 
   useEffect(() => {
+    // Skip tax computation if loaded from saved simulation
+    if (isLoadedFromSavedSimulation) return
+
     const input = mapAnswersToTaxInput(answers)
     if (!input) return
 
@@ -87,7 +122,7 @@ export function ResultsContent() {
       })
       .catch(() => setTaxError("Impossible de calculer l'impôt"))
       .finally(() => setTaxLoading(false))
-  }, [answers])
+  }, [answers, isLoadedFromSavedSimulation])
 
   const availableItems = results.items.filter((i) => i.available)
 
