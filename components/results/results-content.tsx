@@ -434,16 +434,50 @@ export function ResultsContent() {
 
           {taxResult && !taxLoading && (
             <div className="space-y-4">
-              {/* Tax estimate */}
+              {/* Gross income */}
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Impôt estimé</p>
-                <dd className="font-[family-name:var(--font-heading)] text-2xl font-bold text-card-foreground">
-                  {formatMoney(taxResult.estimatedTax)}
-                </dd>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Revenu brut annuel</p>
+                <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                  {formatMoney(answers.salaryIncome || 0)}
+                </p>
+              </div>
+
+              {/* Adjustments */}
+              {taxResult.deductionsApplied > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Ajustements fiscaux automatiques</p>
+                  <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-primary">
+                    −{formatMoney(taxResult.deductionsApplied)}
+                  </p>
+                </div>
+              )}
+
+              {/* Taxable income */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Revenu imposable</p>
+                <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                  {formatMoney(taxResult.taxableIncome)}
+                </p>
               </div>
 
               {/* Visual separator */}
               <div className="border-t border-border" />
+
+              {/* Tax estimate */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Impôt estimé</p>
+                <p className="font-[family-name:var(--font-heading)] text-2xl font-bold text-card-foreground">
+                  {formatMoney(taxResult.estimatedTax)}
+                </p>
+              </div>
+
+              {/* Effective tax rate */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Taux effectif</p>
+                <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                  {(taxResult.effectiveTaxRate * 100).toFixed(1)}%
+                </p>
+              </div>
 
               {/* Estimated refund or balance */}
               {taxResult.refundOrBalance !== 0 && (
@@ -451,7 +485,7 @@ export function ResultsContent() {
                   <p className={cn("text-xs font-medium mb-1", taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive")}>
                     {taxResult.refundOrBalance >= 0 ? "Remboursement estimé" : "Complément à payer"}
                   </p>
-                  <dd
+                  <p
                     className={cn(
                       "font-[family-name:var(--font-heading)] text-2xl font-bold",
                       taxResult.refundOrBalance >= 0
@@ -462,7 +496,7 @@ export function ResultsContent() {
                     {taxResult.refundOrBalance >= 0
                       ? `+${formatMoney(taxResult.refundOrBalance)}`
                       : formatMoney(taxResult.refundOrBalance)}
-                  </dd>
+                  </p>
                   <p className="mt-3 text-center text-xs text-muted-foreground">
                     Estimation basée sur les informations que vous avez fournies.
                   </p>
@@ -477,43 +511,6 @@ export function ResultsContent() {
             </p>
           )}
         </div>
-
-        {/* Optimizations preview section */}
-        {validItems.length > 0 && (
-          <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
-                {"Optimisations fiscales détectées"}
-              </h3>
-              <span className="font-[family-name:var(--font-heading)] font-semibold text-primary">
-                {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
-              </span>
-            </div>
-
-            {/* Preview list - compact, no descriptions */}
-            <div className="space-y-2 mb-4">
-              {validItems.slice(0, 3).map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
-                >
-                  <p className="text-sm font-medium text-card-foreground">{item.title}</p>
-                  <span className="text-sm font-semibold text-primary">
-                    {formatMoneyRange(item.amountMin, item.amountMax)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA to see all optimizations */}
-            <Button variant="outline" asChild className="w-full">
-              <Link href="/dashboard/optimisation">
-                Voir toutes les optimisations
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        )}
 
         {/* Optimization items breakdown */}
         {validItems.length > 0 && (
@@ -593,6 +590,14 @@ export function ResultsContent() {
                 </div>
               ))}
             </div>
+
+            {/* CTA to see all optimizations */}
+            <Button variant="outline" asChild className="mt-4 w-full">
+              <Link href="/dashboard/optimisation">
+                Voir toutes les optimisations
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         )}
 
