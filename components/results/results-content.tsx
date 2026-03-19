@@ -434,37 +434,16 @@ export function ResultsContent() {
 
           {taxResult && !taxLoading && (
             <div className="space-y-6">
-              {/* Row 1: Income and taxable */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {/* Revenu brut annuel */}
+              {/* Main stats: 4-column grid */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Montant déjà prélevé */}
                 <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Revenu brut annuel</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Montant déjà prélevé</p>
                   <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                    {formatMoney(answers.salaryIncome || 0)}
+                    {formatMoney(answers.taxesAlreadyPaid || 0)}
                   </p>
                 </div>
 
-                {/* Ajustements fiscaux automatiques */}
-                {taxResult.deductionsApplied > 0 && (
-                  <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Ajustements fiscaux automatiques</p>
-                    <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-primary">
-                      −{formatMoney(taxResult.deductionsApplied)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Revenu imposable */}
-                <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Revenu imposable</p>
-                  <p className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-                    {formatMoney(taxResult.taxableIncome)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Row 2: Tax, optimizations, refund */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {/* Impôt estimé */}
                 <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Impôt estimé</p>
