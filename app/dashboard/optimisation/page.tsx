@@ -84,13 +84,20 @@ function OptimisationContent() {
               : "Détail de vos déductions et réductions identifiées."}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button asChild>
             <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
               <Calculator className="mr-2 h-4 w-4" />
               {hasData ? "Modifier" : "Analyser ma situation"}
             </Link>
           </Button>
+          {currentSimulation && (
+            <Button variant="outline" asChild>
+              <Link href={`/results?simulationId=${currentSimulation.id}`}>
+                Voir résultat
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
