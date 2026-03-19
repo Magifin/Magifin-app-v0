@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowRight,
@@ -19,7 +19,8 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { AccountDropdown } from "@/components/account-dropdown"
 import { useWizard, wizardStore, getLastCompletedStepId } from "@/lib/wizard-store"
-import { useOptimizations } from "@/lib/useOptimizations"
+import type { WizardAnswers } from "@/lib/wizard-store"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
@@ -34,9 +35,10 @@ const PARTNER_URL =
 
 export function ResultsContent() {
   const router = useRouter()
-  const { state, goToStep, markAsSaved } = useWizard()
+  const searchParams = useSearchParams()
+  const simulationId = searchParams.get("simulationId")
+  const { state, markAsSaved } = useWizard()
   const { answers, completedStepIds, editingSimulationId } = state
-  const { results } = useOptimizations()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [authInitialized, setAuthInitialized] = useState(false)
@@ -45,10 +47,48 @@ export function ResultsContent() {
   const [taxLoading, setTaxLoading] = useState(false)
   const [taxError, setTaxError] = useState<string | null>(null)
 
-  // Restore answers from localStorage if store is empty (e.g. after page refresh)
+  // Saved simulation mode: local state only — NEVER written to wizard store
+  const [simulationAnswers, setSimulationAnswers] = useState<WizardAnswers | null>(null)
+  const [simulationLoading, setSimulationLoading] = useState(false)
+
+  // Effective answers: saved simulation or current wizard session
+  const activeAnswers = simulationAnswers ?? answers
+  const results = useMemo(
+    () => computeOptimizationsFromAnswers(activeAnswers),
+    [activeAnswers]
+  )
+
+  // Hydrate wizard store only in current session mode
   useEffect(() => {
-    wizardStore.hydrate()
-  }, [])
+    if (!simulationId) {
+      wizardStore.hydrate()
+    }
+  }, [simulationId])
+
+  // Saved simulation mode: fetch from API, store locally, NEVER touch wizard store
+  useEffect(() => {
+    if (!simulationId) {
+      setSimulationAnswers(null)
+      return
+    }
+    setSimulationLoading(true)
+    setTaxResult(null)
+    setSimulationAnswers(null)
+    fetch(`/api/simulations/${simulationId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.simulation) {
+          setSimulationAnswers(data.simulation.wizard_answers as WizardAnswers)
+          setTaxResult(data.simulation.tax_result as TaxResult)
+          // Track last viewed simulation
+          if (typeof window !== "undefined") {
+            localStorage.setItem("magifin_last_viewed_simulation_id", simulationId)
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setSimulationLoading(false))
+  }, [simulationId])
 
   // Ensure auth initializes within reasonable time (max 2 seconds)
   useEffect(() => {
@@ -66,6 +106,11 @@ export function ResultsContent() {
   }, [authLoading, authUser])
 
   useEffect(() => {
+    if (simulationId) return
+
+    if (!answers || Object.keys(answers).length === 0) return
+    if (!answers.taxYear) return
+
     const input = mapAnswersToTaxInput(answers)
     if (!input) return
 
@@ -87,9 +132,14 @@ export function ResultsContent() {
       })
       .catch(() => setTaxError("Impossible de calculer l'impôt"))
       .finally(() => setTaxLoading(false))
-  }, [answers])
+  }, [answers, simulationId])
 
-  const availableItems = results.items.filter((i) => i.available)
+  // Compute optimizations using the correct source of truth
+  const displayResults = useMemo(() => {
+    return computeOptimizationsFromAnswers(activeAnswers)
+  }, [activeAnswers])
+
+  const availableItems = displayResults.items.filter((i) => i.available)
 
   // Filter to items with valid numeric amounts — uses correct field names (amountMin/amountMax)
   const validItems = availableItems.filter((item) => {
@@ -109,14 +159,21 @@ export function ResultsContent() {
   const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    // Encode full wizard state in URL for complete restoration
-    const resumeData = {
-      answers,
-      currentStepId: editingSimulationId ? "taxYear" : getLastCompletedStepId(completedStepIds, answers),
-      completedStepIds,
+    if (simulationId && simulationAnswers) {
+      // Saved simulation mode: open wizard in edit mode for this exact simulation
+      const resumeData = { answers: simulationAnswers, currentStepId: "taxYear", completedStepIds: [] }
+      router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}&simulationId=${simulationId}`)
+    } else {
+      // Current session mode: encode full wizard state
+      const resumeData = {
+        answers,
+        currentStepId: editingSimulationId
+          ? "taxYear"
+          : getLastCompletedStepId(completedStepIds, answers),
+        completedStepIds,
+      }
+      router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}`)
     }
-    const resumeUrl = `/wizard?resume=${btoa(JSON.stringify(resumeData))}`
-    router.push(resumeUrl)
   }
 
   const handleCreateSpace = () => {
@@ -185,7 +242,7 @@ export function ResultsContent() {
           <div className="flex items-center gap-3">
             {isAuthenticated && <AccountDropdown />}
             {/* Save button for authenticated users */}
-            {authInitialized && !!authUser && taxResult && (
+            {authInitialized && !!authUser && taxResult && !simulationId && (
               <SaveSimulationDialog
                 wizardAnswers={answers}
                 taxResult={taxResult}
@@ -229,10 +286,10 @@ export function ResultsContent() {
             Votre situation analysée
           </p>
 
-              {answers.taxYear && (
+              {activeAnswers.taxYear && (
                 <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatDeclarationYear(answers.taxYear - 1)}</span>
+                  <span>{formatDeclarationYear(activeAnswers.taxYear - 1)}</span>
                 </div>
               )}
 
@@ -256,7 +313,7 @@ export function ResultsContent() {
             </>
           )}
 
-          {!taxResult && !taxLoading && !taxError && (
+          {!taxResult && !taxLoading && !taxError && !simulationLoading && (
             <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
               Complétez vos informations
             </h1>
@@ -421,10 +478,10 @@ export function ResultsContent() {
             </h2>
           </div>
 
-          {taxLoading && (
+          {(taxLoading || simulationLoading) && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              Calcul en cours...
+              {simulationLoading ? "Chargement de la simulation..." : "Calcul en cours..."}
             </div>
           )}
 

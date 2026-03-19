@@ -19,16 +19,32 @@ function OptimisationContent() {
   const [currentSimulation, setCurrentSimulation] = useState<Simulation | null>(null)
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
 
-  // Fetch simulation: contextual (by ID) or global (latest)
+  // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
     const fetchSimulation = async () => {
       try {
-        if (simulationId) {
+        let idToFetch = simulationId
+        
+        // If no simulationId in URL, try to use lastViewedSimulationId
+        if (!idToFetch && typeof window !== "undefined") {
+          idToFetch = localStorage.getItem("magifin_last_viewed_simulation_id")
+        }
+        
+        if (idToFetch) {
           // CONTEXTUAL: Fetch specific simulation by ID
-          const res = await fetch(`/api/simulations/${simulationId}`)
+          const res = await fetch(`/api/simulations/${idToFetch}`)
           const data = await res.json()
           if (res.ok && data.simulation) {
             setCurrentSimulation(data.simulation)
+            // Update last viewed when fetching by ID
+            localStorage.setItem("magifin_last_viewed_simulation_id", idToFetch)
+          } else {
+            // Fallback to latest if ID is invalid
+            const listRes = await fetch("/api/simulations/list")
+            const listData = await listRes.json()
+            if (listRes.ok && listData.simulations && listData.simulations.length > 0) {
+              setCurrentSimulation(listData.simulations[0])
+            }
           }
         } else {
           // GLOBAL: Fetch latest simulation
@@ -51,22 +67,18 @@ function OptimisationContent() {
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
 
-  // Single source of truth: always recompute optimisation items from wizard_answers.
-  // TaxResult does not store optimisation items.
-  const displayResults = useMemo(() => {
-    if (currentSimulation?.wizard_answers) {
-      return computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
-    }
-    return results
-  }, [currentSimulation, results])
+  // Build display results from saved simulation wizard_answers OR current wizard session
+  const displayResults = currentSimulation?.wizard_answers
+    ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
+    : results
 
   const availableItems = displayResults.items.filter((i) => i.available)
 
   return (
     <div>
-      {/* Back navigation */}
+      {/* Back navigation - preserve simulationId if present */}
       <Link
-        href="/results"
+        href={simulationId ? `/results?simulationId=${simulationId}` : "/results"}
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -104,7 +116,11 @@ function OptimisationContent() {
       <div>
         <UnsavedSimulationBanner />
 
-        {!hasData || (isLoadingSimulation && !hasWizardData) ? (
+        {isLoadingSimulation ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      ) : !hasData ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <AlertCircle className="h-6 w-6 text-muted-foreground" />
@@ -146,9 +162,9 @@ function OptimisationContent() {
           <div className="mb-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-accent" />
-              <span className="text-sm font-medium text-muted-foreground">
-                {currentSimulation ? "Optimisations fiscales détectées" : "Gain total estimé"}
-              </span>
+            <span className="text-sm font-medium text-muted-foreground">
+              Économies potentielles
+            </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">
               {formatMoneyRange(displayResults.totalMin, displayResults.totalMax)}
