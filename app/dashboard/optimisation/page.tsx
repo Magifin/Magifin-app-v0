@@ -84,12 +84,21 @@ function OptimisationContent() {
               : "Détail de vos déductions et réductions identifiées."}
           </p>
         </div>
-        <Button asChild>
-          <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
-            <Calculator className="mr-2 h-4 w-4" />
-            {hasData ? "Mettre à jour" : "Analyser ma situation"}
-          </Link>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button asChild>
+            <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
+              <Calculator className="mr-2 h-4 w-4" />
+              {hasData ? "Modifier" : "Analyser ma situation"}
+            </Link>
+          </Button>
+          {currentSimulation && (
+            <Button variant="outline" asChild>
+              <Link href={`/results?simulationId=${currentSimulation.id}`}>
+                Voir résultat
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div>
@@ -138,7 +147,7 @@ function OptimisationContent() {
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-accent" />
               <span className="text-sm font-medium text-muted-foreground">
-                {currentSimulation ? "Remboursement estimé" : "Gain total estimé"}
+                {currentSimulation ? "Optimisations fiscales détectées" : "Gain total estimé"}
               </span>
             </div>
             <p className="font-[family-name:var(--font-heading)] text-3xl font-bold text-primary">

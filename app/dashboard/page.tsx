@@ -111,7 +111,7 @@ export default function DashboardPage() {
           <div>
             <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp className="h-4 w-4 text-accent" />
-              {latestSimulation ? "Gain de votre dernière simulation" : "Gain fiscal estimé"}
+              {latestSimulation ? "Remboursement estimé" : "Gain fiscal estimé"}
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-[family-name:var(--font-heading)] text-4xl font-bold text-primary sm:text-5xl">
@@ -139,6 +139,13 @@ export default function DashboardPage() {
               <Button variant="outline" asChild>
                 <Link href={`/dashboard/simulations/${latestSimulation.id}`}>
                   Voir détails
+                </Link>
+              </Button>
+            )}
+            {latestSimulation && (
+              <Button variant="outline" asChild>
+                <Link href="/results">
+                  Voir les résultats
                 </Link>
               </Button>
             )}
