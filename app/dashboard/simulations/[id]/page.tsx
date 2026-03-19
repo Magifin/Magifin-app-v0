@@ -438,10 +438,22 @@ export default function SimulationDetailPage({
 
       {/* Navigation CTA */}
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <Button asChild>
+          <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation?.wizard_answers))}&simulationId=${id}`}>
+            <Calculator className="mr-2 h-4 w-4" />
+            {"Mettre à jour cette simulation"}
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href={`/results?simulationId=${id}`}>
+            <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
+            Voir résultat
+          </Link>
+        </Button>
         <Button variant="outline" asChild>
           <Link href={`/dashboard/optimisation?simulationId=${id}`}>
             <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
-            Voir optimisations
+            Voir optimisation
           </Link>
         </Button>
         <Button
@@ -451,12 +463,6 @@ export default function SimulationDetailPage({
         >
           <Copy className="mr-2 h-4 w-4" />
           {isDuplicating ? "Duplication..." : "Dupliquer"}
-        </Button>
-        <Button asChild>
-          <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation?.wizard_answers))}&simulationId=${id}`}>
-            <Calculator className="mr-2 h-4 w-4" />
-            {"Mettre à jour cette simulation"}
-          </Link>
         </Button>
       </div>
     </div>
