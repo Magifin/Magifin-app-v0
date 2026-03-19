@@ -88,16 +88,9 @@ function OptimisationContent() {
           <Button asChild>
             <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
               <Calculator className="mr-2 h-4 w-4" />
-              {hasData ? "Mettre à jour" : "Analyser ma situation"}
+              {hasData ? "Modifier" : "Analyser ma situation"}
             </Link>
           </Button>
-          {currentSimulation && (
-            <Button variant="outline" asChild>
-              <Link href={`/results?simulationId=${currentSimulation.id}`}>
-                Voir résultat
-              </Link>
-            </Button>
-          )}
         </div>
       </div>
 

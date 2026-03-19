@@ -433,36 +433,37 @@ export function ResultsContent() {
           )}
 
           {taxResult && !taxLoading && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Tax estimate */}
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <dt className="text-sm font-medium text-card-foreground">Impôt estimé</dt>
-                <dd className="font-[family-name:var(--font-heading)] text-lg font-bold text-card-foreground">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Impôt estimé</p>
+                <dd className="font-[family-name:var(--font-heading)] text-2xl font-bold text-card-foreground">
                   {formatMoney(taxResult.estimatedTax)}
                 </dd>
               </div>
 
+              {/* Visual separator */}
+              <div className="border-t border-border" />
+
               {/* Estimated refund or balance */}
               {taxResult.refundOrBalance !== 0 && (
                 <div>
-                  <div className="flex items-center justify-between pt-2">
-                    <dt className="text-sm font-medium text-card-foreground">
-                      {taxResult.refundOrBalance >= 0 ? "Remboursement estimé" : "Complément à payer"}
-                    </dt>
-                    <dd
-                      className={cn(
-                        "font-[family-name:var(--font-heading)] text-lg font-bold",
-                        taxResult.refundOrBalance >= 0
-                          ? "text-primary"
-                          : "text-destructive"
-                      )}
-                    >
-                      {taxResult.refundOrBalance >= 0
-                        ? `+${formatMoney(taxResult.refundOrBalance)}`
-                        : formatMoney(taxResult.refundOrBalance)}
-                    </dd>
-                  </div>
-                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                  <p className={cn("text-xs font-medium mb-1", taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive")}>
+                    {taxResult.refundOrBalance >= 0 ? "Remboursement estimé" : "Complément à payer"}
+                  </p>
+                  <dd
+                    className={cn(
+                      "font-[family-name:var(--font-heading)] text-2xl font-bold",
+                      taxResult.refundOrBalance >= 0
+                        ? "text-primary"
+                        : "text-destructive"
+                    )}
+                  >
+                    {taxResult.refundOrBalance >= 0
+                      ? `+${formatMoney(taxResult.refundOrBalance)}`
+                      : formatMoney(taxResult.refundOrBalance)}
+                  </dd>
+                  <p className="mt-3 text-center text-xs text-muted-foreground">
                     Estimation basée sur les informations que vous avez fournies.
                   </p>
                 </div>
