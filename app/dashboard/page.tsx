@@ -57,11 +57,30 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchLatestSimulation = async () => {
       try {
+        // First try to use lastViewedSimulationId if available
+        let lastViewedId = ""
+        if (typeof window !== "undefined") {
+          lastViewedId = localStorage.getItem("magifin_last_viewed_simulation_id") || ""
+        }
+        
+        // Fetch all simulations
         const res = await fetch("/api/simulations/list")
         const data = await res.json()
+        
         if (res.ok && data.simulations && data.simulations.length > 0) {
-          setLatestSimulation(data.simulations[0])
           setSimulationCount(data.simulations.length)
+          
+          // Try to use lastViewedSimulationId if it exists in the list
+          if (lastViewedId) {
+            const lastViewed = data.simulations.find((s: Simulation) => s.id === lastViewedId)
+            if (lastViewed) {
+              setLatestSimulation(lastViewed)
+              return
+            }
+          }
+          
+          // Fallback to latest
+          setLatestSimulation(data.simulations[0])
         }
       } catch (error) {
         console.error("Error fetching latest simulation:", error)

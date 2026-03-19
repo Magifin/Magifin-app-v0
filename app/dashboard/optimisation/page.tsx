@@ -19,16 +19,32 @@ function OptimisationContent() {
   const [currentSimulation, setCurrentSimulation] = useState<Simulation | null>(null)
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
 
-  // Fetch simulation: contextual (by ID) or global (latest)
+  // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
     const fetchSimulation = async () => {
       try {
-        if (simulationId) {
+        let idToFetch = simulationId
+        
+        // If no simulationId in URL, try to use lastViewedSimulationId
+        if (!idToFetch && typeof window !== "undefined") {
+          idToFetch = localStorage.getItem("magifin_last_viewed_simulation_id")
+        }
+        
+        if (idToFetch) {
           // CONTEXTUAL: Fetch specific simulation by ID
-          const res = await fetch(`/api/simulations/${simulationId}`)
+          const res = await fetch(`/api/simulations/${idToFetch}`)
           const data = await res.json()
           if (res.ok && data.simulation) {
             setCurrentSimulation(data.simulation)
+            // Update last viewed when fetching by ID
+            localStorage.setItem("magifin_last_viewed_simulation_id", idToFetch)
+          } else {
+            // Fallback to latest if ID is invalid
+            const listRes = await fetch("/api/simulations/list")
+            const listData = await listRes.json()
+            if (listRes.ok && listData.simulations && listData.simulations.length > 0) {
+              setCurrentSimulation(listData.simulations[0])
+            }
           }
         } else {
           // GLOBAL: Fetch latest simulation

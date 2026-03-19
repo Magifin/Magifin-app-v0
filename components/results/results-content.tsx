@@ -80,6 +80,10 @@ export function ResultsContent() {
         if (data.simulation) {
           setSimulationAnswers(data.simulation.wizard_answers as WizardAnswers)
           setTaxResult(data.simulation.tax_result as TaxResult)
+          // Track last viewed simulation
+          if (typeof window !== "undefined") {
+            localStorage.setItem("magifin_last_viewed_simulation_id", simulationId)
+          }
         }
       })
       .catch(() => {})
