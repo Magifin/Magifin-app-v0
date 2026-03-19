@@ -193,18 +193,6 @@ export function ResultsContent() {
       ? "Débloquez votre optimisation fiscale complète"
       : "Vérification complète de vos droits fiscaux"
 
-  // Early return for saved simulation loading state
-  if (simulationId && simulationLoading) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Chargement de la simulation...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border/50 px-6 py-4">
@@ -321,7 +309,7 @@ export function ResultsContent() {
             </>
           )}
 
-          {!taxResult && !taxLoading && !taxError && (
+          {!taxResult && !taxLoading && !taxError && !simulationLoading && (
             <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-foreground sm:text-4xl text-balance">
               Complétez vos informations
             </h1>

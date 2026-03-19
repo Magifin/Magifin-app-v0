@@ -7,7 +7,6 @@ import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lu
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
-import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
@@ -101,7 +100,11 @@ function OptimisationContent() {
       <div>
         <UnsavedSimulationBanner />
 
-        {!hasData || (isLoadingSimulation && !hasWizardData) ? (
+        {isLoadingSimulation ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      ) : !hasData ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <AlertCircle className="h-6 w-6 text-muted-foreground" />
