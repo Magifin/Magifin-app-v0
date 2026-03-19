@@ -29,7 +29,6 @@ import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import { cn } from "@/lib/utils"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
-import type { WizardAnswers } from "@/lib/wizard-store"
 
 const PARTNER_URL =
   "https://www.assurances-maron.be/devis-epargne-pension?utm_source=magifin&utm_medium=results&utm_campaign=insurance"
@@ -129,8 +128,8 @@ export function ResultsContent() {
 
   // Compute optimizations using the correct source of truth
   const displayResults = useMemo(() => {
-    return computeOptimizationsFromAnswers(answersForResults)
-  }, [answersForResults])
+    return computeOptimizationsFromAnswers(activeAnswers)
+  }, [activeAnswers])
 
   const availableItems = displayResults.items.filter((i) => i.available)
 
