@@ -500,21 +500,21 @@ export function ResultsContent() {
 
           {taxResult && !taxLoading && (
             <div className="space-y-4">
-              {/* Row 1: Montant déjà prélevé, Impôt estimé, Remboursement estimé */}
+              {/* Row 1: Impôt estimé, Montant déjà prélevé, Remboursement estimé */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {/* Montant déjà prélevé */}
-                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Montant déjà prélevé</p>
-                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
-                    {formatMoney(answers.taxesAlreadyPaid || 0)}
-                  </p>
-                </div>
-
                 {/* Impôt estimé */}
                 <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
                   <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Impôt estimé</p>
                   <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
                     {formatMoney(taxResult.estimatedTax)}
+                  </p>
+                </div>
+
+                {/* Montant déjà prélevé */}
+                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
+                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Montant déjà prélevé</p>
+                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
+                    {formatMoney(answers.taxesAlreadyPaid || 0)}
                   </p>
                 </div>
 
