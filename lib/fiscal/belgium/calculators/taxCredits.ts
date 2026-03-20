@@ -7,12 +7,15 @@
 
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
 import { calculatePensionTaxCredit, PENSION_SAVINGS_RULE } from "../rules/deductions"
+import { calculateServiceVouchersCredit } from "../rules/credits"
 
 /**
  * Input for tax credit calculation
  */
 export interface TaxCreditInput {
   pensionContribution?: number
+  /** Total annual cost paid for service vouchers (euros). */
+  serviceVouchersCost?: number
 }
 
 /**
@@ -23,6 +26,8 @@ export interface TaxCreditResult {
   totalCredits: number
   /** Pension savings credit (30% of contribution) */
   pensionCredit: number
+  /** Service vouchers credit (30% of cost, max 163 vouchers/year) */
+  serviceVouchersCredit: number
 }
 
 /**
@@ -40,8 +45,13 @@ export function calculateAllTaxCredits(input: TaxCreditInput): TaxCreditResult {
     clampNonNegative(input.pensionContribution ?? 0)
   )
 
+  const serviceVouchersCredit = calculateServiceVouchersCredit(
+    clampNonNegative(input.serviceVouchersCost ?? 0)
+  )
+
   return {
     pensionCredit,
-    totalCredits: clampNonNegative(pensionCredit),
+    serviceVouchersCredit,
+    totalCredits: clampNonNegative(pensionCredit + serviceVouchersCredit),
   }
 }
