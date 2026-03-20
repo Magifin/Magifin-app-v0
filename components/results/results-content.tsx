@@ -6,6 +6,7 @@ import Link from "next/link"
 import {
   ArrowRight,
   CheckCircle2,
+  TrendingUp,
   ShieldCheck,
   ExternalLink,
   Edit3,
