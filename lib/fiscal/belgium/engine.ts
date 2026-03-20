@@ -34,6 +34,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   // === Stage 1: Sanitize and normalize inputs ===
   const grossIncome = clampNonNegative(input.salaryIncome)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
+  const serviceVouchersCost = clampNonNegative(input.serviceVouchersCost ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
   const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
@@ -65,7 +66,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 
   // === Stage 6: Apply non-quotité tax credits ===
   // Pension is applied as 30% credit
-  const taxCredits = calculateAllTaxCredits({ pensionContribution })
+  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost })
   const estimatedTax = clampNonNegative(taxBeforeCredits - taxCredits.totalCredits)
 
   // === Stage 7: Calculate effective rate and balance ===
@@ -101,6 +102,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   // === Stage 1: Sanitize and normalize inputs ===
   const grossIncome = clampNonNegative(input.salaryIncome)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
+  const serviceVouchersCost = clampNonNegative(input.serviceVouchersCost ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
 
   // === Stage 2: Calculate net income ===
@@ -127,7 +129,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   )
 
   // === Stage 6: Apply tax credits ===
-  const taxCredits = calculateAllTaxCredits({ pensionContribution })
+  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost })
   const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits)
 
   // === Stage 7: Build detailed result ===

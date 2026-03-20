@@ -53,3 +53,28 @@ export function getQuotiteBase(fiscalYear?: number): number {
   const year = fiscalYear ?? DEFAULT_QUOTITE_YEAR
   return QUOTITE_BASE_AMOUNT[year] ?? QUOTITE_BASE_AMOUNT[DEFAULT_QUOTITE_YEAR]
 }
+
+/**
+ * Service vouchers (titres-services) tax credit
+ *
+ * Reference: Art. 145/21 CIR 92
+ * Rate: 30% of actual price paid per voucher
+ * Cost per voucher: €9
+ * Cap: 163 vouchers/year per household (single)
+ * Maximum annual credit: 163 × €9 × 30% = €440.10
+ */
+export const SERVICE_VOUCHERS_CREDIT_RATE = 0.30
+export const SERVICE_VOUCHERS_COST_PER_UNIT = 9
+export const SERVICE_VOUCHERS_MAX_UNITS = 163
+
+/**
+ * Calculate service vouchers tax credit
+ * @param serviceVouchersCost - Total annual cost paid in euros (pre-capped by mapper)
+ * @returns Tax credit amount in euros
+ */
+export function calculateServiceVouchersCredit(serviceVouchersCost: number): number {
+  if (serviceVouchersCost <= 0) return 0
+  const maxCost = SERVICE_VOUCHERS_MAX_UNITS * SERVICE_VOUCHERS_COST_PER_UNIT
+  const cappedCost = Math.min(serviceVouchersCost, maxCost)
+  return cappedCost * SERVICE_VOUCHERS_CREDIT_RATE
+}

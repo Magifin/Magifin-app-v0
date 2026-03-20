@@ -213,28 +213,9 @@ export function computeOptimizationsFromAnswers(
   }
 
   // 6. Titres-services
-  if (answers.serviceVouchers === "Oui") {
-    let amountMin = 120
-    let amountMax = 240
-
-    // If amount is provided, calculate more precisely
-    if (answers.serviceVouchersAmount > 0) {
-      const reduction = answers.serviceVouchersAmount * 9 * 0.3
-      amountMin = Math.round(reduction * 0.9)
-      amountMax = Math.round(reduction)
-    }
-
-    items.push({
-      key: "service_vouchers",
-      title: "Réduction titres-services",
-      category: "other",
-      amountMin,
-      amountMax,
-      available: true,
-      precision: "estimated",
-      reason: "Réduction estimée liée aux titres-services déclarés.",
-    })
-  }
+  // NOTE: The service vouchers credit is now applied by the tax engine.
+  // It is already reflected in estimatedTax and refundOrBalance.
+  // Do not include here to avoid double-counting.
 
   // Housing - Cadastral income impact (estimated)
   if (

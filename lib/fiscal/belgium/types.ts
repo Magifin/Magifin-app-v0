@@ -36,6 +36,12 @@ export interface TaxInput extends BaseTaxInput {
   donations?: number
   /** Taxes already paid at source (precompte, withholding, etc.) */
   taxesAlreadyPaid?: number
+  /**
+   * Total annual cost paid for service vouchers (titres-services), in euros.
+   * Mapper caps at SERVICE_VOUCHERS_MAX_UNITS × SERVICE_VOUCHERS_COST_PER_UNIT.
+   * Art. 145/21 CIR 92 — 30% tax credit applied post-brackets.
+   */
+  serviceVouchersCost?: number
 }
 
 /**
