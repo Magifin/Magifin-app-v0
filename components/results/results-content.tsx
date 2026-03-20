@@ -1,5 +1,6 @@
 "use client"
 
+// Cache invalidation: TrendingUp icon fix
 import { useEffect, useState, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -580,6 +581,16 @@ export function ResultsContent() {
                 </p>
               </div>
             </div>
+          )}
+
+          {/* Contextual CTA: View optimization details (authenticated users only) */}
+          {authInitialized && authUser && taxResult && (
+            <Link 
+              href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}
+              className="mt-4 inline-flex text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
+            >
+              Voir le détail de mes optimisations →
+            </Link>
           )}
 
           {!taxResult && !taxLoading && !taxError && (
