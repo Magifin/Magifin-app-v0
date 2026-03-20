@@ -1,11 +1,14 @@
 import type { BaseTaxResult, DetailedTaxResult, AppliedDeduction, OptimizationSuggestion, RuleCertainty } from "./types"
+import type { AppliedOptimizations } from "@/lib/fiscal/belgium/types"
 
 /**
  * Builder class for constructing tax computation results
  */
 export class TaxResultBuilder {
   private taxableIncome: number = 0
+  private baseTax: number = 0
   private estimatedTax: number = 0
+  private appliedOptimizations: AppliedOptimizations | null = null
   private deductionsApplied: number = 0
   private appliedDeductions: AppliedDeduction[] = []
   private optimizations: OptimizationSuggestion[] = []
@@ -16,8 +19,18 @@ export class TaxResultBuilder {
     return this
   }
 
+  setBaseTax(amount: number): this {
+    this.baseTax = amount
+    return this
+  }
+
   setEstimatedTax(amount: number): this {
     this.estimatedTax = amount
+    return this
+  }
+
+  setAppliedOptimizations(optimizations: AppliedOptimizations): this {
+    this.appliedOptimizations = optimizations
     return this
   }
 
@@ -66,6 +79,13 @@ export class TaxResultBuilder {
 
     return {
       ...basic,
+      baseTax: this.baseTax,
+      appliedOptimizations: this.appliedOptimizations || {
+        pensionCredit: 0,
+        childrenCredit: 0,
+        serviceVouchersCredit: 0,
+        total: 0,
+      },
       appliedDeductions: [...this.appliedDeductions],
       optimizations: [...this.optimizations],
       overallCertainty: this.overallCertainty,

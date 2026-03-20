@@ -1,5 +1,4 @@
 import type { WizardAnswers } from "./wizard-store"
-import { getChildTaxFreeAllowanceSupplement } from "@/lib/fiscal/belgium/rules/deductions"
 
 export type OptimizationPrecision = "confirmed" | "estimated" | "advisory"
 export type OptimizationCategory =
@@ -102,26 +101,7 @@ export function computeOptimizationsFromAnswers(
   }
 
   // 2. Pension saving
-  if (answers.pensionSaving === "Oui" && answers.pensionSavingAmount > 0) {
-    // 30% reduction up to 1020€, or 25% up to 1310€
-    let reduction: number
-    if (answers.pensionSavingAmount <= 1020) {
-      reduction = answers.pensionSavingAmount * 0.3
-    } else {
-      reduction = Math.min(answers.pensionSavingAmount, 1310) * 0.25
-    }
-
-    items.push({
-      key: "pension_saving",
-      title: "Réduction pour épargne pension",
-      category: "pension",
-      amountMin: Math.round(reduction * 0.9),
-      amountMax: Math.round(reduction),
-      available: true,
-      precision: "confirmed",
-      reason: "Réduction de 30% (max 1.020€) ou 25% (max 1.310€).",
-    })
-  } else if (answers.pensionSaving === "Non") {
+  if (answers.pensionSaving === "Non") {
     // Advisory only: user has no pension saving — amounts are speculative
     // available: false → excluded from availableItems UI filter and fiscal totals
     items.push({
@@ -164,30 +144,7 @@ export function computeOptimizationsFromAnswers(
 
   // === LEVEL 2: ESTIMATED REALISTIC OPTIMISATIONS ===
 
-  // 4. Children impact — derived from real engine logic
-  if (answers.children > 0) {
-    const SURCHARGE_BY_REGION: Record<string, number> = {
-      Wallonie: 0.075,
-      Bruxelles: 0.08,
-      Flandre: 0.07,
-    }
-    const surchargeRate = SURCHARGE_BY_REGION[answers.region ?? ""] ?? 0.075
-    const supplement = getChildTaxFreeAllowanceSupplement(answers.children)
-    const amount = Math.round(supplement * 0.25 * (1 + surchargeRate))
-
-    items.push({
-      key: "children",
-      title: `Avantage pour ${answers.children} enfant(s) à charge`,
-      category: "family",
-      amountMin: amount,
-      amountMax: amount,
-      available: true,
-      precision: "confirmed",
-      reason: "Réduction via supplément à la quotité exemptée (Art. 132-140 CIR 92).",
-    })
-  }
-
-  // 5. Childcare expenses
+  // 4. Childcare expenses
   if (answers.childcare === "Oui") {
     let amountMin = 200
     let amountMax = 600

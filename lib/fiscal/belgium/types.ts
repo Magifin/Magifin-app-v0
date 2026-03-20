@@ -45,6 +45,20 @@ export interface TaxInput extends BaseTaxInput {
 }
 
 /**
+ * Breakdown of user-driven tax optimizations applied by the engine.
+ */
+export interface AppliedOptimizations {
+  /** Pension savings credit */
+  pensionCredit: number
+  /** Children credit */
+  childrenCredit: number
+  /** Service vouchers credit */
+  serviceVouchersCredit: number
+  /** Total of all applied user-driven optimizations */
+  total: number
+}
+
+/**
  * Tax computation result for Belgium
  * 
  * This interface is the public API contract and should remain stable.
@@ -53,8 +67,15 @@ export interface TaxInput extends BaseTaxInput {
 export interface TaxResult extends BaseTaxResult {
   /** Taxable income after deductions */
   taxableIncome: number
-  /** Total estimated tax (federal + regional) */
+  /**
+   * Tax before user-driven optimizations (pension, children, titres-services).
+   * Professional expenses and base quotité remain included.
+   */
+  baseTax: number
+  /** Final estimated tax after user-driven optimizations */
   estimatedTax: number
+  /** Breakdown of user-driven optimizations already applied in the engine */
+  appliedOptimizations: AppliedOptimizations
   /** Total deductions that were applied */
   deductionsApplied: number
   /** Effective tax rate (estimatedTax / taxableIncome) */
