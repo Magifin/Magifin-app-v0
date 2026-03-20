@@ -67,15 +67,15 @@ function OptimisationContent() {
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
 
-  // Show detailed CTAs (Modifier, Voir résultat) only when content is available
-  const showDetailCtas = !isLoadingSimulation && hasData && availableItems.length > 0
-
   // Build display results from saved simulation wizard_answers OR current wizard session
   const displayResults = currentSimulation?.wizard_answers
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
     : results
 
   const availableItems = displayResults.items.filter((i) => i.available)
+
+  // Show detailed CTAs (Modifier, Voir résultat) only when content is available
+  const showDetailCtas = !isLoadingSimulation && hasData && availableItems.length > 0
 
   return (
     <div>
