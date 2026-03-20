@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
+import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { Simulation } from "@/lib/supabase/types"
+import type { AppliedOptimizations } from "@/lib/fiscal/belgium/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 
 function OptimisationContent() {
@@ -18,6 +20,8 @@ function OptimisationContent() {
   const { results, hasWizardData } = useOptimizations()
   const [currentSimulation, setCurrentSimulation] = useState<Simulation | null>(null)
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
+  const [liveAppliedOptimizations, setLiveAppliedOptimizations] = useState<AppliedOptimizations | null>(null)
+  const [isComputingTax, setIsComputingTax] = useState(false)
 
   // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
@@ -64,6 +68,43 @@ function OptimisationContent() {
     fetchSimulation()
   }, [simulationId])
 
+  // PATCH 3: Live compute effect for appliedOptimizations
+  useEffect(() => {
+    if (!currentSimulation?.wizard_answers) {
+      setLiveAppliedOptimizations(null)
+      return
+    }
+
+    const computeLiveAppliedOptimizations = async () => {
+      setIsComputingTax(true)
+      try {
+        const input = mapAnswersToTaxInput(currentSimulation.wizard_answers)
+        if (!input) {
+          setLiveAppliedOptimizations(null)
+          return
+        }
+
+        const res = await fetch("/api/tax/compute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        })
+
+        const data = await res.json()
+        if (res.ok && data.result?.appliedOptimizations) {
+          setLiveAppliedOptimizations(data.result.appliedOptimizations)
+        }
+      } catch (error) {
+        console.error("Error computing tax:", error)
+        setLiveAppliedOptimizations(null)
+      } finally {
+        setIsComputingTax(false)
+      }
+    }
+
+    computeLiveAppliedOptimizations()
+  }, [currentSimulation?.wizard_answers])
+
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
 
@@ -78,7 +119,8 @@ function OptimisationContent() {
   // Section A: applied optimizations already integrated in the engine result
   const appliedItems = useMemo(() => {
     const result: Array<{ key: string; title: string; amount: number; reason: string }> = []
-    const applied = currentSimulation?.tax_result?.appliedOptimizations
+    // PATCH 4: Use liveAppliedOptimizations first, fallback to stored value
+    const applied = liveAppliedOptimizations ?? currentSimulation?.tax_result?.appliedOptimizations
     if (!applied) return result
 
     if (applied.childrenCredit > 0) {
@@ -109,18 +151,21 @@ function OptimisationContent() {
     }
 
     return result
-  }, [currentSimulation])
+  }, [liveAppliedOptimizations, currentSimulation])
 
   const hasAnyContent = appliedItems.length > 0 || potentialItems.length > 0
 
   // Show Modifier/Voir résultat only when content exists
   const showDetailCtas = !isLoadingSimulation && hasData && hasAnyContent
 
+  // PATCH 5: Determine effective simulation ID for back link
+  const effectiveSimulationId = simulationId ?? currentSimulation?.id
+
   return (
     <div>
       {/* Back navigation - preserve simulationId if present */}
       <Link
-        href={simulationId ? `/results?simulationId=${simulationId}` : "/results"}
+        href={effectiveSimulationId ? `/results?simulationId=${effectiveSimulationId}` : "/results"}
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -174,7 +219,7 @@ function OptimisationContent() {
       <div>
         <UnsavedSimulationBanner />
 
-        {isLoadingSimulation ? (
+        {isLoadingSimulation || isComputingTax ? (
         <div className="flex items-center justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
@@ -264,7 +309,7 @@ function OptimisationContent() {
                 <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
                   <p className="text-sm text-muted-foreground">Total des optimisations appliquées</p>
                   <p className="font-[family-name:var(--font-heading)] text-lg font-bold text-primary">
-                    {formatMoney(currentSimulation.tax_result?.appliedOptimizations?.total || 0)}
+                    {formatMoney((liveAppliedOptimizations ?? currentSimulation.tax_result?.appliedOptimizations)?.total || 0)}
                   </p>
                 </div>
               )}
