@@ -80,7 +80,6 @@ export function ResultsContent() {
       .then((data) => {
         if (data.simulation) {
           setSimulationAnswers(data.simulation.wizard_answers as WizardAnswers)
-          setTaxResult(data.simulation.tax_result as TaxResult)
           // Track last viewed simulation
           if (typeof window !== "undefined") {
             localStorage.setItem("magifin_last_viewed_simulation_id", simulationId)
@@ -107,12 +106,13 @@ export function ResultsContent() {
   }, [authLoading, authUser])
 
   useEffect(() => {
-    if (simulationId) return
+    // Compute effective answers (from saved simulation or current session)
+    const effectiveAnswers = simulationId ? simulationAnswers : answers
 
-    if (!answers || Object.keys(answers).length === 0) return
-    if (!answers.taxYear) return
+    if (!effectiveAnswers || Object.keys(effectiveAnswers).length === 0) return
+    if (!effectiveAnswers.taxYear) return
 
-    const input = mapAnswersToTaxInput(answers)
+    const input = mapAnswersToTaxInput(effectiveAnswers)
     if (!input) return
 
     setTaxLoading(true)
@@ -133,7 +133,7 @@ export function ResultsContent() {
       })
       .catch(() => setTaxError("Impossible de calculer l'impôt"))
       .finally(() => setTaxLoading(false))
-  }, [answers, simulationId])
+  }, [answers, simulationId, simulationAnswers])
 
   // Compute optimizations using the correct source of truth
   const displayResults = useMemo(() => {
@@ -593,7 +593,7 @@ export function ResultsContent() {
             </Link>
           )}
 
-          {!taxResult && !taxLoading && !taxError && (
+          {!taxResult && !taxLoading && !taxError && !simulationId && (
             <p className="text-sm text-muted-foreground">
               {"Complétez au moins votre région et votre revenu pour obtenir le calcul."}
             </p>

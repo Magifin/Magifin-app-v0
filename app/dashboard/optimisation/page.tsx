@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
+import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
@@ -67,6 +67,9 @@ function OptimisationContent() {
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
 
+  // Show detailed CTAs (Modifier, Voir résultat) only when content is available
+  const showDetailCtas = !isLoadingSimulation && hasData && availableItems.length > 0
+
   // Build display results from saved simulation wizard_answers OR current wizard session
   const displayResults = currentSimulation?.wizard_answers
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
@@ -97,13 +100,29 @@ function OptimisationContent() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button asChild>
-            <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
-              <Calculator className="mr-2 h-4 w-4" />
-              {hasData ? "Modifier" : "Analyser ma situation"}
+          {/* Nouvelle simulation - always visible and first */}
+          <Button 
+            variant={showDetailCtas ? "outline" : "default"} 
+            asChild
+          >
+            <Link href="/wizard?new=true">
+              <Plus className="mr-2 h-4 w-4" />
+              Nouvelle simulation
             </Link>
           </Button>
-          {currentSimulation && (
+
+          {/* Modifier - only when detail CTAs should show */}
+          {showDetailCtas && (
+            <Button asChild>
+              <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
+                <Calculator className="mr-2 h-4 w-4" />
+                Modifier
+              </Link>
+            </Button>
+          )}
+
+          {/* Voir résultat - only when detail CTAs should show */}
+          {showDetailCtas && currentSimulation && (
             <Button variant="outline" asChild>
               <Link href={`/results?simulationId=${currentSimulation.id}`}>
                 Voir résultat
