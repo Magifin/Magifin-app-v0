@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, Suspense, useRef } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Eye, LayoutDashboard } from "lucide-react"
+import { ArrowLeft, Eye, LayoutDashboard, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { AccountDropdown } from "@/components/account-dropdown"
@@ -42,6 +43,8 @@ function WizardContent() {
   const { user } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
+
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
 
   const availableSteps = getAvailableSteps(answers)
   const currentIndex = getStepIndex(currentStepId, answers)
@@ -201,6 +204,40 @@ function WizardContent() {
     router.push("/results")
   }
 
+  const handleSaveDraft = async () => {
+    if (!editingSimulationId || !authUser) return
+
+    setIsSavingDraft(true)
+    try {
+      const response = await fetch("/api/simulations/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          simulation_id: editingSimulationId,
+          tax_year: answers.taxYear,
+          name: null, // Keep existing name
+          wizard_answers: answers,
+          tax_result: null, // No results yet, just saving answers
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("[wizard] save failed:", data.error)
+        return
+      }
+
+      // Mark as saved to clear unsaved banner
+      markAsSaved()
+      track("wizard_draft_saved", { simulationId: editingSimulationId })
+    } catch (err) {
+      console.error("[wizard] save error:", err)
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
   const renderStep = () => {
     switch (currentStepId) {
       case "taxYear":
@@ -357,8 +394,21 @@ function WizardContent() {
             </span>
           </Link>
           
-          {/* Right side: Dashboard link when authenticated (optional UX improvement) */}
-          <div className="flex items-center gap-4">
+          {/* Right side: Dashboard link when authenticated + Save button in edit mode */}
+          <div className="flex items-center gap-3">
+            {/* Save button - only shown when editing an existing simulation */}
+            {editingSimulationId && authUser && !authLoading && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isSavingDraft ? "Sauvegarde..." : "Sauvegarder"}
+              </Button>
+            )}
+
             {authUser && !authLoading && (
               <>
                 <Link
