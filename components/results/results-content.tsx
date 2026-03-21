@@ -22,6 +22,7 @@ import { AccountDropdown } from "@/components/account-dropdown"
 import { useWizard, wizardStore, getLastCompletedStepId } from "@/lib/wizard-store"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { buildUnifiedOptimizationItems } from "@/lib/buildUnifiedOptimizationItems"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
@@ -153,8 +154,17 @@ export function ResultsContent() {
   })
 
   // Total equals exact sum of visible rows
-  const optimizationTotalMin = validItems.reduce((sum, item) => sum + item.amountMin, 0)
-  const optimizationTotalMax = validItems.reduce((sum, item) => sum + item.amountMax, 0)
+  const validItems = displayResults.items.filter((i) => i.available && i.precision !== "advisory")
+
+  // Build unified optimization items (engine + heuristic)
+  const unifiedItems = buildUnifiedOptimizationItems(
+    taxResult?.appliedOptimizations ?? null,
+    displayResults.items
+  )
+  
+  // Calculate totals from unified items
+  const optimizationTotalMin = unifiedItems.reduce((sum, item) => sum + item.amountMin, 0)
+  const optimizationTotalMax = unifiedItems.reduce((sum, item) => sum + item.amountMax, 0)
 
   // Consistent auth check used throughout the app
   const isAuthenticated = authInitialized && !!authUser
@@ -556,18 +566,6 @@ export function ResultsContent() {
                 )}
               </div>
 
-              {/* Potential optimizations bucket */}
-              {optimizationTotalMax > 0 && (
-                <div className="mt-4 pt-4 border-t border-border/50">
-                  <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
-                    <p className="text-xs font-medium text-muted-foreground/70 mb-1">Optimisations potentielles supplémentaires</p>
-                    <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-foreground">
-                      {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Footer: Effective tax rate and disclaimer */}
               <div className="space-y-2 border-t border-border/40 pt-2.5">
                 <div className="flex items-center justify-between">
@@ -601,7 +599,7 @@ export function ResultsContent() {
         </div>
 
         {/* Optimization items breakdown */}
-        {validItems.length > 0 && (
+        {unifiedItems.length > 0 && (
           <div className="mt-10">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
@@ -646,17 +644,26 @@ export function ResultsContent() {
               </div>
             )}
 
-            {/* Items list */}
+            {/* Items list with badges */}
             <div className="flex flex-col gap-3">
-              {validItems.map((item) => (
+              {unifiedItems.map((item) => (
                 <div
                   key={item.key}
                   className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
                 >
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                    <div>
-                      <p className="font-medium text-card-foreground">{item.title}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-card-foreground">{item.title}</p>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.badge === "Confirmé"
+                            ? "bg-accent/10 text-accent"
+                            : "bg-amber-500/10 text-amber-600"
+                        }`}>
+                          {item.badge}
+                        </span>
+                      </div>
                       {isAuthenticated ? (
                         <p className="text-sm text-muted-foreground">{item.reason}</p>
                       ) : (

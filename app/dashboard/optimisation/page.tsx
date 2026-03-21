@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Calculator, TrendingUp, CheckCircle2, AlertCircle, ArrowLeft, Plus } from "lucide-react"
+import { Calculator, CheckCircle2, AlertCircle, ArrowLeft, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { buildUnifiedOptimizationItems } from "@/lib/buildUnifiedOptimizationItems"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { Simulation } from "@/lib/supabase/types"
@@ -113,47 +114,17 @@ function OptimisationContent() {
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
     : results
 
-  // Section B: potential optimizations from heuristic
-  const potentialItems = displayResults.items.filter((i) => i.available)
+  // Build unified optimization items (engine + heuristic)
+  const unifiedItems = buildUnifiedOptimizationItems(
+    liveAppliedOptimizations ?? currentSimulation?.tax_result?.appliedOptimizations ?? null,
+    displayResults.items
+  )
 
-  // Section A: applied optimizations already integrated in the engine result
-  const appliedItems = useMemo(() => {
-    const result: Array<{ key: string; title: string; amount: number; reason: string }> = []
-    // PATCH 4: Use liveAppliedOptimizations first, fallback to stored value
-    const applied = liveAppliedOptimizations ?? currentSimulation?.tax_result?.appliedOptimizations
-    if (!applied) return result
+  // Calculate totals from unified items
+  const optimizationTotalMin = unifiedItems.reduce((sum, item) => sum + item.amountMin, 0)
+  const optimizationTotalMax = unifiedItems.reduce((sum, item) => sum + item.amountMax, 0)
 
-    if (applied.childrenCredit > 0) {
-      result.push({
-        key: "children_credit",
-        title: "Enfants à charge",
-        amount: applied.childrenCredit,
-        reason: "Supplément à la quotité exemptée pour personnes à charge (Art. 132-140 CIR 92).",
-      })
-    }
-
-    if (applied.pensionCredit > 0) {
-      result.push({
-        key: "pension_credit",
-        title: "Épargne pension",
-        amount: applied.pensionCredit,
-        reason: "Crédit d'impôt de 30% sur votre épargne pension.",
-      })
-    }
-
-    if (applied.serviceVouchersCredit > 0) {
-      result.push({
-        key: "titres_services",
-        title: "Titres-services",
-        amount: applied.serviceVouchersCredit,
-        reason: "Crédit d'impôt de 30% sur vos titres-services.",
-      })
-    }
-
-    return result
-  }, [liveAppliedOptimizations, currentSimulation])
-
-  const hasAnyContent = appliedItems.length > 0 || potentialItems.length > 0
+  const hasAnyContent = unifiedItems.length > 0
 
   // Show Modifier/Voir résultat only when content exists
   const showDetailCtas = !isLoadingSimulation && hasData && hasAnyContent
@@ -261,123 +232,72 @@ function OptimisationContent() {
         </div>
       ) : (
         <>
-          {/* SECTION A: Applied optimizations */}
-          {appliedItems.length > 0 && (
-            <div className="mb-8">
-              <div className="mb-4">
-                <h2 className="font-[family-name:var(--font-heading)] text-xl font-bold text-foreground">
-                  Optimisations appliquées
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Déjà intégrées dans votre résultat fiscal
-                </p>
-              </div>
+          {/* Unified Optimisations détectées section */}
+          <div className="mb-8">
+            <div className="mb-4">
+              <h2 className="font-[family-name:var(--font-heading)] text-xl font-bold text-foreground">
+                Optimisations détectées
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Toutes les optimisations identifiées pour votre situation
+              </p>
+            </div>
 
-              <div className="flex flex-col gap-4">
-                {appliedItems.map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <CheckCircle2 className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-card-foreground">
-                          {item.title}
-                        </p>
-                        <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-                          Appliqué
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {item.reason}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                        {formatMoney(item.amount)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Applied section total */}
-              {currentSimulation && (
-                <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                  <p className="text-sm text-muted-foreground">Total des optimisations appliquées</p>
-                  <p className="font-[family-name:var(--font-heading)] text-lg font-bold text-primary">
-                    {formatMoney((liveAppliedOptimizations ?? currentSimulation.tax_result?.appliedOptimizations)?.total || 0)}
+            {/* Notes */}
+            {displayResults.notes.length > 0 && (
+              <div className="mb-6 rounded-xl border border-border/60 bg-muted/30 p-4">
+                {displayResults.notes.map((note, i) => (
+                  <p key={i} className="text-sm text-muted-foreground">
+                    {note}
                   </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* SECTION B: Potential optimizations */}
-          {potentialItems.length > 0 && (
-            <div className="mb-8">
-              <div className="mb-4">
-                <h2 className="font-[family-name:var(--font-heading)] text-xl font-bold text-foreground">
-                  Optimisations potentielles supplémentaires
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Gains estimés, non encore inclus dans le calcul
-                </p>
-              </div>
-
-              {/* Notes */}
-              {displayResults.notes.length > 0 && (
-                <div className="mb-6 rounded-xl border border-border/60 bg-muted/30 p-4">
-                  {displayResults.notes.map((note, i) => (
-                    <p key={i} className="text-sm text-muted-foreground">
-                      {note}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {/* Potential items list */}
-              <div className="flex flex-col gap-4">
-                {potentialItems.map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <CheckCircle2 className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-card-foreground">
-                          {item.title}
-                        </p>
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                          item.precision === "confirmed" 
-                            ? "bg-accent/10 text-accent" 
-                            : item.precision === "estimated"
-                            ? "bg-amber-500/10 text-amber-600"
-                            : "bg-muted text-muted-foreground"
-                        }`}>
-                          {item.precision === "confirmed" ? "Confirmé" : item.precision === "estimated" ? "Estimé" : "Conseil"}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {item.reason}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                        {formatMoneyRange(item.amountMin, item.amountMax)}
-                      </p>
-                    </div>
-                  </div>
                 ))}
               </div>
+            )}
+
+            {/* Unified items list with badges */}
+            <div className="flex flex-col gap-4">
+              {unifiedItems.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-card-foreground">
+                        {item.title}
+                      </p>
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                        item.badge === "Confirmé"
+                          ? "bg-accent/10 text-accent"
+                          : "bg-amber-500/10 text-amber-600"
+                      }`}>
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {item.reason}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
+                      {formatMoneyRange(item.amountMin, item.amountMax)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+
+            {/* Total at the bottom */}
+            <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+              <p className="text-sm text-muted-foreground">Total des optimisations</p>
+              <p className="font-[family-name:var(--font-heading)] text-lg font-bold text-primary">
+                {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
+              </p>
+            </div>
+          </div>
 
           {/* View full simulation button */}
           {currentSimulation && (
