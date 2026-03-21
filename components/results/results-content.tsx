@@ -161,7 +161,7 @@ export function ResultsContent() {
       if (!simulationAnswers) return
 
       const resumeData = {
-        answers: simulationAnswers,
+        answers: simulationAnswers?.wizard_answers ?? simulationAnswers,
         currentStepId: "taxYear",
         completedStepIds: [],
       }
