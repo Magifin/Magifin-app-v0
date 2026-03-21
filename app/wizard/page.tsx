@@ -8,7 +8,7 @@ import { ArrowLeft, Eye, LayoutDashboard, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { AccountDropdown } from "@/components/account-dropdown"
-import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
+import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import { StepTaxYear } from "@/components/wizard/step-tax-year"
 import { StepRegion } from "@/components/wizard/step-region"
 import { StepStatus } from "@/components/wizard/step-status"
@@ -44,8 +44,6 @@ function WizardContent() {
   const { user } = useUser()
   const { user: authUser, isLoading: authLoading } = useAuth()
   const { answers, currentStepId, completedStepIds, editingSimulationId } = state
-
-  const [isSavingDraft, setIsSavingDraft] = useState(false)
 
   const availableSteps = getAvailableSteps(answers)
   const currentIndex = getStepIndex(currentStepId, answers)
@@ -203,41 +201,6 @@ function WizardContent() {
   const handleViewResults = () => {
     track("wizard_view_results_clicked", { stepId: currentStepId, isFullySupported })
     router.push("/results")
-  }
-
-  const handleSaveDraft = async () => {
-    if (!editingSimulationId || !authUser) return
-
-    setIsSavingDraft(true)
-    try {
-      // Use real persistence with generated default name if needed
-      const response = await fetch("/api/simulations/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          simulation_id: editingSimulationId,
-          tax_year: answers.taxYear,
-          name: generateDefaultSimulationName(answers.taxYear),
-          wizard_answers: answers,
-          tax_result: null, // Draft save - no results yet
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        console.error("[wizard] save failed:", data.error)
-        return
-      }
-
-      // Mark as saved to clear unsaved banner
-      markAsSaved()
-      track("wizard_draft_saved", { simulationId: editingSimulationId })
-    } catch (err) {
-      console.error("[wizard] save error:", err)
-    } finally {
-      setIsSavingDraft(false)
-    }
   }
 
   const renderStep = () => {
@@ -398,17 +361,20 @@ function WizardContent() {
           
           {/* Right side: Dashboard link when authenticated + Save button in edit mode */}
           <div className="flex items-center gap-3">
-            {/* Save button - only shown when editing an existing simulation */}
+            {/* Save button - reuses the same SaveSimulationDialog as results page */}
             {editingSimulationId && authUser && !authLoading && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSaveDraft}
-                disabled={isSavingDraft}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isSavingDraft ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
+              <SaveSimulationDialog
+                wizardAnswers={answers}
+                taxResult={null}
+                editingSimulationId={editingSimulationId}
+                onSaved={markAsSaved}
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Save className="h-4 w-4" />
+                    <span className="hidden sm:inline">Sauvegarder</span>
+                  </Button>
+                }
+              />
             )}
 
             {authUser && !authLoading && (
