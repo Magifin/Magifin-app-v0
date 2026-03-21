@@ -64,6 +64,17 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
     input.dependents,
   )
 
+  // === Stage 5b: Calculate baseTax (tax without dependent-related credits) ===
+  // This is the tax that would be calculated with dependents=0
+  const { totalTax: taxBeforeCreditsNoChildren } = calculateTotalIncomeTax(
+    taxableIncome,
+    region,
+    input.fiscalYear,
+    0, // No dependents for base calculation
+  )
+  const baseTax = taxBeforeCreditsNoChildren
+  const childrenCredit = Math.max(0, taxBeforeCreditsNoChildren - taxBeforeCredits)
+
   // === Stage 6: Apply non-quotité tax credits ===
   // Pension is applied as 30% credit
   const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost })
@@ -79,7 +90,14 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 
   return {
     taxableIncome,
+    baseTax,
     estimatedTax,
+    appliedOptimizations: {
+      pensionCredit: taxCredits.pensionCredit,
+      childrenCredit,
+      serviceVouchersCredit: taxCredits.serviceVouchersCredit,
+      total: taxCredits.totalCredits + childrenCredit,
+    },
     deductionsApplied: totalDeductionsApplied,
     effectiveTaxRate,
     taxesAlreadyPaid,
@@ -128,6 +146,16 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
     input.dependents,
   )
 
+  // === Stage 5b: Calculate baseTax (tax without dependent-related credits) ===
+  const { totalTax: taxNoChildren } = calculateTotalIncomeTax(
+    taxableIncome,
+    region,
+    input.fiscalYear,
+    0, // No dependents for base calculation
+  )
+  const baseTax = taxNoChildren
+  const childrenCredit = Math.max(0, taxNoChildren - totalTax)
+
   // === Stage 6: Apply tax credits ===
   const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost })
   const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits)
@@ -137,7 +165,14 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
 
   const builder = createResultBuilder()
     .setTaxableIncome(taxableIncome)
+    .setBaseTax(baseTax)
     .setEstimatedTax(finalTax)
+    .setAppliedOptimizations({
+      pensionCredit: taxCredits.pensionCredit,
+      childrenCredit,
+      serviceVouchersCredit: taxCredits.serviceVouchersCredit,
+      total: taxCredits.totalCredits + childrenCredit,
+    })
     .setDeductionsApplied(totalDeductionsApplied)
 
   // Add each deduction to the breakdown

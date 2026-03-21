@@ -67,6 +67,15 @@ export interface OptimizationSuggestion {
  * Extended result with detailed breakdown
  */
 export interface DetailedTaxResult extends BaseTaxResult {
+  /** Tax before user-driven optimizations */
+  baseTax?: number
+  /** Breakdown of user-driven optimizations applied */
+  appliedOptimizations?: {
+    pensionCredit: number
+    childrenCredit: number
+    serviceVouchersCredit: number
+    total: number
+  }
   /** List of deductions that were applied */
   appliedDeductions: AppliedDeduction[]
   /** List of potential optimizations */

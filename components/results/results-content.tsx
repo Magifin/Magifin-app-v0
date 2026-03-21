@@ -1,5 +1,6 @@
 "use client"
 
+// Cache invalidation: TrendingUp icon fix
 import { useEffect, useState, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -21,6 +22,7 @@ import { AccountDropdown } from "@/components/account-dropdown"
 import { useWizard, wizardStore, getLastCompletedStepId } from "@/lib/wizard-store"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { buildUnifiedOptimizationItems } from "@/lib/buildUnifiedOptimizationItems"
 import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
@@ -79,7 +81,6 @@ export function ResultsContent() {
       .then((data) => {
         if (data.simulation) {
           setSimulationAnswers(data.simulation.wizard_answers as WizardAnswers)
-          setTaxResult(data.simulation.tax_result as TaxResult)
           // Track last viewed simulation
           if (typeof window !== "undefined") {
             localStorage.setItem("magifin_last_viewed_simulation_id", simulationId)
@@ -106,12 +107,13 @@ export function ResultsContent() {
   }, [authLoading, authUser])
 
   useEffect(() => {
-    if (simulationId) return
+    // Compute effective answers (from saved simulation or current session)
+    const effectiveAnswers = simulationId ? simulationAnswers : answers
 
-    if (!answers || Object.keys(answers).length === 0) return
-    if (!answers.taxYear) return
+    if (!effectiveAnswers || Object.keys(effectiveAnswers).length === 0) return
+    if (!effectiveAnswers.taxYear) return
 
-    const input = mapAnswersToTaxInput(answers)
+    const input = mapAnswersToTaxInput(effectiveAnswers)
     if (!input) return
 
     setTaxLoading(true)
@@ -132,48 +134,33 @@ export function ResultsContent() {
       })
       .catch(() => setTaxError("Impossible de calculer l'impôt"))
       .finally(() => setTaxLoading(false))
-  }, [answers, simulationId])
+  }, [answers, simulationId, simulationAnswers])
 
   // Compute optimizations using the correct source of truth
   const displayResults = useMemo(() => {
     return computeOptimizationsFromAnswers(activeAnswers)
   }, [activeAnswers])
 
-  const availableItems = displayResults.items.filter((i) => i.available)
-
-  // Filter to items with valid numeric amounts — uses correct field names (amountMin/amountMax)
-  const validItems = availableItems.filter((item) => {
-    const min = item.amountMin
-    const max = item.amountMax
-    return (
-      min != null && max != null &&
-      !Number.isNaN(min) && !Number.isNaN(max)
-    )
-  })
-
-  // Total equals exact sum of visible rows
-  const optimizationTotalMin = validItems.reduce((sum, item) => sum + item.amountMin, 0)
-  const optimizationTotalMax = validItems.reduce((sum, item) => sum + item.amountMax, 0)
-
-  // Compute optimized refund projection
-  const optimizationGain =
-    results?.totalMax && results.totalMax > 0 ? results.totalMax : 0
-
-  const optimizedRefund =
-    taxResult?.refundOrBalance != null
-      ? taxResult.refundOrBalance + optimizationGain
-      : null
+  // Build unified optimization items (engine + heuristic)
+  const unifiedItems = buildUnifiedOptimizationItems(
+    taxResult?.appliedOptimizations ?? null,
+    displayResults.items
+  )
+  
+  // Calculate totals from unified items
+  const optimizationTotalMin = unifiedItems.reduce((sum, item) => sum + item.amountMin, 0)
+  const optimizationTotalMax = unifiedItems.reduce((sum, item) => sum + item.amountMax, 0)
 
   // Consistent auth check used throughout the app
   const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    if (simulationId && simulationAnswers) {
-      // Saved simulation mode: open wizard in edit mode for this exact simulation
-      const resumeData = { answers: simulationAnswers, currentStepId: "taxYear", completedStepIds: [] }
-      router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}&simulationId=${simulationId}`)
+    if (simulationId) {
+      // Saved simulation mode: pass only wizard_answers (old format)
+      // The wizard will auto-compute completedStepIds based on answers
+      router.push(`/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(simulationAnswers)))}&simulationId=${simulationId}`)
     } else {
-      // Current session mode: encode full wizard state
+      // Session mode: pass full state structure to preserve edit mode context
       const resumeData = {
         answers,
         currentStepId: editingSimulationId
@@ -181,7 +168,8 @@ export function ResultsContent() {
           : getLastCompletedStepId(completedStepIds, answers),
         completedStepIds,
       }
-      router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}`)
+
+      router.push(`/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(resumeData)))}`)
     }
   }
 
@@ -202,7 +190,7 @@ export function ResultsContent() {
 
   // Determine left card title
   const leftCardTitle =
-    !results.isFullySupported || availableItems.length > 0
+    !results.isFullySupported || unifiedItems.length > 0
       ? "Débloquez votre optimisation fiscale complète"
       : "Vérification complète de vos droits fiscaux"
 
@@ -222,7 +210,8 @@ export function ResultsContent() {
           <div className="flex items-center gap-4">
             <button
               onClick={handleModifyAnswers}
-              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              disabled={!!simulationId && simulationAnswers === null}
+              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit3 className="h-4 w-4" />
               Modifier
@@ -500,71 +489,66 @@ export function ResultsContent() {
 
           {taxResult && !taxLoading && (
             <div className="space-y-4">
-              {/* Row 1: Impôt estimé, Montant déjà prélevé, Remboursement estimé */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {/* Impôt estimé */}
-                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Impôt estimé</p>
-                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
-                    {formatMoney(taxResult.estimatedTax)}
-                  </p>
+              {/* LINE 1: Impôt hors optimisations → Applied optimizations → = Impôt dû après optimisations */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground font-medium">Impôt hors optimisations</span>
+                  <span className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">{formatMoney(taxResult.baseTax)}</span>
                 </div>
 
-                {/* Montant déjà prélevé */}
-                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Montant déjà prélevé</p>
-                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-card-foreground">
-                    {formatMoney(answers.taxesAlreadyPaid || 0)}
-                  </p>
+                {/* Applied optimizations rows - only show if amount > 0 */}
+                {taxResult.appliedOptimizations.pensionCredit > 0 && (
+                  <div className="flex items-center justify-between text-sm pl-4 border-l-2 border-primary/20">
+                    <span className="text-muted-foreground">- Épargne pension</span>
+                    <span className="font-[family-name:var(--font-heading)] font-medium text-primary">-{formatMoney(taxResult.appliedOptimizations.pensionCredit)}</span>
+                  </div>
+                )}
+                {taxResult.appliedOptimizations.childrenCredit > 0 && (
+                  <div className="flex items-center justify-between text-sm pl-4 border-l-2 border-primary/20">
+                    <span className="text-muted-foreground">- Enfants à charge</span>
+                    <span className="font-[family-name:var(--font-heading)] font-medium text-primary">-{formatMoney(taxResult.appliedOptimizations.childrenCredit)}</span>
+                  </div>
+                )}
+                {taxResult.appliedOptimizations.serviceVouchersCredit > 0 && (
+                  <div className="flex items-center justify-between text-sm pl-4 border-l-2 border-primary/20">
+                    <span className="text-muted-foreground">- Titres-services</span>
+                    <span className="font-[family-name:var(--font-heading)] font-medium text-primary">-{formatMoney(taxResult.appliedOptimizations.serviceVouchersCredit)}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-sm border-t border-border/50 pt-2">
+                  <span className="font-medium">= Impôt dû après optimisations</span>
+                  <span className="font-[family-name:var(--font-heading)] font-bold text-primary text-base">{formatMoney(taxResult.estimatedTax)}</span>
+                </div>
+              </div>
+
+              {/* LINE 2: Déjà prélevé vs Impôt dû = Remboursement / Complément */}
+              <div className="space-y-2 border-t border-border pt-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground font-medium">Déjà prélevé</span>
+                  <span className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">{formatMoney(activeAnswers.taxesAlreadyPaid || 0)}</span>
                 </div>
 
-                {/* Remboursement estimé or Complément à payer */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground font-medium">Impôt dû</span>
+                  <span className="font-[family-name:var(--font-heading)] font-semibold text-card-foreground">{formatMoney(taxResult.estimatedTax)}</span>
+                </div>
+
                 {taxResult.refundOrBalance !== 0 && (
-                  <div className={cn("rounded-lg border-2 px-3 py-2", taxResult.refundOrBalance >= 0 ? "border-primary/35 bg-primary/8" : "border-destructive bg-destructive/5")}>
-                    <p className={cn("text-xs font-medium mb-0.5", taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive")}>
-                      {taxResult.refundOrBalance >= 0 ? "Remboursement" : "Complément"}
-                    </p>
-                    <p
+                  <div className={cn("flex items-center justify-between text-sm rounded-lg border-2 px-3 py-2", taxResult.refundOrBalance >= 0 ? "border-primary/35 bg-primary/8" : "border-destructive bg-destructive/5")}>
+                    <span className={cn("font-medium", taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive")}>
+                      = {taxResult.refundOrBalance >= 0 ? "Remboursement estimé" : "Solde restant dû"}
+                    </span>
+                    <span
                       className={cn(
-                        "font-[family-name:var(--font-heading)] text-sm font-semibold",
+                        "font-[family-name:var(--font-heading)] font-bold text-base",
                         taxResult.refundOrBalance >= 0 ? "text-primary" : "text-destructive"
                       )}
                     >
                       {taxResult.refundOrBalance >= 0
                         ? `+${formatMoney(taxResult.refundOrBalance)}`
                         : formatMoney(taxResult.refundOrBalance)}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Row 2: Économies supplémentaires potentielles, Avec optimisation complète */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {/* Économies supplémentaires potentielles */}
-                <div className="rounded-lg border border-border/50 bg-muted/25 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground/70 mb-0.5">Économies supplémentaires potentielles</p>
-                  <p className="font-[family-name:var(--font-heading)] text-sm font-semibold text-foreground">
-                    {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
-                  </p>
-                </div>
-
-                {/* Avec optimisation complète */}
-                {optimizationGain > 0 && (
-                  <div className="rounded-lg border-2 border-primary/50 bg-primary/15 px-3 py-2">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                      <p className="text-xs font-semibold text-primary">
-                        Avec optimisation complète
-                      </p>
-                    </div>
-                    <div className="flex items-end gap-1.5">
-                      <span className="font-[family-name:var(--font-heading)] text-base font-bold text-primary">
-                        {formatMoney(optimizedRefund)}
-                      </span>
-                      <span className="text-xs text-primary/70">
-                        (+{formatMoney(optimizationGain)})
-                      </span>
-                    </div>
+                    </span>
                   </div>
                 )}
               </div>
@@ -584,7 +568,17 @@ export function ResultsContent() {
             </div>
           )}
 
-          {!taxResult && !taxLoading && !taxError && (
+          {/* Contextual CTA: View optimization details (authenticated users only) */}
+          {authInitialized && authUser && taxResult && (
+            <Link 
+              href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}
+              className="mt-4 inline-flex text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
+            >
+              Voir le détail de mes optimisations →
+            </Link>
+          )}
+
+          {!taxResult && !taxLoading && !taxError && !simulationId && (
             <p className="text-sm text-muted-foreground">
               {"Complétez au moins votre région et votre revenu pour obtenir le calcul."}
             </p>
@@ -592,11 +586,11 @@ export function ResultsContent() {
         </div>
 
         {/* Optimization items breakdown */}
-        {validItems.length > 0 && (
+        {unifiedItems.length > 0 && (
           <div className="mt-10">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
-                {"Optimisations fiscales détectées"}
+                {"Optimisations détectées"}
               </h3>
               <span className="font-[family-name:var(--font-heading)] font-semibold text-primary">
                 {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
@@ -637,17 +631,26 @@ export function ResultsContent() {
               </div>
             )}
 
-            {/* Items list */}
+            {/* Items list with badges */}
             <div className="flex flex-col gap-3">
-              {validItems.map((item) => (
+              {unifiedItems.map((item) => (
                 <div
                   key={item.key}
                   className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
                 >
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                    <div>
-                      <p className="font-medium text-card-foreground">{item.title}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-card-foreground">{item.title}</p>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.badge === "Confirmé"
+                            ? "bg-accent/10 text-accent"
+                            : "bg-amber-500/10 text-amber-600"
+                        }`}>
+                          {item.badge}
+                        </span>
+                      </div>
                       {isAuthenticated ? (
                         <p className="text-sm text-muted-foreground">{item.reason}</p>
                       ) : (
