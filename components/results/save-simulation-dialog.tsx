@@ -65,19 +65,12 @@ export function SaveSimulationDialog({
     setIsSaving(true)
 
     try {
-      // Key business rule: If editing a simulation and the tax year changed, create a new one
-      // instead of overwriting the old one
-      const isEditingWithDifferentYear =
-        editingSimulationId &&
-        wizardAnswers.taxYear &&
-        wizardAnswers.taxYear !== getDefaultTaxYear()
-
       const response = await fetch("/api/simulations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // If tax year changed during edit, don't pass simulation_id (create new)
-          simulation_id: isEditingWithDifferentYear ? null : (editingSimulationId ?? null),
+          // Pass simulation_id for update, or null for create
+          simulation_id: editingSimulationId ?? null,
           tax_year: wizardAnswers.taxYear ?? getDefaultTaxYear(),
           name: name.trim() || generateDefaultSimulationName(wizardAnswers.taxYear),
           wizard_answers: wizardAnswers,
