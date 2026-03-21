@@ -166,7 +166,7 @@ export function ResultsContent() {
         completedStepIds: [],
       }
 
-      router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}&simulationId=${simulationId}`)
+      router.push(`/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(resumeData)))}&simulationId=${simulationId}`)
     } else {
       // Session mode: keep current behavior unchanged
       const resumeData = {
@@ -177,7 +177,7 @@ export function ResultsContent() {
         completedStepIds,
       }
 
-      router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}`)
+      router.push(`/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(resumeData)))}`)
     }
   }
 
