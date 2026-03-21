@@ -155,12 +155,20 @@ export function ResultsContent() {
   const isAuthenticated = authInitialized && !!authUser
 
   const handleModifyAnswers = () => {
-    if (simulationId && simulationAnswers) {
-      // Saved simulation mode: open wizard in edit mode for this exact simulation
-      const resumeData = { answers: simulationAnswers, currentStepId: "taxYear", completedStepIds: [] }
+    if (simulationId) {
+      // Saved simulation mode: must always use the saved simulation answers.
+      // Never fall through to session mode while the async data is still loading.
+      if (!simulationAnswers) return
+
+      const resumeData = {
+        answers: simulationAnswers,
+        currentStepId: "taxYear",
+        completedStepIds: [],
+      }
+
       router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}&simulationId=${simulationId}`)
     } else {
-      // Current session mode: encode full wizard state
+      // Session mode: keep current behavior unchanged
       const resumeData = {
         answers,
         currentStepId: editingSimulationId
@@ -168,6 +176,7 @@ export function ResultsContent() {
           : getLastCompletedStepId(completedStepIds, answers),
         completedStepIds,
       }
+
       router.push(`/wizard?resume=${btoa(JSON.stringify(resumeData))}`)
     }
   }
@@ -209,7 +218,8 @@ export function ResultsContent() {
           <div className="flex items-center gap-4">
             <button
               onClick={handleModifyAnswers}
-              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              disabled={!!simulationId && simulationAnswers === null}
+              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Edit3 className="h-4 w-4" />
               Modifier
