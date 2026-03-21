@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate required fields
-  if (!body.tax_year || !body.wizard_answers || !body.tax_result) {
+  if (!body.tax_year || !body.wizard_answers) {
     return NextResponse.json(
-      { error: "Champs requis manquants: tax_year, wizard_answers, tax_result" },
+      { error: "Champs requis manquants: tax_year, wizard_answers" },
       { status: 400 }
     )
   }

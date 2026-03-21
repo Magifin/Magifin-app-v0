@@ -8,6 +8,7 @@ import { ArrowLeft, Eye, LayoutDashboard, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { AccountDropdown } from "@/components/account-dropdown"
+import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
 import { StepTaxYear } from "@/components/wizard/step-tax-year"
 import { StepRegion } from "@/components/wizard/step-region"
 import { StepStatus } from "@/components/wizard/step-status"
@@ -209,15 +210,16 @@ function WizardContent() {
 
     setIsSavingDraft(true)
     try {
+      // Use real persistence with generated default name if needed
       const response = await fetch("/api/simulations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           simulation_id: editingSimulationId,
           tax_year: answers.taxYear,
-          name: null, // Keep existing name
+          name: generateDefaultSimulationName(answers.taxYear),
           wizard_answers: answers,
-          tax_result: null, // No results yet, just saving answers
+          tax_result: null, // Draft save - no results yet
         }),
       })
 

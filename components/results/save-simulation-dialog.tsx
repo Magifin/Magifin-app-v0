@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
+import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
 import { useWizard } from "@/lib/wizard-store"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
@@ -78,7 +79,7 @@ export function SaveSimulationDialog({
           // If tax year changed during edit, don't pass simulation_id (create new)
           simulation_id: isEditingWithDifferentYear ? null : (editingSimulationId ?? null),
           tax_year: wizardAnswers.taxYear ?? getDefaultTaxYear(),
-          name: name.trim() || `Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`,
+          name: name.trim() || generateDefaultSimulationName(wizardAnswers.taxYear),
           wizard_answers: wizardAnswers,
           tax_result: taxResult,
         }),
@@ -146,7 +147,7 @@ export function SaveSimulationDialog({
             </Label>
             <Input
               id="simulation-name"
-              placeholder={`Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`}
+              placeholder={generateDefaultSimulationName(wizardAnswers.taxYear)}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoadingName}
