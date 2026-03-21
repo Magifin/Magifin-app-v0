@@ -141,21 +141,6 @@ export function ResultsContent() {
     return computeOptimizationsFromAnswers(activeAnswers)
   }, [activeAnswers])
 
-  const availableItems = displayResults.items.filter((i) => i.available)
-
-  // Filter to items with valid numeric amounts — uses correct field names (amountMin/amountMax)
-  const validItems = availableItems.filter((item) => {
-    const min = item.amountMin
-    const max = item.amountMax
-    return (
-      min != null && max != null &&
-      !Number.isNaN(min) && !Number.isNaN(max)
-    )
-  })
-
-  // Total equals exact sum of visible rows
-  const validItems = displayResults.items.filter((i) => i.available && i.precision !== "advisory")
-
   // Build unified optimization items (engine + heuristic)
   const unifiedItems = buildUnifiedOptimizationItems(
     taxResult?.appliedOptimizations ?? null,
@@ -204,7 +189,7 @@ export function ResultsContent() {
 
   // Determine left card title
   const leftCardTitle =
-    !results.isFullySupported || availableItems.length > 0
+    !results.isFullySupported || unifiedItems.length > 0
       ? "Débloquez votre optimisation fiscale complète"
       : "Vérification complète de vos droits fiscaux"
 

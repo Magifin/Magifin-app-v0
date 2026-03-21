@@ -60,6 +60,7 @@ export function buildUnifiedOptimizationItems(
   }
 
   // SECTION 2: Heuristic items (available only, exclude advisory)
+  // All heuristic items show "Estimé" badge (never "Confirmé")
   for (const item of heuristicItems) {
     if (item.available && item.precision !== "advisory") {
       unified.push({
@@ -68,7 +69,7 @@ export function buildUnifiedOptimizationItems(
         amountMin: item.amountMin,
         amountMax: item.amountMax,
         reason: item.reason,
-        badge: item.precision === "confirmed" ? "Confirmé" : "Estimé",
+        badge: "Estimé",
       })
     }
   }
