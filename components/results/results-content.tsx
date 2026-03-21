@@ -156,19 +156,11 @@ export function ResultsContent() {
 
   const handleModifyAnswers = () => {
     if (simulationId) {
-      // Saved simulation mode: must always use the saved simulation answers.
-      // Never fall through to session mode while the async data is still loading.
-      if (!simulationAnswers) return
-
-      const resumeData = {
-        answers: simulationAnswers,
-        currentStepId: "taxYear",
-        completedStepIds: [],
-      }
-
-      router.push(`/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(resumeData)))}&simulationId=${simulationId}`)
+      // Saved simulation mode: pass only wizard_answers (old format)
+      // The wizard will auto-compute completedStepIds based on answers
+      router.push(`/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(simulationAnswers)))}&simulationId=${simulationId}`)
     } else {
-      // Session mode: keep current behavior unchanged
+      // Session mode: pass full state structure to preserve edit mode context
       const resumeData = {
         answers,
         currentStepId: editingSimulationId
