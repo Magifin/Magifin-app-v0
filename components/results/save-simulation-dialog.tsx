@@ -22,7 +22,7 @@ import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 interface SaveSimulationDialogProps {
   wizardAnswers: WizardAnswers
-  taxResult: TaxResult
+  taxResult: TaxResult | null
   editingSimulationId?: string | null
   onSaved?: () => void
   trigger?: React.ReactNode
@@ -163,32 +163,34 @@ export function SaveSimulationDialog({
             </strong>
           </div>
 
-          {/* Summary preview */}
-          <div className="rounded-lg border border-border bg-muted/30 p-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Résumé</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Revenu imposable:</span>
-              </div>
-              <div className="text-right font-medium">
-                {new Intl.NumberFormat("fr-BE", {
-                  style: "currency",
-                  currency: "EUR",
-                  maximumFractionDigits: 0,
-                }).format(taxResult.taxableIncome)}
-              </div>
-              <div>
-                <span className="text-muted-foreground">Impôt estimé:</span>
-              </div>
-              <div className="text-right font-medium">
-                {new Intl.NumberFormat("fr-BE", {
-                  style: "currency",
-                  currency: "EUR",
-                  maximumFractionDigits: 0,
-                }).format(taxResult.estimatedTax)}
+          {/* Summary preview - only show if taxResult exists */}
+          {taxResult && (
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Résumé</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Revenu imposable:</span>
+                </div>
+                <div className="text-right font-medium">
+                  {new Intl.NumberFormat("fr-BE", {
+                    style: "currency",
+                    currency: "EUR",
+                    maximumFractionDigits: 0,
+                  }).format(taxResult.taxableIncome)}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Impôt estimé:</span>
+                </div>
+                <div className="text-right font-medium">
+                  {new Intl.NumberFormat("fr-BE", {
+                    style: "currency",
+                    currency: "EUR",
+                    maximumFractionDigits: 0,
+                  }).format(taxResult.estimatedTax)}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <DialogFooter>
