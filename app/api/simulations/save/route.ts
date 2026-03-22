@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { computeBelgiumTax } from "@/lib/fiscal/belgium/computeBelgiumTax"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { SimulationInsert } from "@/lib/supabase/types"
 
@@ -68,34 +68,22 @@ export async function POST(request: NextRequest) {
       updatePayload.name = body.name
     }
 
-    // If tax_result is null/undefined, try to compute it server-side
-    if (body.tax_result === null || body.tax_result === undefined) {
+    // Resolve tax_result: use provided value, or compute directly from wizard_answers
+    if (body.tax_result !== null && body.tax_result !== undefined) {
+      // Caller (results page) provided a real value — use it directly
+      updatePayload.tax_result = body.tax_result as any
+    } else {
+      // Wizard sends null (no client-side compute) — compute server-side
       try {
-        // Compute tax_result from wizard_answers
         const taxInput = mapAnswersToTaxInput(body.wizard_answers as any)
         if (taxInput) {
-          // Call compute API synchronously or use internal compute function
-          // For now, try to use the compute function if available
-          const computeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/tax/compute`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(taxInput),
-          })
-
-          if (computeRes.ok) {
-            const computeData = await computeRes.json()
-            if (computeData.result?.taxResult) {
-              updatePayload.tax_result = computeData.result.taxResult as any
-            }
-          }
+          updatePayload.tax_result = computeBelgiumTax(taxInput)
         }
+        // If taxInput is null (unsupported scenario): fall through, existing DB value preserved
       } catch (error) {
-        // If computation fails, don't set tax_result - preserve existing DB value
+        // Computation failed: fall through, existing DB value preserved
         console.error("Error computing tax_result:", error)
       }
-    } else {
-      // tax_result is provided, use it
-      updatePayload.tax_result = body.tax_result as any
     }
 
     const { data: updateData, error: updateError } = await supabase
