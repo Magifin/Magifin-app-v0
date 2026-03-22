@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Copy,
   Edit3,
+  MoreHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +25,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,6 +79,7 @@ export default function SimulationsPage() {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
+  const [deletingSimulationId, setDeletingSimulationId] = useState<string | null>(null)
 
   // Fetch available years
   const fetchYears = useCallback(async () => {
@@ -446,7 +455,7 @@ export default function SimulationsPage() {
                   )}
                 </div>
 
-                {/* Actions */}
+                {/* Actions: 2 visible + overflow menu */}
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -469,54 +478,49 @@ export default function SimulationsPage() {
                     Voir résultats
                     <ArrowRight className="ml-2 h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRenameSimulation(sim.id, sim.name)
-                    }}
-                  >
-                    <Edit3 className="mr-2 h-3.5 w-3.5" />
-                    Renommer
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      duplicateSimulation(sim.id)
-                    }}
-                  >
-                    <Copy className="mr-2 h-3.5 w-3.5" />
-                    Dupliquer
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est irréversible. La simulation sera définitivement supprimée.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteSimulation(sim.id)}>
-                          Supprimer
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRenameSimulation(sim.id, sim.name)
+                        }}
+                      >
+                        <Edit3 className="mr-2 h-4 w-4" />
+                        Renommer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          duplicateSimulation(sim.id)
+                        }}
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        Dupliquer
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeletingSimulationId(sim.id)
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -553,6 +557,29 @@ export default function SimulationsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingSimulationId} onOpenChange={(open) => !open && setDeletingSimulationId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La simulation sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (deletingSimulationId) {
+                deleteSimulation(deletingSimulationId)
+                setDeletingSimulationId(null)
+              }
+            }}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

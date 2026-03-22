@@ -11,6 +11,7 @@ import {
   Trash2,
   Copy,
   Edit3,
+  MoreHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +23,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -30,7 +38,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
@@ -53,6 +60,7 @@ export default function SimulationDetailPage({
   const [isDuplicating, setIsDuplicating] = useState(false)
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renameValue, setRenameValue] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -278,29 +286,6 @@ export default function SimulationDetailPage({
               <p className="mt-3 text-muted-foreground">{simulation.description}</p>
             )}
           </div>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-destructive hover:bg-destructive/5">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Supprimer
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cette action est irréversible. La simulation sera définitivement supprimée.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
 
@@ -485,8 +470,8 @@ export default function SimulationDetailPage({
         </dl>
       </div>
 
-      {/* Navigation CTA */}
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+      {/* Navigation CTA: 2 visible + overflow menu */}
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center sm:items-center">
         <Button asChild>
           <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation?.wizard_answers))}&simulationId=${id}`}>
             <Calculator className="mr-2 h-4 w-4" />
@@ -499,24 +484,37 @@ export default function SimulationDetailPage({
             Voir résultat
           </Link>
         </Button>
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/optimisation?simulationId=${id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
-            Voir optimisation
-          </Link>
-        </Button>
-        <Button variant="outline" onClick={handleRenameSimulation}>
-          <Edit3 className="mr-2 h-4 w-4" />
-          Renommer
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleDuplicate}
-          disabled={isDuplicating}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          {isDuplicating ? "Duplication..." : "Dupliquer"}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/optimisation?simulationId=${id}`}>
+                Voir optimisation
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleRenameSimulation}>
+              <Edit3 className="mr-2 h-4 w-4" />
+              Renommer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
+              <Copy className="mr-2 h-4 w-4" />
+              {isDuplicating ? "Duplication..." : "Dupliquer"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Supprimer
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Rename Dialog */}
@@ -548,6 +546,24 @@ export default function SimulationDetailPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La simulation sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
