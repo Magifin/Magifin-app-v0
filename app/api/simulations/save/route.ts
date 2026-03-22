@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { SimulationInsert } from "@/lib/supabase/types"
 
 export async function POST(request: NextRequest) {
@@ -56,15 +58,43 @@ export async function POST(request: NextRequest) {
   // Check if this is an update (simulation_id provided)
   if (body.simulation_id) {
     // UPDATE existing simulation
-    // Only overwrite tax_result when the caller provides a real value.
-    // The wizard has no tax computation and sends null; preserve the existing
-    // DB value to satisfy the JSONB NOT NULL constraint.
     const updatePayload: Record<string, unknown> = {
-      name: body.name || "Ma simulation",
       wizard_answers: body.wizard_answers as any,
       updated_at: new Date().toISOString(),
     }
-    if (body.tax_result !== null && body.tax_result !== undefined) {
+
+    // Only set name if provided, otherwise preserve existing name
+    if (body.name) {
+      updatePayload.name = body.name
+    }
+
+    // If tax_result is null/undefined, try to compute it server-side
+    if (body.tax_result === null || body.tax_result === undefined) {
+      try {
+        // Compute tax_result from wizard_answers
+        const taxInput = mapAnswersToTaxInput(body.wizard_answers as any)
+        if (taxInput) {
+          // Call compute API synchronously or use internal compute function
+          // For now, try to use the compute function if available
+          const computeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/tax/compute`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(taxInput),
+          })
+
+          if (computeRes.ok) {
+            const computeData = await computeRes.json()
+            if (computeData.result?.taxResult) {
+              updatePayload.tax_result = computeData.result.taxResult as any
+            }
+          }
+        }
+      } catch (error) {
+        // If computation fails, don't set tax_result - preserve existing DB value
+        console.error("Error computing tax_result:", error)
+      }
+    } else {
+      // tax_result is provided, use it
       updatePayload.tax_result = body.tax_result as any
     }
 
