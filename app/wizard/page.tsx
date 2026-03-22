@@ -377,6 +377,23 @@ function WizardContent() {
               />
             )}
 
+            {/* Unauthenticated CTAs */}
+            {!authUser && authLoading === false && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/auth/login?redirect=/wizard">
+                    Se connecter
+                  </Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/auth/sign-up?redirect=/wizard">
+                    Créer un compte
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+            {/* Authenticated CTAs */}
             {authUser && !authLoading && (
               <>
                 <Link
