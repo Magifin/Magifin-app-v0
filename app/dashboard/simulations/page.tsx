@@ -15,6 +15,15 @@ import {
   Edit3,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +68,9 @@ export default function SimulationsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
 
   // Fetch available years
   const fetchYears = useCallback(async () => {
@@ -207,10 +219,21 @@ export default function SimulationsPage() {
   }
 
   const handleRenameSimulation = (id: string, currentName: string) => {
-    const newName = prompt("Nouveau nom de la simulation:", currentName)
-    if (newName !== null && newName !== currentName) {
-      renameSimulation(id, newName)
+    setRenamingId(id)
+    setRenameValue(currentName)
+    setRenameDialogOpen(true)
+  }
+
+  const confirmRename = async () => {
+    if (!renamingId) return
+    if (!renameValue.trim() || renameValue === simulations.find(s => s.id === renamingId)?.name) {
+      setRenameDialogOpen(false)
+      return
     }
+    await renameSimulation(renamingId, renameValue)
+    setRenameDialogOpen(false)
+    setRenamingId(null)
+    setRenameValue("")
   }
 
   // Initialize years and auth check
@@ -500,6 +523,36 @@ export default function SimulationsPage() {
           ))}
         </div>
       )}
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renommer la simulation</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Nouveau nom de la simulation"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  confirmRename()
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmRename}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -13,6 +13,14 @@ import {
   Edit3,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +51,8 @@ export default function SimulationDetailPage({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDuplicating, setIsDuplicating] = useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renameValue, setRenameValue] = useState("")
 
   useEffect(() => {
     if (authLoading) return
@@ -148,10 +158,18 @@ export default function SimulationDetailPage({
   }
 
   const handleRenameSimulation = () => {
-    const newName = prompt("Nouveau nom de la simulation:", simulation?.name || "")
-    if (newName !== null && newName !== simulation?.name) {
-      renameSimulation(newName)
+    setRenameValue(simulation?.name || "")
+    setRenameDialogOpen(true)
+  }
+
+  const confirmRename = async () => {
+    if (!renameValue.trim() || renameValue === simulation?.name) {
+      setRenameDialogOpen(false)
+      return
     }
+    await renameSimulation(renameValue)
+    setRenameDialogOpen(false)
+    setRenameValue("")
   }
 
   const formatDate = (dateStr: string) => {
@@ -500,6 +518,36 @@ export default function SimulationDetailPage({
           {isDuplicating ? "Duplication..." : "Dupliquer"}
         </Button>
       </div>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renommer la simulation</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Nouveau nom de la simulation"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  confirmRename()
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmRename}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
