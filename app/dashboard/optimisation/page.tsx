@@ -184,15 +184,6 @@ function OptimisationContent() {
               </Link>
             </Button>
           )}
-
-          {/* Voir détails - only when detail CTAs should show */}
-          {showDetailCtas && currentSimulation && (
-            <Button variant="outline" asChild>
-              <Link href={`/dashboard/simulations/${currentSimulation.id}`}>
-                Voir détails
-              </Link>
-            </Button>
-          )}
         </div>
       </div>
 
