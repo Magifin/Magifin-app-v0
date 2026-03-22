@@ -56,14 +56,21 @@ export async function POST(request: NextRequest) {
   // Check if this is an update (simulation_id provided)
   if (body.simulation_id) {
     // UPDATE existing simulation
+    // Only overwrite tax_result when the caller provides a real value.
+    // The wizard has no tax computation and sends null; preserve the existing
+    // DB value to satisfy the JSONB NOT NULL constraint.
+    const updatePayload: Record<string, unknown> = {
+      name: body.name || "Ma simulation",
+      wizard_answers: body.wizard_answers as any,
+      updated_at: new Date().toISOString(),
+    }
+    if (body.tax_result !== null && body.tax_result !== undefined) {
+      updatePayload.tax_result = body.tax_result as any
+    }
+
     const { data: updateData, error: updateError } = await supabase
       .from("simulations")
-      .update({
-        name: body.name || "Ma simulation",
-        wizard_answers: body.wizard_answers as any,
-        tax_result: body.tax_result as any,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", body.simulation_id)
       .eq("user_id", user.id)
       .select()
