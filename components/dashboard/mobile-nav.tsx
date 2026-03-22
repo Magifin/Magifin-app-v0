@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { AccountDropdown } from "@/components/account-dropdown"
 import {
   Home,
   LayoutDashboard,
@@ -28,15 +29,18 @@ export function DashboardMobileNav() {
 
   return (
     <div className="border-b border-border/50 lg:hidden">
-      {/* Header */}
-      <Link href="/" className="flex items-center gap-2 px-4 py-3 transition-opacity hover:opacity-80">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-          <span className="text-xs font-bold text-primary-foreground">M</span>
-        </div>
-        <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
-          Magifin
-        </span>
-      </Link>
+      {/* Header with logo and account menu */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+            <span className="text-xs font-bold text-primary-foreground">M</span>
+          </div>
+          <span className="font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight text-foreground">
+            Magifin
+          </span>
+        </Link>
+        <AccountDropdown />
+      </div>
 
       {/* Nav tabs */}
       <nav className="flex overflow-x-auto px-2 pb-2">
