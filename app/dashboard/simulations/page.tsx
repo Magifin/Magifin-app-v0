@@ -12,8 +12,18 @@ import {
   AlertCircle,
   ArrowLeft,
   Copy,
+  Edit3,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +68,9 @@ export default function SimulationsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
 
   // Fetch available years
   const fetchYears = useCallback(async () => {
@@ -181,6 +194,46 @@ export default function SimulationsPage() {
     } catch (error) {
       console.error("Error duplicating simulation:", error)
     }
+  }
+
+  // Rename simulation
+  const renameSimulation = async (id: string, newName: string) => {
+    if (!newName.trim()) return
+
+    try {
+      const res = await fetch(`/api/simulations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      })
+
+      if (res.ok) {
+        // Update local state
+        setSimulations((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, name: newName.trim() } : s))
+        )
+      }
+    } catch (error) {
+      console.error("Error renaming simulation:", error)
+    }
+  }
+
+  const handleRenameSimulation = (id: string, currentName: string) => {
+    setRenamingId(id)
+    setRenameValue(currentName)
+    setRenameDialogOpen(true)
+  }
+
+  const confirmRename = async () => {
+    if (!renamingId) return
+    if (!renameValue.trim() || renameValue === simulations.find(s => s.id === renamingId)?.name) {
+      setRenameDialogOpen(false)
+      return
+    }
+    await renameSimulation(renamingId, renameValue)
+    setRenameDialogOpen(false)
+    setRenamingId(null)
+    setRenameValue("")
   }
 
   // Initialize years and auth check
@@ -337,7 +390,8 @@ export default function SimulationsPage() {
           {simulations.map((sim) => (
             <div
               key={sim.id}
-              className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/30"
+              onClick={() => router.push(`/dashboard/simulations/${sim.id}`)}
+              className="group cursor-pointer rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/30 hover:bg-card/80 hover:shadow-md"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
@@ -394,21 +448,45 @@ export default function SimulationsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Link href={`/wizard?resume=${btoa(JSON.stringify(sim.wizard_answers))}&simulationId=${sim.id}`}>
                       Modifier
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/simulations/${sim.id}`}>
-                      Voir détails
-                      <ArrowRight className="ml-2 h-3.5 w-3.5" />
                     </Link>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => duplicateSimulation(sim.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      router.push(`/dashboard/simulations/${sim.id}`)
+                    }}
+                  >
+                    Voir résultats
+                    <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRenameSimulation(sim.id, sim.name)
+                    }}
+                  >
+                    <Edit3 className="mr-2 h-3.5 w-3.5" />
+                    Renommer
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      duplicateSimulation(sim.id)
+                    }}
                   >
                     <Copy className="mr-2 h-3.5 w-3.5" />
                     Dupliquer
@@ -419,6 +497,7 @@ export default function SimulationsPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -444,6 +523,36 @@ export default function SimulationsPage() {
           ))}
         </div>
       )}
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renommer la simulation</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Nouveau nom de la simulation"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  confirmRename()
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmRename}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
