@@ -106,6 +106,32 @@ export function ResultsContent() {
     return () => clearTimeout(timeout)
   }, [authLoading, authUser])
 
+  // AUTOSAVE: Results page is source of truth for persisted tax_result
+  // When user lands on results with computed taxResult and editingSimulationId,
+  // automatically persist to DB to ensure dashboard always has latest values
+  useEffect(() => {
+    // Only autosave in edit mode (when re-visiting results after modifying wizard)
+    if (!editingSimulationId || !taxResult || !authUser || authLoading) {
+      return
+    }
+
+    // Persist the computed tax_result to DB
+    fetch("/api/simulations/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        simulation_id: editingSimulationId,
+        tax_year: answers.taxYear,
+        wizard_answers: answers,
+        tax_result: taxResult,
+        // Do NOT override name
+        name: null,
+      }),
+    })
+      .then((res) => res.json())
+      .catch((err) => console.error("[autosave] Failed to persist tax_result:", err))
+  }, [editingSimulationId, taxResult, authUser, authLoading, answers])
+
   useEffect(() => {
     // Compute effective answers (from saved simulation or current session)
     const effectiveAnswers = simulationId ? simulationAnswers : answers
