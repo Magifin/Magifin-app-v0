@@ -105,7 +105,6 @@ export default function ProfilPage() {
       <DashboardHeader
         title="Profil"
         description="Gérez vos informations personnelles."
-        showNewSimulation={false}
       />
 
       <div className="max-w-lg rounded-2xl border border-border bg-card p-6 shadow-sm">
