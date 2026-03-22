@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { computeBelgiumTax } from "@/lib/fiscal/belgium/computeBelgiumTax"
+import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { SimulationInsert } from "@/lib/supabase/types"
 
 export async function POST(request: NextRequest) {
@@ -38,9 +40,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate required fields
-  if (!body.tax_year || !body.wizard_answers || !body.tax_result) {
+  if (!body.tax_year || !body.wizard_answers) {
     return NextResponse.json(
-      { error: "Champs requis manquants: tax_year, wizard_answers, tax_result" },
+      { error: "Champs requis manquants: tax_year, wizard_answers" },
       { status: 400 }
     )
   }
@@ -56,14 +58,37 @@ export async function POST(request: NextRequest) {
   // Check if this is an update (simulation_id provided)
   if (body.simulation_id) {
     // UPDATE existing simulation
+    const updatePayload: Record<string, unknown> = {
+      wizard_answers: body.wizard_answers as any,
+      updated_at: new Date().toISOString(),
+    }
+
+    // Only set name if provided, otherwise preserve existing name
+    if (body.name) {
+      updatePayload.name = body.name
+    }
+
+    // Resolve tax_result: use provided value, or compute directly from wizard_answers
+    if (body.tax_result !== null && body.tax_result !== undefined) {
+      // Caller (results page) provided a real value — use it directly
+      updatePayload.tax_result = body.tax_result as any
+    } else {
+      // Wizard sends null (no client-side compute) — compute server-side
+      try {
+        const taxInput = mapAnswersToTaxInput(body.wizard_answers as any)
+        if (taxInput) {
+          updatePayload.tax_result = computeBelgiumTax(taxInput)
+        }
+        // If taxInput is null (unsupported scenario): fall through, existing DB value preserved
+      } catch (error) {
+        // Computation failed: fall through, existing DB value preserved
+        console.error("Error computing tax_result:", error)
+      }
+    }
+
     const { data: updateData, error: updateError } = await supabase
       .from("simulations")
-      .update({
-        name: body.name || "Ma simulation",
-        wizard_answers: body.wizard_answers as any,
-        tax_result: body.tax_result as any,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", body.simulation_id)
       .eq("user_id", user.id)
       .select()

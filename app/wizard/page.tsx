@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useMemo, Suspense, useRef } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Eye, LayoutDashboard } from "lucide-react"
+import { ArrowLeft, Eye, LayoutDashboard, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WizardProgress } from "@/components/wizard/wizard-progress"
 import { AccountDropdown } from "@/components/account-dropdown"
+import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import { StepTaxYear } from "@/components/wizard/step-tax-year"
 import { StepRegion } from "@/components/wizard/step-region"
 import { StepStatus } from "@/components/wizard/step-status"
@@ -357,8 +359,24 @@ function WizardContent() {
             </span>
           </Link>
           
-          {/* Right side: Dashboard link when authenticated (optional UX improvement) */}
-          <div className="flex items-center gap-4">
+          {/* Right side: Dashboard link when authenticated + Save button in edit mode */}
+          <div className="flex items-center gap-3">
+            {/* Save button - reuses the same SaveSimulationDialog as results page */}
+            {editingSimulationId && authUser && !authLoading && (
+              <SaveSimulationDialog
+                wizardAnswers={answers}
+                taxResult={null}
+                editingSimulationId={editingSimulationId}
+                onSaved={markAsSaved}
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Save className="h-4 w-4" />
+                    <span className="hidden sm:inline">Sauvegarder</span>
+                  </Button>
+                }
+              />
+            )}
+
             {authUser && !authLoading && (
               <>
                 <Link

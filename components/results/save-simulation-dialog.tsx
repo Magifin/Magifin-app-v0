@@ -15,13 +15,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
+import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
 import { useWizard } from "@/lib/wizard-store"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
 interface SaveSimulationDialogProps {
   wizardAnswers: WizardAnswers
-  taxResult: TaxResult
+  taxResult: TaxResult | null
   editingSimulationId?: string | null
   onSaved?: () => void
   trigger?: React.ReactNode
@@ -64,21 +65,14 @@ export function SaveSimulationDialog({
     setIsSaving(true)
 
     try {
-      // Key business rule: If editing a simulation and the tax year changed, create a new one
-      // instead of overwriting the old one
-      const isEditingWithDifferentYear =
-        editingSimulationId &&
-        wizardAnswers.taxYear &&
-        wizardAnswers.taxYear !== getDefaultTaxYear()
-
       const response = await fetch("/api/simulations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // If tax year changed during edit, don't pass simulation_id (create new)
-          simulation_id: isEditingWithDifferentYear ? null : (editingSimulationId ?? null),
+          // Pass simulation_id for update, or null for create
+          simulation_id: editingSimulationId ?? null,
           tax_year: wizardAnswers.taxYear ?? getDefaultTaxYear(),
-          name: name.trim() || `Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`,
+          name: name.trim() || generateDefaultSimulationName(wizardAnswers.taxYear),
           wizard_answers: wizardAnswers,
           tax_result: taxResult,
         }),
@@ -146,7 +140,7 @@ export function SaveSimulationDialog({
             </Label>
             <Input
               id="simulation-name"
-              placeholder={`Simulation ${wizardAnswers.taxYear ?? getDefaultTaxYear()}`}
+              placeholder={generateDefaultSimulationName(wizardAnswers.taxYear)}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoadingName}
@@ -162,32 +156,34 @@ export function SaveSimulationDialog({
             </strong>
           </div>
 
-          {/* Summary preview */}
-          <div className="rounded-lg border border-border bg-muted/30 p-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Résumé</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Revenu imposable:</span>
-              </div>
-              <div className="text-right font-medium">
-                {new Intl.NumberFormat("fr-BE", {
-                  style: "currency",
-                  currency: "EUR",
-                  maximumFractionDigits: 0,
-                }).format(taxResult.taxableIncome)}
-              </div>
-              <div>
-                <span className="text-muted-foreground">Impôt estimé:</span>
-              </div>
-              <div className="text-right font-medium">
-                {new Intl.NumberFormat("fr-BE", {
-                  style: "currency",
-                  currency: "EUR",
-                  maximumFractionDigits: 0,
-                }).format(taxResult.estimatedTax)}
+          {/* Summary preview - only show if taxResult exists */}
+          {taxResult && (
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Résumé</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Revenu imposable:</span>
+                </div>
+                <div className="text-right font-medium">
+                  {new Intl.NumberFormat("fr-BE", {
+                    style: "currency",
+                    currency: "EUR",
+                    maximumFractionDigits: 0,
+                  }).format(taxResult.taxableIncome)}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Impôt estimé:</span>
+                </div>
+                <div className="text-right font-medium">
+                  {new Intl.NumberFormat("fr-BE", {
+                    style: "currency",
+                    currency: "EUR",
+                    maximumFractionDigits: 0,
+                  }).format(taxResult.estimatedTax)}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <DialogFooter>
