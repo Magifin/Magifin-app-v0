@@ -1,3 +1,5 @@
+"use client"
+
 import {
   CheckCircle2,
   Clock,
@@ -6,6 +8,7 @@ import {
   FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 const documents = [
   {
@@ -55,20 +58,16 @@ const statusConfig = {
 export default function DocumentsPage() {
   return (
     <div>
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-            Documents
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            {"Gérez vos attestations et justificatifs fiscaux."}
-          </p>
-        </div>
-        <Button>
-          <Upload className="mr-2 h-4 w-4" />
-          Ajouter un document
-        </Button>
-      </div>
+      <DashboardHeader
+        title="Documents"
+        description="Gérez vos attestations et justificatifs fiscaux."
+        actions={
+          <Button variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Ajouter un document
+          </Button>
+        }
+      />
 
       {/* Document list */}
       <div className="flex flex-col gap-3">

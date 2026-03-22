@@ -11,6 +11,7 @@ import {
   Trash2,
   Copy,
   Edit3,
+  MoreHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,13 +31,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import type { Simulation } from "@/lib/supabase/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 export default function SimulationDetailPage({
   params,
@@ -53,6 +61,7 @@ export default function SimulationDetailPage({
   const [isDuplicating, setIsDuplicating] = useState(false)
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renameValue, setRenameValue] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -235,74 +244,58 @@ export default function SimulationDetailPage({
       <UnsavedSimulationBanner />
 
       {/* Header with navigation */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Link
-            href="/dashboard/simulations"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour aux simulations
-          </Link>
-          <span className="text-muted-foreground">•</span>
-          <Link
-            href={`/dashboard/optimisation?simulationId=${id}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Optimisation fiscale
-          </Link>
-        </div>
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <FileText className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-                    {simulation.name}
-                  </h1>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {formatDeclarationYear(simulation.tax_year - 1)}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-                  <span>Créée le {formatDate(simulation.created_at)}</span>
-                </div>
-              </div>
-            </div>
-            {simulation.description && (
-              <p className="mt-3 text-muted-foreground">{simulation.description}</p>
-            )}
-          </div>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-destructive hover:bg-destructive/5">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Supprimer
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cette action est irréversible. La simulation sera définitivement supprimée.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+      <div className="mb-4 flex items-center gap-2">
+        <Link
+          href="/dashboard/simulations"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Retour aux simulations
+        </Link>
       </div>
+
+      <DashboardHeader
+        title={simulation.name}
+        description={`Créée le ${formatDate(simulation.created_at)} - ${formatDeclarationYear(simulation.tax_year - 1)}`}
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation.wizard_answers))}&simulationId=${id}`}>
+                <Calculator className="mr-2 h-4 w-4" />
+                Modifier
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/results?simulationId=${id}`}>
+                Voir résultats
+              </Link>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Plus d'actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleRenameSimulation}>
+                  <Edit3 className="mr-2 h-4 w-4" />
+                  Renommer
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  {isDuplicating ? "Duplication..." : "Dupliquer"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
       {/* Tax Result Card */}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -487,35 +480,10 @@ export default function SimulationDetailPage({
 
       {/* Navigation CTA */}
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button asChild>
-          <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation?.wizard_answers))}&simulationId=${id}`}>
-            <Calculator className="mr-2 h-4 w-4" />
-            Modifier
-          </Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href={`/results?simulationId=${id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
-            Voir résultat
-          </Link>
-        </Button>
         <Button variant="outline" asChild>
           <Link href={`/dashboard/optimisation?simulationId=${id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
             Voir optimisation
           </Link>
-        </Button>
-        <Button variant="outline" onClick={handleRenameSimulation}>
-          <Edit3 className="mr-2 h-4 w-4" />
-          Renommer
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleDuplicate}
-          disabled={isDuplicating}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          {isDuplicating ? "Duplication..." : "Dupliquer"}
         </Button>
       </div>
 
@@ -548,6 +516,24 @@ export default function SimulationDetailPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La simulation sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -1,18 +1,19 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState, Suspense } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Calculator, CheckCircle2, AlertCircle, ArrowLeft, Plus } from "lucide-react"
+import { Calculator, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { buildUnifiedOptimizationItems } from "@/lib/buildUnifiedOptimizationItems"
-import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
+import { formatMoneyRange } from "@/lib/formatMoney"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { Simulation } from "@/lib/supabase/types"
 import type { AppliedOptimizations } from "@/lib/fiscal/belgium/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 function OptimisationContent() {
   const searchParams = useSearchParams()
@@ -143,58 +144,31 @@ function OptimisationContent() {
         Voir mes résultats
       </Link>
 
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-            Optimisation fiscale
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            {currentSimulation
-              ? `Détail de vos déductions (simulation du ${new Date(currentSimulation.created_at).toLocaleDateString("fr-BE")})`
-              : "Détail de vos déductions et réductions identifiées."}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          {/* Nouvelle simulation - always visible and first */}
-          <Button 
-            variant={showDetailCtas ? "outline" : "default"} 
-            asChild
-          >
-            <Link href="/wizard?new=true">
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle simulation
-            </Link>
-          </Button>
-
-          {/* Modifier - only when detail CTAs should show */}
-          {showDetailCtas && (
-            <Button asChild>
-              <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
-                <Calculator className="mr-2 h-4 w-4" />
-                Modifier
-              </Link>
-            </Button>
-          )}
-
-          {/* Voir résultat - only when detail CTAs should show */}
-          {showDetailCtas && currentSimulation && (
-            <Button variant="outline" asChild>
-              <Link href={`/results?simulationId=${currentSimulation.id}`}>
-                Voir résultat
-              </Link>
-            </Button>
-          )}
-
-          {/* Voir détails - only when detail CTAs should show */}
-          {showDetailCtas && currentSimulation && (
-            <Button variant="outline" asChild>
-              <Link href={`/dashboard/simulations/${currentSimulation.id}`}>
-                Voir détails
-              </Link>
-            </Button>
-          )}
-        </div>
-      </div>
+      <DashboardHeader
+        title="Optimisation fiscale"
+        description={currentSimulation
+          ? `Détail de vos déductions (simulation du ${new Date(currentSimulation.created_at).toLocaleDateString("fr-BE")})`
+          : "Détail de vos déductions et réductions identifiées."}
+        actions={
+          <>
+            {showDetailCtas && (
+              <Button variant="outline" asChild>
+                <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
+                  <Calculator className="mr-2 h-4 w-4" />
+                  Modifier
+                </Link>
+              </Button>
+            )}
+            {showDetailCtas && currentSimulation && (
+              <Button variant="outline" asChild>
+                <Link href={`/results?simulationId=${currentSimulation.id}`}>
+                  Voir résultats
+                </Link>
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <div>
         <UnsavedSimulationBanner />

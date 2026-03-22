@@ -8,18 +8,16 @@ import {
   Calendar,
   Trash2,
   ArrowRight,
-  Plus,
   AlertCircle,
-  ArrowLeft,
   Copy,
   Edit3,
+  MoreHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,13 +31,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { getDefaultTaxYear } from "@/lib/supabase/types"
 import { useWizard } from "@/lib/wizard-store"
 import { cn } from "@/lib/utils"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 interface SimulationListItem {
   id: string
@@ -71,6 +76,7 @@ export default function SimulationsPage() {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
+  const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null)
 
   // Fetch available years
   const fetchYears = useCallback(async () => {
@@ -312,22 +318,10 @@ export default function SimulationsPage() {
     <div>
       <UnsavedSimulationBanner />
 
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-            Mes simulations
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            Retrouvez et gérez toutes vos simulations fiscales.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/wizard?new=true">
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle simulation
-          </Link>
-        </Button>
-      </div>
+      <DashboardHeader
+        title="Mes simulations"
+        description="Retrouvez et gérez toutes vos simulations fiscales."
+      />
 
       {/* Year filter tabs */}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
@@ -469,54 +463,50 @@ export default function SimulationsPage() {
                     Voir résultats
                     <ArrowRight className="ml-2 h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRenameSimulation(sim.id, sim.name)
-                    }}
-                  >
-                    <Edit3 className="mr-2 h-3.5 w-3.5" />
-                    Renommer
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      duplicateSimulation(sim.id)
-                    }}
-                  >
-                    <Copy className="mr-2 h-3.5 w-3.5" />
-                    Dupliquer
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Plus d'actions</span>
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est irréversible. La simulation sera définitivement supprimée.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteSimulation(sim.id)}>
-                          Supprimer
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRenameSimulation(sim.id, sim.name)
+                        }}
+                      >
+                        <Edit3 className="mr-2 h-4 w-4" />
+                        Renommer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          duplicateSimulation(sim.id)
+                        }}
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        Dupliquer
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteDialogId(sim.id)
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -553,6 +543,29 @@ export default function SimulationsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={!!deleteDialogId} onOpenChange={(open) => !open && setDeleteDialogId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. La simulation sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (deleteDialogId) {
+                deleteSimulation(deleteDialogId)
+                setDeleteDialogId(null)
+              }
+            }}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
