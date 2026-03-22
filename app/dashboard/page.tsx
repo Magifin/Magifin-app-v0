@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Clock,
   AlertCircle,
+  Plus,
   Zap,
 } from "lucide-react"
 import Link from "next/link"
@@ -149,6 +150,13 @@ export default function DashboardPage() {
             </Button>
             {latestSimulation && (
               <Button variant="outline" asChild>
+                <Link href={`/dashboard/simulations/${latestSimulation.id}`}>
+                  Voir détails
+                </Link>
+              </Button>
+            )}
+            {latestSimulation && (
+              <Button variant="outline" asChild>
                 <Link href={`/results?simulationId=${latestSimulation.id}`}>
                   Voir résultats
                 </Link>
@@ -166,6 +174,12 @@ export default function DashboardPage() {
             Actions rapides
           </h2>
           <div className="flex flex-col gap-2">
+            <Button asChild className="w-full">
+              <Link href="/wizard?new=true">
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle simulation
+              </Link>
+            </Button>
             <Button variant="outline" asChild className="w-full">
               <Link href="/dashboard/simulations">
                 <FileText className="mr-2 h-4 w-4" />
