@@ -10,6 +10,7 @@ import {
   FileText,
   Trash2,
   Copy,
+  Edit3,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -125,6 +126,31 @@ export default function SimulationDetailPage({
     } catch (error) {
       console.error("Error duplicating simulation:", error)
       setIsDuplicating(false)
+    }
+  }
+
+  const renameSimulation = async (newName: string) => {
+    if (!newName.trim()) return
+
+    try {
+      const res = await fetch(`/api/simulations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      })
+
+      if (res.ok) {
+        setSimulation((prev) => prev ? { ...prev, name: newName.trim() } : null)
+      }
+    } catch (error) {
+      console.error("Error renaming simulation:", error)
+    }
+  }
+
+  const handleRenameSimulation = () => {
+    const newName = prompt("Nouveau nom de la simulation:", simulation?.name || "")
+    if (newName !== null && newName !== simulation?.name) {
+      renameSimulation(newName)
     }
   }
 
@@ -460,6 +486,10 @@ export default function SimulationDetailPage({
             <ArrowLeft className="mr-2 h-4 w-4 rotate-180" />
             Voir optimisation
           </Link>
+        </Button>
+        <Button variant="outline" onClick={handleRenameSimulation}>
+          <Edit3 className="mr-2 h-4 w-4" />
+          Renommer
         </Button>
         <Button
           variant="outline"
