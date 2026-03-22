@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 export default function ProfilPage() {
   const router = useRouter()
@@ -101,14 +102,10 @@ export default function ProfilPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-          Profil
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {"Gérez vos informations personnelles."}
-        </p>
-      </div>
+      <DashboardHeader
+        title="Profil"
+        description="Gérez vos informations personnelles."
+      />
 
       <div className="max-w-lg rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-4">

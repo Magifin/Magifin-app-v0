@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Send, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 interface Message {
   role: "user" | "assistant"
@@ -44,14 +45,10 @@ export default function AssistantPage() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col lg:h-[calc(100vh-4rem)]">
-      <div className="mb-6">
-        <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-          Assistant IA
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {"Posez vos questions fiscales à Magi."}
-        </p>
-      </div>
+      <DashboardHeader
+        title="Assistant IA"
+        description="Posez vos questions fiscales à Magi."
+      />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-sm">

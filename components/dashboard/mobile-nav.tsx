@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AccountDropdown } from "@/components/account-dropdown"
 import {
@@ -29,8 +31,8 @@ export function DashboardMobileNav() {
 
   return (
     <div className="border-b border-border/50 lg:hidden">
-      {/* Header with logo and account menu */}
-      <div className="flex items-center justify-between px-4 py-3">
+      {/* Header with logo, CTA, and account menu */}
+      <div className="flex items-center justify-between px-4 py-3 gap-2">
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
             <span className="text-xs font-bold text-primary-foreground">M</span>
@@ -39,7 +41,14 @@ export function DashboardMobileNav() {
             Magifin
           </span>
         </Link>
-        <AccountDropdown />
+        <div className="flex items-center gap-2">
+          <Button asChild size="sm" className="hidden sm:flex">
+            <Link href="/wizard?new=true">
+              <Plus className="h-4 w-4" />
+            </Link>
+          </Button>
+          <AccountDropdown />
+        </div>
       </div>
 
       {/* Nav tabs */}

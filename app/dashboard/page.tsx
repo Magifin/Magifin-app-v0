@@ -18,6 +18,7 @@ import { useOptimizations } from "@/lib/useOptimizations"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import type { Simulation } from "@/lib/supabase/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
+import { DashboardHeader } from "@/components/dashboard/header"
 
 const checklistItems = [
   { label: "Compléter le questionnaire fiscal", done: true },
@@ -112,22 +113,10 @@ export default function DashboardPage() {
     <div>
       <UnsavedSimulationBanner />
 
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-bold text-foreground sm:text-3xl">
-            {greeting}
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            {"Voici un aperçu de votre optimisation fiscale."}
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/wizard?new=true">
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle simulation
-          </Link>
-        </Button>
-      </div>
+      <DashboardHeader
+        title={greeting}
+        description="Voici un aperçu de votre optimisation fiscale."
+      />
 
       {/* Estimated gain card */}
       <div className="mb-8 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
@@ -169,7 +158,7 @@ export default function DashboardPage() {
             {latestSimulation && (
               <Button variant="outline" asChild>
                 <Link href={`/results?simulationId=${latestSimulation.id}`}>
-                  Voir les résultats
+                  Voir résultats
                 </Link>
               </Button>
             )}
