@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { computeBelgiumTax } from "@/lib/fiscal/belgium/computeBelgiumTax"
-import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
 import type { SimulationInsert } from "@/lib/supabase/types"
 
 export async function POST(request: NextRequest) {
@@ -68,23 +66,11 @@ export async function POST(request: NextRequest) {
       updatePayload.name = body.name
     }
 
-    // Resolve tax_result: use provided value, or compute directly from wizard_answers
+    // Use provided tax_result as-is (no server-side fallback compute)
     if (body.tax_result !== null && body.tax_result !== undefined) {
-      // Caller (results page) provided a real value — use it directly
       updatePayload.tax_result = body.tax_result as any
-    } else {
-      // Wizard sends null (no client-side compute) — compute server-side
-      try {
-        const taxInput = mapAnswersToTaxInput(body.wizard_answers as any)
-        if (taxInput) {
-          updatePayload.tax_result = computeBelgiumTax(taxInput)
-        }
-        // If taxInput is null (unsupported scenario): fall through, existing DB value preserved
-      } catch (error) {
-        // Computation failed: fall through, existing DB value preserved
-        console.error("Error computing tax_result:", error)
-      }
     }
+    // If tax_result is null/undefined: don't include in payload, preserve DB value
 
     const { data: updateData, error: updateError } = await supabase
       .from("simulations")

@@ -1,7 +1,7 @@
 "use client"
 
 // Cache invalidation: TrendingUp icon fix
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
@@ -27,6 +27,7 @@ import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
+import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
 import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
 import { cn } from "@/lib/utils"
@@ -39,7 +40,7 @@ export function ResultsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const simulationId = searchParams.get("simulationId")
-  const { state, markAsSaved } = useWizard()
+  const { state, markAsSaved, setEditingSimulationId } = useWizard()
   const { answers, completedStepIds, editingSimulationId } = state
   const { user: authUser, isLoading: authLoading } = useAuth()
   const [savedSuccess, setSavedSuccess] = useState(false)
@@ -105,6 +106,62 @@ export function ResultsContent() {
     
     return () => clearTimeout(timeout)
   }, [authLoading, authUser])
+
+  // AUTOSAVE: Results page is source of truth for persisted tax_result
+  // Support both CREATE (new simulations) and UPDATE (existing simulations)
+  const autosaveInProgressRef = useRef(false)
+  const hasCreatedRef = useRef(false)
+
+  useEffect(() => {
+    // Skip if viewing a saved simulation directly (read-only URL param)
+    if (simulationId) return
+    // Skip if prerequisites not met
+    if (!taxResult || !authUser || authLoading || !answers.taxYear) return
+    // Skip if we already created a new simulation this session
+    if (!editingSimulationId && hasCreatedRef.current) return
+    // Skip if a save is already in progress
+    if (autosaveInProgressRef.current) return
+
+    autosaveInProgressRef.current = true
+
+    // Mark create intent before async fetch to prevent double CREATE
+    if (!editingSimulationId) {
+      hasCreatedRef.current = true
+    }
+
+    fetch("/api/simulations/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        simulation_id: editingSimulationId ?? null,
+        tax_year: answers.taxYear,
+        // For new simulations: create a default name
+        // For updates: preserve existing name
+        name: editingSimulationId
+          ? null
+          : generateDefaultSimulationName(answers.taxYear ?? undefined),
+        wizard_answers: answers,
+        tax_result: taxResult,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.simulation?.id) {
+          if (!editingSimulationId) {
+            // New simulation created — store ID so next autosaves use UPDATE
+            setEditingSimulationId(data.simulation.id)
+            if (typeof window !== "undefined") {
+              localStorage.setItem("magifin_last_viewed_simulation_id", data.simulation.id)
+            }
+          }
+          markAsSaved()
+        }
+      })
+      .catch((err) => console.error("[autosave] Failed:", err))
+      .finally(() => {
+        autosaveInProgressRef.current = false
+      })
+  }, [simulationId, editingSimulationId, taxResult, authUser, authLoading, answers, markAsSaved, setEditingSimulationId])
 
   useEffect(() => {
     // Compute effective answers (from saved simulation or current session)

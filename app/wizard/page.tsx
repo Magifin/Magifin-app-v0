@@ -35,6 +35,8 @@ import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import { useUser } from "@/lib/user-store"
 import { useAuth } from "@/lib/auth-context"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
+import { computeBelgiumTax } from "@/lib/fiscal/belgium/computeBelgiumTax"
 import { track } from "@/lib/track"
 
 function WizardContent() {
@@ -365,7 +367,11 @@ function WizardContent() {
             {editingSimulationId && authUser && !authLoading && (
               <SaveSimulationDialog
                 wizardAnswers={answers}
-                taxResult={null}
+                taxResult={(() => {
+                  // Compute tax_result before saving
+                  const taxInput = mapAnswersToTaxInput(answers)
+                  return taxInput ? computeBelgiumTax(taxInput) : null
+                })()}
                 editingSimulationId={editingSimulationId}
                 onSaved={markAsSaved}
                 trigger={
