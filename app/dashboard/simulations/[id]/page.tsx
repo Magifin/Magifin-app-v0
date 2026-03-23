@@ -309,17 +309,11 @@ export default function SimulationDetailPage({
         </div>
 
         {/* Tax breakdown */}
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
           <div>
             <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
             <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
               {formatMoney(tax_result.taxableIncome)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-              -{formatMoney(tax_result.deductionsApplied)}
             </dd>
           </div>
           <div>
