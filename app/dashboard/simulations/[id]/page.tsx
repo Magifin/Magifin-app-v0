@@ -11,7 +11,6 @@ import {
   Trash2,
   Copy,
   Edit3,
-  MoreHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,13 +31,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import type { Simulation } from "@/lib/supabase/types"
@@ -257,44 +249,6 @@ export default function SimulationDetailPage({
       <DashboardHeader
         title={simulation.name}
         description={`Créée le ${formatDate(simulation.created_at)} - ${formatDeclarationYear(simulation.tax_year - 1)}`}
-        actions={
-          <>
-            <Button variant="outline" asChild>
-              <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation.wizard_answers))}&simulationId=${id}`}>
-                <Calculator className="mr-2 h-4 w-4" />
-                Modifier
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href={`/results?simulationId=${id}`}>
-                Voir résultats
-              </Link>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Plus d'actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleRenameSimulation}>
-                  <Edit3 className="mr-2 h-4 w-4" />
-                  Renommer
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  {isDuplicating ? "Duplication..." : "Dupliquer"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        }
       />
 
       {/* Tax Result Card */}
@@ -308,80 +262,79 @@ export default function SimulationDetailPage({
           </h2>
         </div>
 
-        {/* Tax breakdown */}
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-          <div>
-            <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-              {formatMoney(tax_result.taxableIncome)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Ajustements fiscaux automatiques</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
-              -{formatMoney(tax_result.deductionsApplied)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{"Impôt estimé"}</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-              {formatMoney(tax_result.estimatedTax)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Taux effectif</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-              {(tax_result.effectiveTaxRate * 100).toFixed(1)}%
-            </dd>
-          </div>
-        </dl>
+        {/* Fiscal summary - 2 rows */}
+        <div className="space-y-6">
+          {/* Row 1: Main metrics */}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            <div>
+              <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {formatMoney(tax_result.taxableIncome)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Optimisations appliquées</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+                −{formatMoney(tax_result.appliedOptimizations.total)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {formatMoney(tax_result.estimatedTax)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Taux effectif</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {(tax_result.effectiveTaxRate * 100).toFixed(1)}%
+              </dd>
+            </div>
+          </dl>
 
-        {/* Withholding and balance summary */}
-        {(tax_result.taxesAlreadyPaid > 0 || tax_result.refundOrBalance !== 0) && (
-          <div className="mt-6 border-t border-border pt-6">
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-lg bg-muted/30 p-4">
-                <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
-                <dd className="font-[family-name:var(--font-heading)] text-xl font-semibold text-card-foreground">
-                  {formatMoney(tax_result.taxesAlreadyPaid)}
-                </dd>
-              </div>
-              <div
+          {/* Row 2: Withholding and balance */}
+          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-lg bg-muted/30 p-4">
+              <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
+              <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {formatMoney(tax_result.taxesAlreadyPaid)}
+              </dd>
+            </div>
+            <div
+              className={cn(
+                "rounded-lg p-4",
+                tax_result.refundOrBalance >= 0
+                  ? "bg-accent/10"
+                  : "bg-destructive/10"
+              )}
+            >
+              <dt
                 className={cn(
-                  "rounded-lg p-4",
+                  "text-xs mb-1",
                   tax_result.refundOrBalance >= 0
-                    ? "bg-accent/10"
-                    : "bg-destructive/10"
+                    ? "text-accent"
+                    : "text-destructive"
                 )}
               >
-                <dt
-                  className={cn(
-                    "text-xs mb-1",
-                    tax_result.refundOrBalance >= 0
-                      ? "text-accent"
-                      : "text-destructive"
-                  )}
-                >
-                  {tax_result.refundOrBalance >= 0
-                    ? "Remboursement estimé"
-                    : "Montant encore dû"}
-                </dt>
-                <dd
-                  className={cn(
-                    "font-[family-name:var(--font-heading)] text-xl font-semibold",
-                    tax_result.refundOrBalance >= 0
-                      ? "text-accent"
-                      : "text-destructive"
-                  )}
-                >
-                  {tax_result.refundOrBalance >= 0
-                    ? formatMoney(tax_result.refundOrBalance)
-                    : "−" + formatMoney(Math.abs(tax_result.refundOrBalance))}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
+                {tax_result.refundOrBalance >= 0
+                  ? "Remboursement estimé"
+                  : "Montant encore dû"}
+              </dt>
+              <dd
+                className={cn(
+                  "font-[family-name:var(--font-heading)] text-lg font-semibold",
+                  tax_result.refundOrBalance >= 0
+                    ? "text-accent"
+                    : "text-destructive"
+                )}
+              >
+                {tax_result.refundOrBalance >= 0
+                  ? formatMoney(tax_result.refundOrBalance)
+                  : "−" + formatMoney(Math.abs(tax_result.refundOrBalance))}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </div>
 
       {/* Optimization Items from saved simulation */}
@@ -478,13 +431,53 @@ export default function SimulationDetailPage({
         </dl>
       </div>
 
-      {/* Navigation CTA */}
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/optimisation?simulationId=${id}`}>
-            Voir optimisation
-          </Link>
-        </Button>
+      {/* Navigation CTA and embedded action buttons */}
+      <div className="mt-8 border-t border-border pt-6">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-between">
+          {/* Group 1: Navigation actions */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <Button variant="outline" asChild>
+              <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation.wizard_answers))}&simulationId=${id}`}>
+                <Calculator className="mr-2 h-4 w-4" />
+                Modifier
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/results?simulationId=${id}`}>
+                Voir résultats
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/optimisation?simulationId=${id}`}>
+                Voir optimisation fiscale
+              </Link>
+            </Button>
+          </div>
+
+          {/* Spacer */}
+          <div className="w-full sm:w-auto" />
+
+          {/* Group 2: Management actions */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+            <Button variant="outline" onClick={handleRenameSimulation}>
+              <Edit3 className="mr-2 h-4 w-4" />
+              Renommer
+            </Button>
+            <Button variant="outline" onClick={handleDuplicate} disabled={isDuplicating}>
+              <Copy className="mr-2 h-4 w-4" />
+              {isDuplicating ? "Duplication..." : "Dupliquer"}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 text-destructive hover:bg-destructive/10"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Supprimer</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Rename Dialog */}

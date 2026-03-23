@@ -149,25 +149,6 @@ function OptimisationContent() {
         description={currentSimulation
           ? `Détail de vos déductions (simulation du ${new Date(currentSimulation.created_at).toLocaleDateString("fr-BE")})`
           : "Détail de vos déductions et réductions identifiées."}
-        actions={
-          <>
-            {showDetailCtas && (
-              <Button variant="outline" asChild>
-                <Link href={currentSimulation ? `/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}` : "/wizard?new=true"}>
-                  <Calculator className="mr-2 h-4 w-4" />
-                  Modifier
-                </Link>
-              </Button>
-            )}
-            {showDetailCtas && currentSimulation && (
-              <Button variant="outline" asChild>
-                <Link href={`/results?simulationId=${currentSimulation.id}`}>
-                  Voir résultats
-                </Link>
-              </Button>
-            )}
-          </>
-        }
       />
 
       <div>
