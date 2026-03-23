@@ -11,7 +11,6 @@ import {
   Trash2,
   Copy,
   Edit3,
-  MoreHorizontal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,13 +31,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import type { Simulation } from "@/lib/supabase/types"
@@ -257,44 +249,6 @@ export default function SimulationDetailPage({
       <DashboardHeader
         title={simulation.name}
         description={`Créée le ${formatDate(simulation.created_at)} - ${formatDeclarationYear(simulation.tax_year - 1)}`}
-        actions={
-          <>
-            <Button variant="outline" asChild>
-              <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation.wizard_answers))}&simulationId=${id}`}>
-                <Calculator className="mr-2 h-4 w-4" />
-                Modifier
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href={`/results?simulationId=${id}`}>
-                Voir résultats
-              </Link>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Plus d'actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleRenameSimulation}>
-                  <Edit3 className="mr-2 h-4 w-4" />
-                  Renommer
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  {isDuplicating ? "Duplication..." : "Dupliquer"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        }
       />
 
       {/* Tax Result Card */}
@@ -477,13 +431,53 @@ export default function SimulationDetailPage({
         </dl>
       </div>
 
-      {/* Navigation CTA */}
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/optimisation?simulationId=${id}`}>
-            Voir optimisation
-          </Link>
-        </Button>
+      {/* Navigation CTA and embedded action buttons */}
+      <div className="mt-8 border-t border-border pt-6">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-between">
+          {/* Group 1: Navigation actions */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <Button variant="outline" asChild>
+              <Link href={`/wizard?resume=${btoa(JSON.stringify(simulation.wizard_answers))}&simulationId=${id}`}>
+                <Calculator className="mr-2 h-4 w-4" />
+                Modifier
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/results?simulationId=${id}`}>
+                Voir résultats
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/optimisation?simulationId=${id}`}>
+                Voir optimisation fiscale
+              </Link>
+            </Button>
+          </div>
+
+          {/* Spacer */}
+          <div className="w-full sm:w-auto" />
+
+          {/* Group 2: Management actions */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+            <Button variant="outline" onClick={handleRenameSimulation}>
+              <Edit3 className="mr-2 h-4 w-4" />
+              Renommer
+            </Button>
+            <Button variant="outline" onClick={handleDuplicate} disabled={isDuplicating}>
+              <Copy className="mr-2 h-4 w-4" />
+              {isDuplicating ? "Duplication..." : "Dupliquer"}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 text-destructive hover:bg-destructive/10"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Supprimer</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Rename Dialog */}

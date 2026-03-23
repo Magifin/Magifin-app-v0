@@ -3,26 +3,8 @@
 import Link from "next/link"
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Calculator, CheckCircle2, AlertCircle, ArrowLeft, Edit3, Copy, Trash2 } from "lucide-react"
+import { Calculator, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { useOptimizations } from "@/lib/useOptimizations"
 import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
 import { buildUnifiedOptimizationItems } from "@/lib/buildUnifiedOptimizationItems"
@@ -42,10 +24,6 @@ function OptimisationContent() {
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
   const [liveAppliedOptimizations, setLiveAppliedOptimizations] = useState<AppliedOptimizations | null>(null)
   const [isComputingTax, setIsComputingTax] = useState(false)
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
-  const [renameValue, setRenameValue] = useState("")
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [isDuplicating, setIsDuplicating] = useState(false)
 
   // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
@@ -154,82 +132,6 @@ function OptimisationContent() {
 
   // PATCH 5: Determine effective simulation ID for back link
   const effectiveSimulationId = simulationId ?? currentSimulation?.id
-
-  // Rename handler
-  const handleRenameSimulation = () => {
-    setRenameValue(currentSimulation?.name || "")
-    setRenameDialogOpen(true)
-  }
-
-  const confirmRename = async () => {
-    if (!renameValue.trim() || renameValue === currentSimulation?.name) {
-      setRenameDialogOpen(false)
-      return
-    }
-
-    if (!currentSimulation) return
-
-    try {
-      const res = await fetch(`/api/simulations/${currentSimulation.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: renameValue.trim() }),
-      })
-
-      if (res.ok) {
-        setCurrentSimulation((prev) => prev ? { ...prev, name: renameValue.trim() } : null)
-      }
-    } catch (error) {
-      console.error("Error renaming simulation:", error)
-    }
-
-    setRenameDialogOpen(false)
-    setRenameValue("")
-  }
-
-  // Duplicate handler
-  const handleDuplicate = async () => {
-    if (!currentSimulation) return
-
-    setIsDuplicating(true)
-    try {
-      const res = await fetch("/api/simulations/duplicate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ simulationId: currentSimulation.id }),
-      })
-
-      if (!res.ok) {
-        console.error("Failed to duplicate simulation")
-        setIsDuplicating(false)
-        return
-      }
-
-      const data = await res.json()
-      const duplicatedId = data.simulation?.id
-
-      if (duplicatedId) {
-        window.location.href = `/dashboard/optimisation?simulationId=${duplicatedId}`
-      }
-    } catch (error) {
-      console.error("Error duplicating simulation:", error)
-      setIsDuplicating(false)
-    }
-  }
-
-  // Delete handler
-  const handleDelete = async () => {
-    if (!currentSimulation) return
-
-    try {
-      const res = await fetch(`/api/simulations/${currentSimulation.id}`, { method: "DELETE" })
-      if (res.ok) {
-        window.location.href = "/dashboard/simulations"
-      }
-    } catch (error) {
-      console.error("Error deleting simulation:", error)
-    }
-  }
 
   return (
     <div>
@@ -372,113 +274,9 @@ function OptimisationContent() {
               </Button>
             </div>
           )}
-
-          {/* Bottom action bar - only when simulation exists */}
-          {currentSimulation && (
-            <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/80 backdrop-blur-sm">
-              <div className="mx-auto max-w-6xl px-6 py-4">
-                <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
-                  {/* Group 1: Navigation actions */}
-                  <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/wizard?resume=${btoa(JSON.stringify(currentSimulation.wizard_answers))}&simulationId=${currentSimulation.id}`}>
-                        <Calculator className="mr-2 h-3.5 w-3.5" />
-                        Modifier
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/results?simulationId=${currentSimulation.id}`}>
-                        Voir résultats
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/simulations/${currentSimulation.id}`}>
-                        Voir optimisation fiscale
-                      </Link>
-                    </Button>
-                  </div>
-
-                  {/* Spacer */}
-                  <div className="w-full sm:w-auto" />
-
-                  {/* Group 2: Management actions */}
-                  <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
-                    <Button variant="outline" size="sm" onClick={handleRenameSimulation}>
-                      <Edit3 className="mr-2 h-3.5 w-3.5" />
-                      Renommer
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleDuplicate} disabled={isDuplicating}>
-                      <Copy className="mr-2 h-3.5 w-3.5" />
-                      {isDuplicating ? "Duplication..." : "Dupliquer"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteDialogOpen(true)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Supprimer</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Add padding at bottom to prevent content from being hidden behind the action bar */}
-          {currentSimulation && <div className="h-28" />}
         </>
       )}
       </div>
-
-      {/* Rename Dialog */}
-      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Renommer la simulation</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input
-              placeholder="Nouveau nom de la simulation"
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  confirmRename()
-                }
-              }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={confirmRename}>
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette simulation ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. La simulation sera définitivement supprimée.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
