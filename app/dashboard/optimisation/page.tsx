@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { Calculator, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useOptimizations } from "@/lib/useOptimizations"
-import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { computeOptimizationsFromAnswers, ensureModernOptimizationResult } from "@/lib/computeOptimizationsFromAnswers"
 import { buildUnifiedOptimizationItems } from "@/lib/buildUnifiedOptimizationItems"
 import { formatMoneyRange } from "@/lib/formatMoney"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mappers/wizardToTaxInput"
@@ -112,7 +112,7 @@ function OptimisationContent() {
 
   // Build display results: prefer persisted optimisations from DB, fallback to recompute for unsaved data
   const displayResults = currentSimulation?.optimisations 
-    ? currentSimulation.optimisations
+    ? ensureModernOptimizationResult(currentSimulation.optimisations)
     : currentSimulation?.wizard_answers
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
     : results
@@ -120,7 +120,7 @@ function OptimisationContent() {
   // Build unified optimization items (engine + heuristic)
   const unifiedItems = buildUnifiedOptimizationItems(
     liveAppliedOptimizations ?? currentSimulation?.tax_result?.appliedOptimizations ?? null,
-    displayResults.items
+    displayResults
   )
 
   // Calculate totals from unified items

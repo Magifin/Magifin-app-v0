@@ -1,5 +1,5 @@
 import type { AppliedOptimizations } from "@/lib/fiscal/belgium/types"
-import type { OptimizationItem } from "@/lib/computeOptimizationsFromAnswers"
+import type { OptimizationResult } from "@/lib/computeOptimizationsFromAnswers"
 
 export interface UnifiedOptimizationItem {
   key: string
@@ -13,13 +13,13 @@ export interface UnifiedOptimizationItem {
 /**
  * Build a unified list of optimization items combining:
  * - engine-based applied optimizations (Confirmé badge)
- * - heuristic items with available === true and precision !== "advisory" (Confirmé/Estimé badge)
+ * - heuristic items from the new structured model with status="potential" (Estimé badge)
  *
  * Engine items are listed first, then heuristic items.
  */
 export function buildUnifiedOptimizationItems(
   appliedOptimizations: AppliedOptimizations | null | undefined,
-  heuristicItems: OptimizationItem[]
+  optimizationResult: OptimizationResult
 ): UnifiedOptimizationItem[] {
   const unified: UnifiedOptimizationItem[] = []
 
@@ -59,19 +59,16 @@ export function buildUnifiedOptimizationItems(
     }
   }
 
-  // SECTION 2: Heuristic items (available only, exclude advisory)
-  // All heuristic items show "Estimé" badge (never "Confirmé")
-  for (const item of heuristicItems) {
-    if (item.available && item.precision !== "advisory") {
-      unified.push({
-        key: item.key,
-        title: item.title,
-        amountMin: item.amountMin,
-        amountMax: item.amountMax,
-        reason: item.reason,
-        badge: "Estimé",
-      })
-    }
+  // SECTION 2: Heuristic items with status="potential" (show "Estimé" badge)
+  for (const item of optimizationResult.optimisations.potential) {
+    unified.push({
+      key: item.id,
+      title: item.label,
+      amountMin: item.amountMin ?? 0,
+      amountMax: item.amountMax ?? 0,
+      reason: item.reason,
+      badge: "Estimé",
+    })
   }
 
   return unified

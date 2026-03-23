@@ -9,7 +9,62 @@ export type OptimizationCategory =
   | "housing"
   | "other"
 
+export type OptimizationStatus = "applied" | "potential" | "incomplete" | "ineligible"
+
+/**
+ * Structured optimization item supporting the new 4-bucket model.
+ * Each item can belong to exactly one of: applied, potential, incomplete, or ineligible.
+ */
 export interface OptimizationItem {
+  id: string
+  category: OptimizationCategory
+  label: string
+  status: OptimizationStatus
+  confidence: OptimizationPrecision
+  amount?: number
+  amountMin?: number
+  amountMax?: number
+  reason: string
+  missingFields?: string[]
+}
+
+/**
+ * New structured optimization result with 4 semantic buckets.
+ * 
+ * Bucket semantics:
+ * - applied: Engine-calculated credits (children, pension, service vouchers)
+ * - potential: Heuristic deductions user qualifies for
+ * - incomplete: RESERVED - items user could qualify for but missing input data (not populated yet)
+ * - ineligible: Items user doesn't qualify for or advisory-only suggestions
+ * 
+ * Note: `applied` bucket is populated by buildUnifiedOptimizationItems() using AppliedOptimizations
+ * from the tax engine, not by computeOptimizationsFromAnswers().
+ */
+export interface OptimizationResult {
+  optimisations: {
+    /** Engine-based credits (populated via buildUnifiedOptimizationItems) */
+    applied: OptimizationItem[]
+    /** Heuristic deductions user qualifies for */
+    potential: OptimizationItem[]
+    /** RESERVED: Items with potential but missing user input (not populated in v1) */
+    incomplete: OptimizationItem[]
+    /** Items user doesn't qualify for or advisory-only */
+    ineligible: OptimizationItem[]
+    totals: {
+      applied: number
+      potentialMin: number
+      potentialMax: number
+    }
+  }
+  notes: string[]
+  isFullySupported: boolean
+}
+
+/**
+ * Legacy optimization result for backward compatibility with older saved simulations.
+ * @deprecated Use OptimizationResult.optimisations instead
+ */
+export interface LegacyOptimizationItem {
   key: string
   title: string
   category: OptimizationCategory
@@ -20,28 +75,28 @@ export interface OptimizationItem {
   reason: string
 }
 
-export interface OptimizationResult {
+export interface LegacyOptimizationResult {
   totalMin: number
   totalMax: number
-  items: OptimizationItem[]
+  items: LegacyOptimizationItem[]
   notes: string[]
   isFullySupported: boolean
 }
 
 /**
- * Magifin Fiscal Engine v1
+ * Magifin Fiscal Engine v2
  *
+ * Structured optimization model with 4 buckets: applied, potential, incomplete, ineligible.
+ * 
  * Tiered precision model:
  * - LEVEL 1 (confirmed): Fully supported fiscal logic for Wallonie + Salarié + Propriétaire avec prêt
  * - LEVEL 2 (estimated): Realistic heuristics for common deductions
  * - LEVEL 3 (advisory): Non-fiscal monetisation opportunities
- *
- * Totals = sum of items where available === true AND precision !== "advisory"
  */
 export function computeOptimizationsFromAnswers(
   answers: WizardAnswers
 ): OptimizationResult {
-  const items: OptimizationItem[] = []
+  const legacyItems: LegacyOptimizationItem[] = []
   const notes: string[] = []
   let isFullySupported = true
 
@@ -87,7 +142,7 @@ export function computeOptimizationsFromAnswers(
       const amountMin = Math.round(base * 0.25)
       const amountMax = Math.round(base * 0.40)
 
-      items.push({
+      legacyItems.push({
         key: "mortgage_deduction",
         title: "Déduction liée au prêt hypothécaire",
         category: "mortgage",
@@ -104,7 +159,7 @@ export function computeOptimizationsFromAnswers(
   if (answers.pensionSaving === "Non") {
     // Advisory only: user has no pension saving — amounts are speculative
     // available: false → excluded from availableItems UI filter and fiscal totals
-    items.push({
+    legacyItems.push({
       key: "pension_suggestion",
       title: "Potentiel épargne pension",
       category: "pension",
@@ -129,7 +184,7 @@ export function computeOptimizationsFromAnswers(
     const amountMin = Math.round(premium * 0.20)
     const amountMax = Math.round(premium * 0.30)
 
-    items.push({
+    legacyItems.push({
       key: "srd_insurance",
       title: "Assurance solde restant dû",
       category: "insurance",
@@ -157,7 +212,7 @@ export function computeOptimizationsFromAnswers(
       amountMax = Math.round(deduction)
     }
 
-    items.push({
+    legacyItems.push({
       key: "childcare",
       title: "Frais de garde d'enfants",
       category: "family",
@@ -190,7 +245,7 @@ export function computeOptimizationsFromAnswers(
     const amountMax = Math.round(exemption)
 
     if (amountMax > 0) {
-      items.push({
+      legacyItems.push({
         key: "cadastral_income",
         title: "Exonération revenu cadastral",
         category: "housing",
@@ -212,7 +267,7 @@ export function computeOptimizationsFromAnswers(
     answers.mortgageInsuranceYesNo === "Oui" &&
     answers.mortgageInsuranceCategory === "other"
   ) {
-    items.push({
+    legacyItems.push({
       key: "other_insurance_advisory",
       title: "Optimisation assurance habitation",
       category: "insurance",
@@ -235,24 +290,182 @@ export function computeOptimizationsFromAnswers(
     )
   }
 
-  // === TOTALS COMPUTATION ===
-  // Sum only items where available === true AND precision !== "advisory"
-  const fiscalItems = items.filter(
-    (item) => item.available && item.precision !== "advisory"
-  )
+  // === CONVERT LEGACY ITEMS TO NEW STRUCTURED MODEL ===
+  // 
+  // Bucket semantics:
+  // - applied: Engine-based credits (populated by buildUnifiedOptimizationItems, not here)
+  // - potential: Heuristic deductions where user qualifies (available=true, precision!="advisory")
+  // - incomplete: RESERVED - for future use when user has potential but missing input fields
+  // - ineligible: Items user doesn't qualify for or advisory-only suggestions
+  //
+  const applied: OptimizationItem[] = []
+  const potential: OptimizationItem[] = []
+  const incomplete: OptimizationItem[] = [] // Reserved for future use - not populated in this version
+  const ineligible: OptimizationItem[] = []
 
-  let totalMin = fiscalItems.reduce((sum, item) => sum + item.amountMin, 0)
-  let totalMax = fiscalItems.reduce((sum, item) => sum + item.amountMax, 0)
+  for (const item of legacyItems) {
+    const baseItem: OptimizationItem = {
+      id: item.key,
+      category: item.category,
+      label: item.title,
+      confidence: item.precision,
+      reason: item.reason,
+    }
 
-  // Round totals once
-  totalMin = Math.round(totalMin)
-  totalMax = Math.round(totalMax)
+    // Classify into buckets based on availability and precision
+    if (item.precision === "advisory" || !item.available) {
+      // Advisory or not available → ineligible
+      ineligible.push({
+        ...baseItem,
+        status: "ineligible",
+        amountMin: item.amountMin,
+        amountMax: item.amountMax,
+      })
+    } else if (item.available && item.precision !== "advisory") {
+      // Available and not advisory → potential (will be used to compute totals)
+      potential.push({
+        ...baseItem,
+        status: "potential",
+        amountMin: item.amountMin,
+        amountMax: item.amountMax,
+      })
+    }
+  }
+
+  // === COMPUTE TOTALS ===
+  // Applied = 0 here (engine credits are added separately via buildUnifiedOptimizationItems)
+  // Potential = sum of available, non-advisory heuristic items
+  let potentialMin = 0
+  let potentialMax = 0
+
+  for (const item of potential) {
+    potentialMin += item.amountMin ?? 0
+    potentialMax += item.amountMax ?? 0
+  }
+
+  potentialMin = Math.round(potentialMin)
+  potentialMax = Math.round(potentialMax)
 
   return {
-    totalMin,
-    totalMax,
-    items,
+    optimisations: {
+      applied,
+      potential,
+      incomplete,
+      ineligible,
+      totals: {
+        applied: 0,
+        potentialMin,
+        potentialMax,
+      },
+    },
     notes,
     isFullySupported,
+  }
+}
+
+/**
+ * STEP 5: Backward compatibility helper
+ * 
+ * Converts old flat OptimizationResult format to new structured format.
+ * Used when reading old saved simulations from database.
+ */
+export function convertLegacyOptimizationResult(
+  legacy: LegacyOptimizationResult
+): OptimizationResult {
+  const applied: OptimizationItem[] = []
+  const potential: OptimizationItem[] = []
+  const incomplete: OptimizationItem[] = []
+  const ineligible: OptimizationItem[] = []
+
+  // Classify legacy items into new buckets
+  for (const item of legacy.items) {
+    const baseItem: OptimizationItem = {
+      id: item.key,
+      category: item.category,
+      label: item.title,
+      confidence: item.precision,
+      reason: item.reason,
+    }
+
+    if (item.precision === "advisory" || !item.available) {
+      ineligible.push({
+        ...baseItem,
+        status: "ineligible",
+        amountMin: item.amountMin,
+        amountMax: item.amountMax,
+      })
+    } else if (item.available && item.precision !== "advisory") {
+      potential.push({
+        ...baseItem,
+        status: "potential",
+        amountMin: item.amountMin,
+        amountMax: item.amountMax,
+      })
+    }
+  }
+
+  return {
+    optimisations: {
+      applied,
+      potential,
+      incomplete,
+      ineligible,
+      totals: {
+        applied: 0,
+        potentialMin: legacy.totalMin,
+        potentialMax: legacy.totalMax,
+      },
+    },
+    notes: legacy.notes,
+    isFullySupported: legacy.isFullySupported,
+  }
+}
+
+/**
+ * STEP 5: Safe read compatibility wrapper
+ * 
+ * When loading a saved simulation from the database, check if it's in old or new format.
+ * If old format, convert it. If already new format, return as-is.
+ */
+export function ensureModernOptimizationResult(
+  data: unknown
+): OptimizationResult {
+  if (!data) {
+    return {
+      optimisations: {
+        applied: [],
+        potential: [],
+        incomplete: [],
+        ineligible: [],
+        totals: { applied: 0, potentialMin: 0, potentialMax: 0 },
+      },
+      notes: [],
+      isFullySupported: true,
+    }
+  }
+
+  const obj = data as any
+
+  // Check if it's already in new format (has optimisations property)
+  if (obj.optimisations && typeof obj.optimisations === "object") {
+    return obj as OptimizationResult
+  }
+
+  // Check if it's old format (has items, totalMin, totalMax properties)
+  if (Array.isArray(obj.items) && typeof obj.totalMin === "number" && typeof obj.totalMax === "number") {
+    return convertLegacyOptimizationResult(obj as LegacyOptimizationResult)
+  }
+
+  // Fallback for unrecognized format
+  return {
+    optimisations: {
+      applied: [],
+      potential: [],
+      incomplete: [],
+      ineligible: [],
+      totals: { applied: 0, potentialMin: 0, potentialMax: 0 },
+    },
+    notes: [],
+    isFullySupported: true,
   }
 }
