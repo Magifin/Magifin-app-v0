@@ -110,8 +110,10 @@ function OptimisationContent() {
   // Determine what to show: latest saved simulation or wizard data
   const hasData = currentSimulation || hasWizardData
 
-  // Build display results from saved simulation wizard_answers OR current wizard session
-  const displayResults = currentSimulation?.wizard_answers
+  // Build display results: prefer persisted optimisations from DB, fallback to recompute for unsaved data
+  const displayResults = currentSimulation?.optimisations 
+    ? currentSimulation.optimisations
+    : currentSimulation?.wizard_answers
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
     : results
 
