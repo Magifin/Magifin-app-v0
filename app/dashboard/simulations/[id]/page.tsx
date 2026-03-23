@@ -308,74 +308,79 @@ export default function SimulationDetailPage({
           </h2>
         </div>
 
-        {/* Tax breakdown */}
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-          <div>
-            <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-              {formatMoney(tax_result.taxableIncome)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{"Impôt estimé"}</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-              {formatMoney(tax_result.estimatedTax)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Taux effectif</dt>
-            <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
-              {(tax_result.effectiveTaxRate * 100).toFixed(1)}%
-            </dd>
-          </div>
-        </dl>
+        {/* Fiscal summary - 2 rows */}
+        <div className="space-y-6">
+          {/* Row 1: Main metrics */}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            <div>
+              <dt className="text-xs text-muted-foreground">Revenu imposable</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {formatMoney(tax_result.taxableIncome)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Optimisations appliquées</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-accent">
+                −{formatMoney(tax_result.appliedOptimizations.total)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Impôt estimé</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {formatMoney(tax_result.estimatedTax)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Taux effectif</dt>
+              <dd className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {(tax_result.effectiveTaxRate * 100).toFixed(1)}%
+              </dd>
+            </div>
+          </dl>
 
-        {/* Withholding and balance summary */}
-        {(tax_result.taxesAlreadyPaid > 0 || tax_result.refundOrBalance !== 0) && (
-          <div className="mt-6 border-t border-border pt-6">
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-lg bg-muted/30 p-4">
-                <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
-                <dd className="font-[family-name:var(--font-heading)] text-xl font-semibold text-card-foreground">
-                  {formatMoney(tax_result.taxesAlreadyPaid)}
-                </dd>
-              </div>
-              <div
+          {/* Row 2: Withholding and balance */}
+          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-lg bg-muted/30 p-4">
+              <dt className="text-xs text-muted-foreground mb-1">Impôts déjà payés</dt>
+              <dd className="font-[family-name:var(--font-heading)] text-lg font-semibold text-card-foreground">
+                {formatMoney(tax_result.taxesAlreadyPaid)}
+              </dd>
+            </div>
+            <div
+              className={cn(
+                "rounded-lg p-4",
+                tax_result.refundOrBalance >= 0
+                  ? "bg-accent/10"
+                  : "bg-destructive/10"
+              )}
+            >
+              <dt
                 className={cn(
-                  "rounded-lg p-4",
+                  "text-xs mb-1",
                   tax_result.refundOrBalance >= 0
-                    ? "bg-accent/10"
-                    : "bg-destructive/10"
+                    ? "text-accent"
+                    : "text-destructive"
                 )}
               >
-                <dt
-                  className={cn(
-                    "text-xs mb-1",
-                    tax_result.refundOrBalance >= 0
-                      ? "text-accent"
-                      : "text-destructive"
-                  )}
-                >
-                  {tax_result.refundOrBalance >= 0
-                    ? "Remboursement estimé"
-                    : "Montant encore dû"}
-                </dt>
-                <dd
-                  className={cn(
-                    "font-[family-name:var(--font-heading)] text-xl font-semibold",
-                    tax_result.refundOrBalance >= 0
-                      ? "text-accent"
-                      : "text-destructive"
-                  )}
-                >
-                  {tax_result.refundOrBalance >= 0
-                    ? formatMoney(tax_result.refundOrBalance)
-                    : "−" + formatMoney(Math.abs(tax_result.refundOrBalance))}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
+                {tax_result.refundOrBalance >= 0
+                  ? "Remboursement estimé"
+                  : "Montant encore dû"}
+              </dt>
+              <dd
+                className={cn(
+                  "font-[family-name:var(--font-heading)] text-lg font-semibold",
+                  tax_result.refundOrBalance >= 0
+                    ? "text-accent"
+                    : "text-destructive"
+                )}
+              >
+                {tax_result.refundOrBalance >= 0
+                  ? formatMoney(tax_result.refundOrBalance)
+                  : "−" + formatMoney(Math.abs(tax_result.refundOrBalance))}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </div>
 
       {/* Optimization Items from saved simulation */}
