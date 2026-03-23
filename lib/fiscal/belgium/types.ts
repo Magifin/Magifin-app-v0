@@ -9,6 +9,39 @@ import type { BaseTaxInput, BaseTaxResult } from "@/lib/fiscal/core/types"
 import type { BelgiumRegion } from "./rules/brackets"
 
 /**
+ * Structured optimization item with status classification
+ */
+export type OptimizationStatus = "applied" | "potential" | "incomplete" | "ineligible"
+
+export interface StructuredOptimizationItem {
+  id: string
+  category: string
+  label: string
+  status: OptimizationStatus
+  confidence: "confirmed" | "estimated" | "advisory"
+  amount?: number
+  amountMin?: number
+  amountMax?: number
+  reason: string
+  missingFields?: string[]
+}
+
+/**
+ * New structured optimizations result with 4-bucket classification
+ */
+export interface StructuredOptimizationResult {
+  applied: StructuredOptimizationItem[]
+  potential: StructuredOptimizationItem[]
+  incomplete: StructuredOptimizationItem[]
+  ineligible: StructuredOptimizationItem[]
+  totals: {
+    applied: number
+    potentialMin: number
+    potentialMax: number
+  }
+}
+
+/**
  * Tax computation input for Belgium
  * 
  * @example

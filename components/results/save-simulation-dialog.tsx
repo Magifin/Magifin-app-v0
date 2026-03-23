@@ -17,6 +17,8 @@ import {
 import { getDefaultTaxYear } from "@/lib/fiscal/tax-year"
 import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
 import { useWizard } from "@/lib/wizard-store"
+import { computeOptimizationsFromAnswers } from "@/lib/computeOptimizationsFromAnswers"
+import { structureOptimizationItems } from "@/lib/structureOptimizationItems"
 import type { WizardAnswers } from "@/lib/wizard-store"
 import type { TaxResult } from "@/lib/fiscal/belgium/types"
 
@@ -65,6 +67,13 @@ export function SaveSimulationDialog({
     setIsSaving(true)
 
     try {
+      // Compute flat optimizations then structure them
+      const flatOptimizations = computeOptimizationsFromAnswers(wizardAnswers)
+      const structuredOptimizations = structureOptimizationItems(
+        flatOptimizations.items,
+        taxResult?.appliedOptimizations
+      )
+
       const response = await fetch("/api/simulations/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,6 +84,7 @@ export function SaveSimulationDialog({
           name: name.trim() || generateDefaultSimulationName(wizardAnswers.taxYear),
           wizard_answers: wizardAnswers,
           tax_result: taxResult,
+          optimisations: structuredOptimizations,
         }),
       })
 

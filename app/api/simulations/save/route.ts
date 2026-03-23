@@ -73,6 +73,11 @@ export async function POST(request: NextRequest) {
     }
     // If tax_result is null/undefined: don't include in payload, preserve DB value
 
+    // Include structured optimisations if provided
+    if (body.optimisations !== null && body.optimisations !== undefined) {
+      updatePayload.optimisations = body.optimisations as any
+    }
+
     const { data: updateData, error: updateError } = await supabase
       .from("simulations")
       .update(updatePayload)
