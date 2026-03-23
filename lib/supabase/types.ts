@@ -1,5 +1,5 @@
 import type { WizardAnswers } from "@/lib/wizard-store"
-import type { TaxResult } from "@/lib/fiscal/belgium/types"
+import type { TaxResult, OptimizationResult } from "@/lib/fiscal/belgium/types"
 
 /**
  * Database types for Supabase tables
@@ -22,6 +22,7 @@ export interface Simulation {
   description: string | null
   wizard_answers: WizardAnswers
   tax_result: TaxResult
+  optimisations: OptimizationResult | null
   created_at: string
   updated_at: string
 }
@@ -33,6 +34,7 @@ export interface SimulationInsert {
   description?: string | null
   wizard_answers: WizardAnswers
   tax_result: TaxResult
+  optimisations?: OptimizationResult | null
 }
 
 export interface SimulationUpdate {
@@ -40,6 +42,7 @@ export interface SimulationUpdate {
   description?: string | null
   wizard_answers?: WizardAnswers
   tax_result?: TaxResult
+  optimisations?: OptimizationResult | null
   updated_at?: string
 }
 

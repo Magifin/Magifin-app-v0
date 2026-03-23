@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     description?: string
     wizard_answers: unknown
     tax_result: unknown
+    optimisations?: unknown
   }
 
   try {
@@ -72,6 +73,11 @@ export async function POST(request: NextRequest) {
     }
     // If tax_result is null/undefined: don't include in payload, preserve DB value
 
+    // Include optimisations if provided
+    if (body.optimisations !== null && body.optimisations !== undefined) {
+      updatePayload.optimisations = body.optimisations as any
+    }
+
     const { data: updateData, error: updateError } = await supabase
       .from("simulations")
       .update(updatePayload)
@@ -98,6 +104,7 @@ export async function POST(request: NextRequest) {
       description: body.description || null,
       wizard_answers: body.wizard_answers as SimulationInsert["wizard_answers"],
       tax_result: body.tax_result as SimulationInsert["tax_result"],
+      optimisations: body.optimisations as SimulationInsert["optimisations"],
     }
 
     const { data: createData, error: createError } = await supabase
