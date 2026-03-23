@@ -29,14 +29,26 @@ export interface OptimizationItem {
 }
 
 /**
- * New structured optimization result with applied/potential/incomplete/ineligible buckets.
- * Maintains totals object for easy access to min/max values.
+ * New structured optimization result with 4 semantic buckets.
+ * 
+ * Bucket semantics:
+ * - applied: Engine-calculated credits (children, pension, service vouchers)
+ * - potential: Heuristic deductions user qualifies for
+ * - incomplete: RESERVED - items user could qualify for but missing input data (not populated yet)
+ * - ineligible: Items user doesn't qualify for or advisory-only suggestions
+ * 
+ * Note: `applied` bucket is populated by buildUnifiedOptimizationItems() using AppliedOptimizations
+ * from the tax engine, not by computeOptimizationsFromAnswers().
  */
 export interface OptimizationResult {
   optimisations: {
+    /** Engine-based credits (populated via buildUnifiedOptimizationItems) */
     applied: OptimizationItem[]
+    /** Heuristic deductions user qualifies for */
     potential: OptimizationItem[]
+    /** RESERVED: Items with potential but missing user input (not populated in v1) */
     incomplete: OptimizationItem[]
+    /** Items user doesn't qualify for or advisory-only */
     ineligible: OptimizationItem[]
     totals: {
       applied: number
@@ -279,9 +291,16 @@ export function computeOptimizationsFromAnswers(
   }
 
   // === CONVERT LEGACY ITEMS TO NEW STRUCTURED MODEL ===
+  // 
+  // Bucket semantics:
+  // - applied: Engine-based credits (populated by buildUnifiedOptimizationItems, not here)
+  // - potential: Heuristic deductions where user qualifies (available=true, precision!="advisory")
+  // - incomplete: RESERVED - for future use when user has potential but missing input fields
+  // - ineligible: Items user doesn't qualify for or advisory-only suggestions
+  //
   const applied: OptimizationItem[] = []
   const potential: OptimizationItem[] = []
-  const incomplete: OptimizationItem[] = []
+  const incomplete: OptimizationItem[] = [] // Reserved for future use - not populated in this version
   const ineligible: OptimizationItem[] = []
 
   for (const item of legacyItems) {
@@ -314,8 +333,8 @@ export function computeOptimizationsFromAnswers(
   }
 
   // === COMPUTE TOTALS ===
-  // Applied = 0 (no engine-based optimizations in this function)
-  // Potential = sum of available, non-advisory items
+  // Applied = 0 here (engine credits are added separately via buildUnifiedOptimizationItems)
+  // Potential = sum of available, non-advisory heuristic items
   let potentialMin = 0
   let potentialMax = 0
 
