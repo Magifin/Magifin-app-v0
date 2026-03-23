@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     description?: string
     wizard_answers: unknown
     tax_result: unknown
+    optimisations?: unknown
   }
 
   try {
