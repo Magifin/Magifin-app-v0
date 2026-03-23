@@ -201,7 +201,7 @@ export function ResultsContent() {
   // Build unified optimization items (engine + heuristic)
   const unifiedItems = buildUnifiedOptimizationItems(
     taxResult?.appliedOptimizations ?? null,
-    displayResults.items
+    displayResults
   )
   
   // Calculate totals from unified items

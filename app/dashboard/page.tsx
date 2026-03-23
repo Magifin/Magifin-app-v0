@@ -101,8 +101,8 @@ export default function DashboardPage() {
         max: latestSimulation.tax_result?.refundOrBalance || 0,
       }
     : {
-        min: results.totalMin,
-        max: results.totalMax,
+        min: results.optimisations.totals.potentialMin,
+        max: results.optimisations.totals.potentialMax,
       }
 
   const greeting = profile?.full_name 

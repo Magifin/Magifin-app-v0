@@ -1,5 +1,6 @@
 import type { WizardAnswers } from "@/lib/wizard-store"
-import type { TaxResult, OptimizationResult } from "@/lib/fiscal/belgium/types"
+import type { TaxResult } from "@/lib/fiscal/belgium/types"
+import type { OptimizationResult } from "@/lib/computeOptimizationsFromAnswers"
 
 /**
  * Database types for Supabase tables
