@@ -59,10 +59,6 @@ export interface OptimizationResult {
   notes: string[]
   isFullySupported: boolean
 }
-  }
-  notes: string[]
-  isFullySupported: boolean
-}
 
 /**
  * Legacy optimization result for backward compatibility with older saved simulations.
