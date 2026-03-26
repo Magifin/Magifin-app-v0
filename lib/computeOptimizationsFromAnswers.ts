@@ -34,7 +34,7 @@ export interface OptimizationItem {
  * Bucket semantics:
  * - applied: Engine-calculated credits (children, pension, service vouchers)
  * - potential: Heuristic deductions user qualifies for
- * - incomplete: RESERVED - items user could qualify for but missing input data (not populated yet)
+ * - incomplete: Items user is relevant for but missing required input data
  * - ineligible: Items user doesn't qualify for or advisory-only suggestions
  * 
  * Note: `applied` bucket is populated by buildUnifiedOptimizationItems() using AppliedOptimizations
@@ -46,7 +46,7 @@ export interface OptimizationResult {
     applied: OptimizationItem[]
     /** Heuristic deductions user qualifies for */
     potential: OptimizationItem[]
-    /** RESERVED: Items with potential but missing user input (not populated in v1) */
+    /** Items user could benefit from but missing required input fields */
     incomplete: OptimizationItem[]
     /** Items user doesn't qualify for or advisory-only */
     ineligible: OptimizationItem[]
@@ -130,33 +130,74 @@ export function computeOptimizationsFromAnswers(
   // Apply with full precision when Wallonie + Salarié + Propriétaire avec prêt
 
   // 1. Mortgage deduction (Prêt hypothécaire)
-  if (
-    answers.housingStatus === "ProprietaireAvecPret" &&
-    answers.hasMortgagePayments === "Oui"
-  ) {
-    const interest = answers.mortgageInterest ?? 0
-    const capital = answers.mortgageCapital ?? 0
-    const base = interest + capital
+  if (answers.housingStatus === "ProprietaireAvecPret") {
+    if (answers.hasMortgagePayments === "Oui") {
+      const interest = answers.mortgageInterest ?? 0
+      const capital = answers.mortgageCapital ?? 0
+      const base = interest + capital
 
-    if (base > 0) {
-      const amountMin = Math.round(base * 0.25)
-      const amountMax = Math.round(base * 0.40)
+      if (base > 0) {
+        // Both amounts provided and > 0 → potential
+        const amountMin = Math.round(base * 0.25)
+        const amountMax = Math.round(base * 0.40)
 
-      legacyItems.push({
-        key: "mortgage_deduction",
-        title: "Déduction liée au prêt hypothécaire",
-        category: "mortgage",
-        amountMin,
-        amountMax,
-        available: true,
-        precision: isWallonie && isSalarie ? "confirmed" : "estimated",
-        reason: "Déduction estimée basée sur remboursement déclaré.",
-      })
+        legacyItems.push({
+          key: "mortgage_deduction",
+          title: "Déduction liée au prêt hypothécaire",
+          category: "mortgage",
+          amountMin,
+          amountMax,
+          available: true,
+          precision: isWallonie && isSalarie ? "confirmed" : "estimated",
+          reason: "Déduction estimée basée sur remboursement déclaré.",
+        })
+      } else {
+        // User confirmed payments but amounts missing → incomplete
+        legacyItems.push({
+          key: "mortgage_incomplete",
+          title: "Prêt hypothécaire",
+          category: "mortgage",
+          amountMin: 0,
+          amountMax: 0,
+          available: false,
+          precision: isWallonie && isSalarie ? "confirmed" : "estimated",
+          reason:
+            "Complétez les montants d'intérêt et capital pour calculer la déduction applicable.",
+        })
+      }
     }
   }
 
   // 2. Pension saving
-  if (answers.pensionSaving === "Non") {
+  if (answers.pensionSaving === "Oui") {
+    // User indicated they have pension savings
+    if (answers.pensionSavingAmount > 0) {
+      // Amount provided → potential (can calculate benefit)
+      legacyItems.push({
+        key: "pension_credit",
+        title: "Crédit d'impôt épargne pension",
+        category: "pension",
+        amountMin: Math.round(answers.pensionSavingAmount * 0.30),
+        amountMax: Math.round(answers.pensionSavingAmount * 0.30),
+        available: true,
+        precision: "estimated",
+        reason: "Crédit d'impôt estimé sur votre épargne pension (30%).",
+      })
+    } else {
+      // No amount provided → incomplete
+      legacyItems.push({
+        key: "pension_incomplete",
+        title: "Épargne pension",
+        category: "pension",
+        amountMin: 0,
+        amountMax: 0,
+        available: false, // Mark as incomplete, not potential
+        precision: "estimated",
+        reason:
+          "Complétez le montant de votre épargne pension pour calculer le crédit d'impôt applicable.",
+      })
+    }
+  } else if (answers.pensionSaving === "Non") {
     // Advisory only: user has no pension saving — amounts are speculative
     // available: false → excluded from availableItems UI filter and fiscal totals
     legacyItems.push({
@@ -176,52 +217,76 @@ export function computeOptimizationsFromAnswers(
   if (
     answers.housingStatus === "ProprietaireAvecPret" &&
     answers.mortgageInsuranceYesNo === "Oui" &&
-    answers.mortgageInsuranceCategory === "solde_restant_du" &&
-    answers.mortgageInsuranceAnnualPremium !== null &&
-    answers.mortgageInsuranceAnnualPremium > 0
+    answers.mortgageInsuranceCategory === "solde_restant_du"
   ) {
-    const premium = answers.mortgageInsuranceAnnualPremium
-    const amountMin = Math.round(premium * 0.20)
-    const amountMax = Math.round(premium * 0.30)
+    if (answers.mortgageInsuranceAnnualPremium !== null && answers.mortgageInsuranceAnnualPremium > 0) {
+      // Premium amount provided and > 0 → potential
+      const premium = answers.mortgageInsuranceAnnualPremium
+      const amountMin = Math.round(premium * 0.20)
+      const amountMax = Math.round(premium * 0.30)
 
-    legacyItems.push({
-      key: "srd_insurance",
-      title: "Assurance solde restant dû",
-      category: "insurance",
-      amountMin,
-      amountMax,
-      available: true,
-      precision: isWallonie && isSalarie ? "confirmed" : "estimated",
-      reason:
-        "Certaines primes liées au crédit peuvent ouvrir un avantage fiscal selon le régime régional.",
-    })
+      legacyItems.push({
+        key: "srd_insurance",
+        title: "Assurance solde restant dû",
+        category: "insurance",
+        amountMin,
+        amountMax,
+        available: true,
+        precision: isWallonie && isSalarie ? "confirmed" : "estimated",
+        reason:
+          "Certaines primes liées au crédit peuvent ouvrir un avantage fiscal selon le régime régional.",
+      })
+    } else {
+      // User selected SRD but premium amount missing → incomplete
+      legacyItems.push({
+        key: "srd_insurance_incomplete",
+        title: "Assurance solde restant dû",
+        category: "insurance",
+        amountMin: 0,
+        amountMax: 0,
+        available: false,
+        precision: isWallonie && isSalarie ? "confirmed" : "estimated",
+        reason:
+          "Complétez le montant de la prime annuelle pour calculer l'avantage fiscal applicable.",
+      })
+    }
   }
 
   // === LEVEL 2: ESTIMATED REALISTIC OPTIMISATIONS ===
 
   // 4. Childcare expenses
   if (answers.childcare === "Oui") {
-    let amountMin = 200
-    let amountMax = 600
-
-    // If cost is provided, calculate more precisely
     if (answers.childcareCost > 0) {
+      // Cost provided and > 0 → potential
       const maxDeductible = Math.min(answers.childcareCost, 4100)
       const deduction = maxDeductible * 0.45
-      amountMin = Math.round(deduction * 0.7)
-      amountMax = Math.round(deduction)
-    }
+      const amountMin = Math.round(deduction * 0.7)
+      const amountMax = Math.round(deduction)
 
-    legacyItems.push({
-      key: "childcare",
-      title: "Frais de garde d'enfants",
-      category: "family",
-      amountMin,
-      amountMax,
-      available: true,
-      precision: "estimated",
-      reason: "Déduction estimée pour frais de garde (max 45% des frais).",
-    })
+      legacyItems.push({
+        key: "childcare",
+        title: "Frais de garde d'enfants",
+        category: "family",
+        amountMin,
+        amountMax,
+        available: true,
+        precision: "estimated",
+        reason: "Déduction estimée pour frais de garde (max 45% des frais).",
+      })
+    } else {
+      // User confirmed childcare but cost missing → incomplete
+      legacyItems.push({
+        key: "childcare_incomplete",
+        title: "Frais de garde d'enfants",
+        category: "family",
+        amountMin: 0,
+        amountMax: 0,
+        available: false,
+        precision: "estimated",
+        reason:
+          "Complétez le coût annuel de garde pour calculer la déduction applicable (45% max).",
+      })
+    }
   }
 
   // 6. Titres-services
@@ -295,12 +360,12 @@ export function computeOptimizationsFromAnswers(
   // Bucket semantics:
   // - applied: Engine-based credits (populated by buildUnifiedOptimizationItems, not here)
   // - potential: Heuristic deductions where user qualifies (available=true, precision!="advisory")
-  // - incomplete: RESERVED - for future use when user has potential but missing input fields
+  // - incomplete: Items where user is relevant but missing required input fields (available=false, but not advisory)
   // - ineligible: Items user doesn't qualify for or advisory-only suggestions
   //
   const applied: OptimizationItem[] = []
   const potential: OptimizationItem[] = []
-  const incomplete: OptimizationItem[] = [] // Reserved for future use - not populated in this version
+  const incomplete: OptimizationItem[] = []
   const ineligible: OptimizationItem[] = []
 
   for (const item of legacyItems) {
@@ -313,19 +378,36 @@ export function computeOptimizationsFromAnswers(
     }
 
     // Classify into buckets based on availability and precision
-    if (item.precision === "advisory" || !item.available) {
-      // Advisory or not available → ineligible
+    if (item.precision === "advisory") {
+      // Advisory suggestions → ineligible
       ineligible.push({
         ...baseItem,
         status: "ineligible",
         amountMin: item.amountMin,
         amountMax: item.amountMax,
       })
-    } else if (item.available && item.precision !== "advisory") {
+    } else if (item.available) {
       // Available and not advisory → potential (will be used to compute totals)
       potential.push({
         ...baseItem,
         status: "potential",
+        amountMin: item.amountMin,
+        amountMax: item.amountMax,
+      })
+    } else if (!item.available && item.key.includes("_incomplete")) {
+      // Not available but marked as incomplete → incomplete
+      // (user is relevant but missing required fields)
+      incomplete.push({
+        ...baseItem,
+        status: "incomplete",
+        amountMin: item.amountMin,
+        amountMax: item.amountMax,
+      })
+    } else {
+      // Not available and not explicitly incomplete → ineligible
+      ineligible.push({
+        ...baseItem,
+        status: "ineligible",
         amountMin: item.amountMin,
         amountMax: item.amountMax,
       })

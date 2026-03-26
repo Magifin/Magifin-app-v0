@@ -263,6 +263,40 @@ function OptimisationContent() {
                 {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
               </p>
             </div>
+
+            {/* Incomplete optimizations section */}
+            {displayResults.optimisations.incomplete.length > 0 && (
+              <div className="mt-8">
+                <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+                  {"Optimisations à compléter"}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {"Certaines optimisations nécessitent des informations supplémentaires pour être calculées."}
+                </p>
+
+                {/* Incomplete items list - no amounts, no badges */}
+                <div className="mt-4 flex flex-col gap-4">
+                  {displayResults.optimisations.incomplete.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-4 rounded-xl border border-border/50 bg-card/50 p-5 shadow-sm opacity-75"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground">
+                        <AlertCircle className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-card-foreground">
+                          {item.label}
+                        </p>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          {item.reason}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* View full simulation button */}

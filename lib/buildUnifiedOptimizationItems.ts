@@ -15,6 +15,9 @@ export interface UnifiedOptimizationItem {
  * - engine-based applied optimizations (Confirmé badge)
  * - heuristic items from the new structured model with status="potential" (Estimé badge)
  *
+ * Implements overlap handling: if an item is already applied by the engine,
+ * the heuristic potential version is removed to avoid showing the same benefit twice.
+ *
  * Engine items are listed first, then heuristic items.
  */
 export function buildUnifiedOptimizationItems(
@@ -60,7 +63,13 @@ export function buildUnifiedOptimizationItems(
   }
 
   // SECTION 2: Heuristic items with status="potential" (show "Estimé" badge)
+  // Apply overlap handling: skip heuristic items that are already covered by applied items
   for (const item of optimizationResult.optimisations.potential) {
+    // Skip pension_credit if already applied by engine (to avoid showing same benefit twice)
+    if (item.id === "pension_credit" && appliedOptimizations?.pensionCredit > 0) {
+      continue
+    }
+
     unified.push({
       key: item.id,
       title: item.label,
