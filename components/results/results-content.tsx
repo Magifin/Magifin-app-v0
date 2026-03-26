@@ -28,6 +28,7 @@ import { formatMoney, formatMoneyRange } from "@/lib/formatMoney"
 import { track } from "@/lib/track"
 import { mapAnswersToTaxInput } from "@/lib/fiscal/belgium/mapAnswersToTaxInput"
 import { formatDeclarationYear } from "@/lib/format-declaration-year"
+import { getWizardStepForIncomplete, buildIncompleteResumeUrl } from "@/lib/incomplete-navigation"
 import { generateDefaultSimulationName } from "@/lib/generateDefaultSimulationName"
 import { Button } from "@/components/ui/button"
 import { SaveSimulationDialog } from "@/components/results/save-simulation-dialog"
@@ -755,26 +756,36 @@ export function ResultsContent() {
 
             {/* Incomplete items list - no amounts, no badges */}
             <div className="flex flex-col gap-3">
-              {results.optimisations.incomplete.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-xl border border-border/50 bg-card/50 p-4 opacity-75"
-                >
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 shrink-0 text-muted-foreground/60" />
-                    <div className="flex-1">
-                      <p className="font-medium text-card-foreground">{item.label}</p>
-                      {isAuthenticated ? (
-                        <p className="text-sm text-muted-foreground">{item.reason}</p>
-                      ) : (
-                        <p className="text-sm italic text-muted-foreground/60">
-                          {"Détails disponibles après création de votre espace"}
-                        </p>
-                      )}
+              {results.optimisations.incomplete.map((item) => {
+                const stepId = getWizardStepForIncomplete(item.id)
+                const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, answers) : "/wizard"
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-xl border border-border/50 bg-card/50 p-4 opacity-75"
+                  >
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="h-5 w-5 shrink-0 text-muted-foreground/60" />
+                      <div className="flex-1">
+                        <p className="font-medium text-card-foreground">{item.label}</p>
+                        {isAuthenticated ? (
+                          <p className="text-sm text-muted-foreground">{item.reason}</p>
+                        ) : (
+                          <p className="text-sm italic text-muted-foreground/60">
+                            {"Détails disponibles après création de votre espace"}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    <Link href={resumeUrl} className="ml-4 flex-shrink-0">
+                      <Button variant="outline" size="sm">
+                        Compléter
+                      </Button>
+                    </Link>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

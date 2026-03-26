@@ -14,6 +14,7 @@ import type { Simulation } from "@/lib/supabase/types"
 import type { AppliedOptimizations } from "@/lib/fiscal/belgium/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 import { DashboardHeader } from "@/components/dashboard/header"
+import { getWizardStepForIncomplete, buildIncompleteResumeUrl } from "@/lib/incomplete-navigation"
 
 function OptimisationContent() {
   const searchParams = useSearchParams()
@@ -276,24 +277,36 @@ function OptimisationContent() {
 
                 {/* Incomplete items list - no amounts, no badges */}
                 <div className="mt-4 flex flex-col gap-4">
-                  {displayResults.optimisations.incomplete.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-4 rounded-xl border border-border/50 bg-card/50 p-5 shadow-sm opacity-75"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground">
-                        <AlertCircle className="h-5 w-5" />
+                  {displayResults.optimisations.incomplete.map((item) => {
+                    const stepId = getWizardStepForIncomplete(item.id)
+                    const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, displayResults.optimisations) : "/wizard"
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-card/50 p-5 shadow-sm opacity-75"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground">
+                            <AlertCircle className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-card-foreground">
+                              {item.label}
+                            </p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">
+                              {item.reason}
+                            </p>
+                          </div>
+                        </div>
+                        <Link href={resumeUrl} className="flex-shrink-0">
+                          <Button variant="outline" size="sm">
+                            Compléter
+                          </Button>
+                        </Link>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-card-foreground">
-                          {item.label}
-                        </p>
-                        <p className="mt-0.5 text-sm text-muted-foreground">
-                          {item.reason}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}
