@@ -279,7 +279,8 @@ function OptimisationContent() {
                 <div className="mt-4 flex flex-col gap-4">
                   {displayResults.optimisations.incomplete.map((item) => {
                     const stepId = getWizardStepForIncomplete(item.id)
-                    const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, displayResults.optimisations) : "/wizard"
+                    const wizardAnswers = currentSimulation?.wizard_answers || answers
+                    const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, wizardAnswers, currentSimulation?.id) : "/wizard"
                     
                     return (
                       <div

@@ -758,7 +758,7 @@ export function ResultsContent() {
             <div className="flex flex-col gap-3">
               {results.optimisations.incomplete.map((item) => {
                 const stepId = getWizardStepForIncomplete(item.id)
-                const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, answers) : "/wizard"
+                const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, effectiveAnswers) : "/wizard"
                 
                 return (
                   <div

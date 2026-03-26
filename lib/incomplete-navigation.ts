@@ -17,16 +17,20 @@ export function getWizardStepForIncomplete(itemId: string): string | null {
 
 /**
  * Build a wizard resume URL for a specific step
- * @param stepId - The wizard step ID to navigate to
- * @param answers - Current wizard answers to preserve
- * @param simulationId - Optional simulation ID for edit mode
+ * Encodes both the answers and the target stepId in the resume param.
+ * The wizard will decode this and navigate directly to the target step.
  */
 export function buildIncompleteResumeUrl(
   stepId: string,
   answers: Record<string, any>,
   simulationId?: string
 ): string {
-  const resume = btoa(JSON.stringify(answers))
+  // Include the target stepId in the resume data so wizard knows where to navigate
+  const resumeData = {
+    answers,
+    currentStepId: stepId,
+  }
+  const resume = btoa(JSON.stringify(resumeData))
   const params = new URLSearchParams({ resume })
   if (simulationId) {
     params.append("simulationId", simulationId)
