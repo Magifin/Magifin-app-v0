@@ -493,6 +493,34 @@ export function computeOptimizationsFromAnswers(
     })
   }
 
+  // === UPGRADE LOGIC: TITRES-SERVICES ===
+  // Detect when user uses titres-services but could increase amount for more benefit
+  const serviceVouchersMaxAmount = 1800 // Belgian cap for titres-services
+
+  if (
+    answers.serviceVouchers === "Oui" &&
+    answers.serviceVouchersAmount > 0 &&
+    answers.serviceVouchersAmount < serviceVouchersMaxAmount
+  ) {
+    const currentAmount = answers.serviceVouchersAmount
+    const remainingCapacity = serviceVouchersMaxAmount - currentAmount
+    const additionalGain = Math.round(remainingCapacity * 0.30)
+
+    upgrade.push({
+      id: "service_vouchers_upgrade",
+      category: "other",
+      label: "Optimisation titres-services supplémentaire",
+      status: "upgrade",
+      confidence: "estimated",
+      reason:
+        "Vous pourriez augmenter vos titres-services pour optimiser davantage votre avantage fiscal.",
+      currentAmount,
+      maxAmount: serviceVouchersMaxAmount,
+      additionalBase: remainingCapacity,
+      additionalGain,
+    })
+  }
+
   return {
     optimisations: {
       applied,
