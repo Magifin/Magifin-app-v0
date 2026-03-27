@@ -6,6 +6,7 @@ export const INCOMPLETE_TO_STEP_MAP: Record<string, string> = {
   mortgage_incomplete: "mortgage",
   childcare_incomplete: "childcare",
   srd_insurance_incomplete: "mortgageInsurance",
+  service_vouchers_incomplete: "services",
 }
 
 /**

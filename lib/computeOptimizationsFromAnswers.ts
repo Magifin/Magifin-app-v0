@@ -290,9 +290,28 @@ export function computeOptimizationsFromAnswers(
   }
 
   // 6. Titres-services
-  // NOTE: The service vouchers credit is now applied by the tax engine.
-  // It is already reflected in estimatedTax and refundOrBalance.
-  // Do not include here to avoid double-counting.
+  // NOTE: The service vouchers credit is applied by the tax engine.
+  // However, if user indicates they use them but hasn't entered the amount,
+  // we show an incomplete item to prompt for the missing data.
+  if (answers.serviceVouchers === "Oui") {
+    if (answers.serviceVouchersAmount > 0) {
+      // Amount provided → could be detected by tax engine (no heuristic needed)
+      // Tax engine handles this, so we don't add anything here
+    } else {
+      // User confirmed but amount missing → incomplete
+      legacyItems.push({
+        key: "service_vouchers_incomplete",
+        title: "Titres-services",
+        category: "other",
+        amountMin: 0,
+        amountMax: 0,
+        available: false,
+        precision: "estimated",
+        reason:
+          "Complétez le montant annuel des titres-services pour calculer la réduction d'impôt applicable.",
+      })
+    }
+  }
 
   // Housing - Cadastral income impact (estimated)
   if (
