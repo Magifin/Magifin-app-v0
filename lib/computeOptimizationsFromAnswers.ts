@@ -9,11 +9,17 @@ export type OptimizationCategory =
   | "housing"
   | "other"
 
-export type OptimizationStatus = "applied" | "potential" | "incomplete" | "ineligible"
+export type OptimizationStatus = "applied" | "potential" | "incomplete" | "ineligible" | "upgrade"
 
 /**
- * Structured optimization item supporting the new 4-bucket model.
- * Each item can belong to exactly one of: applied, potential, incomplete, or ineligible.
+ * Structured optimization item supporting the new 5-bucket model.
+ * Each item can belong to: applied, potential, incomplete, ineligible, or upgrade.
+ * 
+ * Upgrade-specific fields:
+ * - currentAmount: User's current contribution amount
+ * - maxAmount: Maximum allowed contribution
+ * - additionalBase: Remaining contribution potential (maxAmount - currentAmount)
+ * - additionalGain: Tax benefit from additional contribution (additionalBase * rate)
  */
 export interface OptimizationItem {
   id: string
@@ -26,16 +32,22 @@ export interface OptimizationItem {
   amountMax?: number
   reason: string
   missingFields?: string[]
+  // Upgrade-specific fields
+  currentAmount?: number
+  maxAmount?: number
+  additionalBase?: number
+  additionalGain?: number
 }
 
 /**
- * New structured optimization result with 4 semantic buckets.
+ * New structured optimization result with 5 semantic buckets.
  * 
  * Bucket semantics:
  * - applied: Engine-calculated credits (children, pension, service vouchers)
  * - potential: Heuristic deductions user qualifies for
  * - incomplete: Items user is relevant for but missing required input data
  * - ineligible: Items user doesn't qualify for or advisory-only suggestions
+ * - upgrade: User is already using optimization but could increase contribution for more benefit
  * 
  * Note: `applied` bucket is populated by buildUnifiedOptimizationItems() using AppliedOptimizations
  * from the tax engine, not by computeOptimizationsFromAnswers().
@@ -50,6 +62,8 @@ export interface OptimizationResult {
     incomplete: OptimizationItem[]
     /** Items user doesn't qualify for or advisory-only */
     ineligible: OptimizationItem[]
+    /** Items user is using but could increase contribution for more benefit */
+    upgrade: OptimizationItem[]
     totals: {
       applied: number
       potentialMin: number
@@ -171,6 +185,8 @@ export function computeOptimizationsFromAnswers(
   // 2. Pension saving
   if (answers.pensionSaving === "Oui") {
     // User indicated they have pension savings
+    const pensionMaxAmount = 990 // 2024 tax year maximum
+    
     if (answers.pensionSavingAmount > 0) {
       // Amount provided → potential (can calculate benefit)
       legacyItems.push({
@@ -381,11 +397,13 @@ export function computeOptimizationsFromAnswers(
   // - potential: Heuristic deductions where user qualifies (available=true, precision!="advisory")
   // - incomplete: Items where user is relevant but missing required input fields (available=false, but not advisory)
   // - ineligible: Items user doesn't qualify for or advisory-only suggestions
+  // - upgrade: User using optimization but could increase for more benefit
   //
   const applied: OptimizationItem[] = []
   const potential: OptimizationItem[] = []
   const incomplete: OptimizationItem[] = []
   const ineligible: OptimizationItem[] = []
+  const upgrade: OptimizationItem[] = []
 
   for (const item of legacyItems) {
     const baseItem: OptimizationItem = {
@@ -447,12 +465,41 @@ export function computeOptimizationsFromAnswers(
   potentialMin = Math.round(potentialMin)
   potentialMax = Math.round(potentialMax)
 
+  // === UPGRADE LOGIC ===
+  // Detect when user is already using an optimization but could increase contribution
+  const pensionMaxAmount = 990 // 2024 tax year maximum
+  
+  if (
+    answers.pensionSaving === "Oui" &&
+    answers.pensionSavingAmount > 0 &&
+    answers.pensionSavingAmount < pensionMaxAmount
+  ) {
+    const currentAmount = answers.pensionSavingAmount
+    const remainingCapacity = pensionMaxAmount - currentAmount
+    const additionalGain = Math.round(remainingCapacity * 0.30)
+    
+    upgrade.push({
+      id: "pension_upgrade",
+      category: "pension",
+      label: "Optimisation épargne pension supplémentaire",
+      status: "upgrade",
+      confidence: "estimated",
+      reason:
+        "Vous pourriez augmenter votre épargne pension pour optimiser davantage votre avantage fiscal.",
+      currentAmount,
+      maxAmount: pensionMaxAmount,
+      additionalBase: remainingCapacity,
+      additionalGain,
+    })
+  }
+
   return {
     optimisations: {
       applied,
       potential,
       incomplete,
       ineligible,
+      upgrade,
       totals: {
         applied: 0,
         potentialMin,
@@ -477,6 +524,7 @@ export function convertLegacyOptimizationResult(
   const potential: OptimizationItem[] = []
   const incomplete: OptimizationItem[] = []
   const ineligible: OptimizationItem[] = []
+  const upgrade: OptimizationItem[] = []
 
   // Classify legacy items into new buckets
   for (const item of legacy.items) {
@@ -511,6 +559,7 @@ export function convertLegacyOptimizationResult(
       potential,
       incomplete,
       ineligible,
+      upgrade,
       totals: {
         applied: 0,
         potentialMin: legacy.totalMin,
@@ -538,6 +587,7 @@ export function ensureModernOptimizationResult(
         potential: [],
         incomplete: [],
         ineligible: [],
+        upgrade: [],
         totals: { applied: 0, potentialMin: 0, potentialMax: 0 },
       },
       notes: [],
@@ -564,6 +614,7 @@ export function ensureModernOptimizationResult(
       potential: [],
       incomplete: [],
       ineligible: [],
+      upgrade: [],
       totals: { applied: 0, potentialMin: 0, potentialMax: 0 },
     },
     notes: [],

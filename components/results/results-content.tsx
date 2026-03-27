@@ -790,6 +790,42 @@ export function ResultsContent() {
           </div>
         )}
 
+        {/* Upgrade optimizations section */}
+        {results.optimisations.upgrade.length > 0 && (
+          <div className="mt-10">
+            <div className="mb-4">
+              <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
+                {"Optimisations supplémentaires possibles"}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {"Vous utilisez déjà ces avantages. Voici comment les augmenter pour davantage d'économies."}
+              </p>
+            </div>
+
+            {/* Upgrade items list */}
+            <div className="flex flex-col gap-4">
+              {results.optimisations.upgrade.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-amber-200/50 bg-amber-50/50 p-4"
+                >
+                  <p className="font-semibold text-foreground">{item.label}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{item.reason}</p>
+                  
+                  {item.additionalGain !== undefined && (
+                    <div className="mt-4 rounded-lg bg-white/60 p-3">
+                      <p className="text-xs text-muted-foreground/80">Économies supplémentaires possibles</p>
+                      <p className="mt-1 font-semibold text-amber-700">
+                        {formatMoney(item.additionalGain)} par an
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Disclaimer */}
         <div className="mt-12 flex flex-col items-center gap-3 text-center">
           <p className="max-w-lg text-xs leading-relaxed text-muted-foreground/70">
