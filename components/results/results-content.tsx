@@ -17,6 +17,7 @@ import {
   Calendar,
   LayoutDashboard,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { AccountDropdown } from "@/components/account-dropdown"
@@ -55,6 +56,20 @@ export function ResultsContent() {
   // Saved simulation mode: local state only — NEVER written to wizard store
   const [simulationAnswers, setSimulationAnswers] = useState<WizardAnswers | null>(null)
   const [simulationLoading, setSimulationLoading] = useState(false)
+
+  // Accordion section state - independent toggles for each section
+  const [openSections, setOpenSections] = useState({
+    applied: true,
+    incomplete: true,
+    upgrade: false,
+  })
+
+  const toggleSection = (key: keyof typeof openSections) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }
 
   // Effective answers: saved simulation or current wizard session
   const activeAnswers = simulationAnswers ?? answers
@@ -644,150 +659,212 @@ export function ResultsContent() {
           )}
         </div>
 
-        {/* Optimization items breakdown */}
-        {unifiedItems.length > 0 && (
-          <div className="mt-10">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
-                {"Optimisations détectées"}
-              </h3>
-              <span className="font-[family-name:var(--font-heading)] font-semibold text-primary">
-                {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
-              </span>
-            </div>
-
-            {/* Locked panel - shown when NOT authenticated */}
-            {!isAuthenticated && (
-              <div className="mb-4 rounded-xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                    <Lock className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-[family-name:var(--font-heading)] font-bold text-card-foreground">
-                      {"Débloquez le détail complet"}
-                    </h4>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {"Accédez aux montants précis, documents requis et prochaines actions."}
-                    </p>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <Button
-                        size="sm"
-                        asChild
-                        onClick={handleCreateSpace}
-                      >
-                        <Link href="/auth/sign-up?from=results">
-                          {"Créer mon espace Magifin"}
-                          <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        {"Gratuit · Sans engagement · 5 minutes"}
-                      </span>
+        {/* Optimization items breakdown - Accordion Layout */}
+        {(unifiedItems.length > 0 || results.optimisations.incomplete.length > 0 || results.optimisations.upgrade.length > 0) && (
+          <div className="mt-10 space-y-0 border border-border/50 rounded-lg overflow-hidden">
+            {/* Section 1: Applied + Potential */}
+            {unifiedItems.length > 0 && (
+              <div className="border-b last:border-b-0">
+                <button
+                  onClick={() => toggleSection("applied")}
+                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                >
+                  <span className="font-semibold">Ce que vous avez déjà optimisé</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-primary">
+                      {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        openSections.applied ? "rotate-0" : "-rotate-90"
+                      }`}
+                    />
+                  </span>
+                </button>
+                {openSections.applied && (
+                  <div className="px-4 pb-4 bg-muted/10">
+                    {/* Locked panel - shown when NOT authenticated */}
+                    {!isAuthenticated && (
+                      <div className="mb-4 rounded-lg border border-border bg-card/50 p-4">
+                        <div className="flex items-start gap-3">
+                          <Lock className="h-4 w-4 shrink-0 text-accent mt-0.5" />
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm text-card-foreground">
+                              {"Débloquez le détail complet"}
+                            </h4>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {"Accédez aux montants précis et prochaines actions."}
+                            </p>
+                            <Button
+                              size="sm"
+                              asChild
+                              className="mt-2"
+                              onClick={handleCreateSpace}
+                            >
+                              <Link href="/auth/sign-up?from=results">
+                                {"Créer mon espace"}
+                                <ArrowRight className="ml-2 h-3 w-3" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Items list with badges */}
+                    <div className="flex flex-col gap-2">
+                      {unifiedItems.map((item) => (
+                        <div
+                          key={item.key}
+                          className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-3"
+                        >
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-accent mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-medium text-card-foreground">{item.title}</p>
+                              <span className={`inline-block rounded-full px-1.5 py-0 text-xs font-medium whitespace-nowrap ${
+                                item.badge === "Confirmé"
+                                  ? "bg-accent/10 text-accent"
+                                  : "bg-amber-500/10 text-amber-600"
+                              }`}>
+                                {item.badge}
+                              </span>
+                            </div>
+                            {isAuthenticated ? (
+                              <p className="text-xs text-muted-foreground mt-0.5">{item.reason}</p>
+                            ) : (
+                              <p className="text-xs italic text-muted-foreground/60 mt-0.5">
+                                {"Détails masqués"}
+                              </p>
+                            )}
+                          </div>
+                          {isAuthenticated && (
+                            <span className="text-xs font-semibold text-accent shrink-0">
+                              {formatMoneyRange(item.amountMin, item.amountMax)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
-            {/* Items list with badges */}
-            <div className="flex flex-col gap-3">
-              {unifiedItems.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
+            {/* Section 2: Incomplete */}
+            {results.optimisations.incomplete.length > 0 && (
+              <div className="border-b last:border-b-0">
+                <button
+                  onClick={() => toggleSection("incomplete")}
+                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
                 >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-accent" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-card-foreground">{item.title}</p>
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                          item.badge === "Confirmé"
-                            ? "bg-accent/10 text-accent"
-                            : "bg-amber-500/10 text-amber-600"
-                        }`}>
-                          {item.badge}
-                        </span>
-                      </div>
-                      {isAuthenticated ? (
-                        <p className="text-sm text-muted-foreground">{item.reason}</p>
-                      ) : (
-                        <p className="text-sm italic text-muted-foreground/60">
-                          {"Détails disponibles après création de votre espace"}
-                        </p>
-                      )}
+                  <span className="font-semibold text-muted-foreground">À compléter</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      openSections.incomplete ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+                {openSections.incomplete && (
+                  <div className="px-4 pb-4 bg-muted/10">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {"Certaines optimisations nécessitent des informations supplémentaires."}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {results.optimisations.incomplete.map((item) => {
+                        const stepId = getWizardStepForIncomplete(item.id)
+                        const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, activeAnswers) : "/wizard"
+                        
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex items-start gap-3 justify-between rounded-lg border border-border/50 bg-card/30 p-3"
+                          >
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground/60 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-card-foreground">{item.label}</p>
+                                {isAuthenticated ? (
+                                  <p className="text-xs text-muted-foreground mt-0.5">{item.reason}</p>
+                                ) : (
+                                  <p className="text-xs italic text-muted-foreground/60 mt-0.5">
+                                    {"Détails masqués"}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <Link href={resumeUrl} className="shrink-0">
+                              <Button variant="outline" size="xs">
+                                Compléter
+                              </Button>
+                            </Link>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
-                  {isAuthenticated ? (
-                    <span className="text-sm font-semibold text-accent">
-                      {formatMoneyRange(item.amountMin, item.amountMax)}
-                    </span>
-                  ) : (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {"Montant masqué"}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            )}
 
-            {/* CTA to see all optimizations */}
-            <Button variant="outline" asChild className="mt-4 w-full">
-              <Link href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}>
-                Voir toutes les optimisations
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            {/* Section 3: Upgrade */}
+            {results.optimisations.upgrade.length > 0 && (
+              <div className="border-b last:border-b-0">
+                <button
+                  onClick={() => toggleSection("upgrade")}
+                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                >
+                  <span className="font-semibold">Opportunités d'économies</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      openSections.upgrade ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+                {openSections.upgrade && (
+                  <div className="px-4 pb-4 bg-muted/10">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {"Vous pouvez encore optimiser votre situation fiscale."}
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      {results.optimisations.upgrade.map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-lg border border-amber-200/50 bg-amber-50/50 p-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-medium text-foreground">{item.label}</p>
+                            {item.additionalGain !== undefined && (
+                              <div className="text-right shrink-0">
+                                <p className="text-xs font-semibold text-amber-700">
+                                  +{formatMoney(item.additionalGain)}/an
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          {item.additionalBase !== undefined && item.maxAmount !== undefined && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {"Ajoutez "}{formatMoney(item.additionalBase)}{" pour atteindre le plafond"}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Incomplete optimizations section */}
-        {results.optimisations.incomplete.length > 0 && (
-          <div className="mt-10">
-            <div className="mb-4">
-              <h3 className="font-[family-name:var(--font-heading)] text-lg font-semibold text-foreground">
-                {"Optimisations à compléter"}
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {"Certaines optimisations nécessitent des informations supplémentaires pour être calculées."}
-              </p>
-            </div>
-
-            {/* Incomplete items list - no amounts, no badges */}
-            <div className="flex flex-col gap-3">
-              {results.optimisations.incomplete.map((item) => {
-                const stepId = getWizardStepForIncomplete(item.id)
-                const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, activeAnswers) : "/wizard"
-                
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-xl border border-border/50 bg-card/50 p-4 opacity-75"
-                  >
-                    <div className="flex items-center gap-3">
-                      <AlertCircle className="h-5 w-5 shrink-0 text-muted-foreground/60" />
-                      <div className="flex-1">
-                        <p className="font-medium text-card-foreground">{item.label}</p>
-                        {isAuthenticated ? (
-                          <p className="text-sm text-muted-foreground">{item.reason}</p>
-                        ) : (
-                          <p className="text-sm italic text-muted-foreground/60">
-                            {"Détails disponibles après création de votre espace"}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <Link href={resumeUrl} className="ml-4 flex-shrink-0">
-                      <Button variant="outline" size="sm">
-                        Compléter
-                      </Button>
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+        {/* CTA: View all optimizations - positioned outside sections */}
+        {(unifiedItems.length > 0 || results.optimisations.incomplete.length > 0 || results.optimisations.upgrade.length > 0) && (
+          <Button variant="outline" asChild className="mt-4 w-full" size="sm">
+            <Link href={simulationId ? `/dashboard/optimisation?simulationId=${simulationId}` : "/dashboard/optimisation"}>
+              Voir tous les détails de la simulation
+              <ArrowRight className="ml-2 h-3 w-3" />
+            </Link>
+          </Button>
         )}
 
         {/* Disclaimer */}
