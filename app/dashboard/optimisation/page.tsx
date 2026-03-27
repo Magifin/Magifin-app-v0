@@ -26,12 +26,26 @@ function OptimisationContent() {
   const [liveAppliedOptimizations, setLiveAppliedOptimizations] = useState<AppliedOptimizations | null>(null)
   const [isComputingTax, setIsComputingTax] = useState(false)
 
-  // Accordion section state - only one section open at a time
-  const [openSection, setOpenSection] = useState<"applied" | "incomplete" | "upgrade" | null>("applied")
+  // Accordion section state - multiple sections can be open at the same time
+  const [openSections, setOpenSections] = useState<Set<"applied" | "incomplete" | "upgrade">>(
+    new Set(["applied", "incomplete"])
+  )
 
   const toggleSection = (key: "applied" | "incomplete" | "upgrade") => {
-    setOpenSection(openSection === key ? null : key)
+    const newOpen = new Set(openSections)
+    if (newOpen.has(key)) {
+      newOpen.delete(key)
+    } else {
+      newOpen.add(key)
+    }
+    setOpenSections(newOpen)
   }
+
+  // Calculate upgrade total (sum of additionalGain)
+  const upgradeTotal = displayResults.optimisations.upgrade.reduce(
+    (sum, item) => sum + (item.additionalGain || 0),
+    0
+  )
 
   // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
@@ -225,21 +239,21 @@ function OptimisationContent() {
                 <div className="border-b last:border-b-0">
                   <button
                     onClick={() => toggleSection("applied")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                    className="w-full px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors text-left group"
                   >
-                    <span className="font-semibold">Ce que vous avez déjà optimisé</span>
-                    <span className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-primary">
+                    <span className="font-semibold text-foreground">Ce que vous avez déjà optimisé</span>
+                    <span className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-primary">
                         {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
                       </span>
                       <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          openSection === "applied" ? "rotate-0" : "-rotate-90"
+                        className={`h-4 w-4 transition-transform flex-shrink-0 text-foreground/60 group-hover:text-foreground ${
+                          openSections.has("applied") ? "rotate-0" : "-rotate-90"
                         }`}
                       />
                     </span>
                   </button>
-                  {openSection === "applied" && (
+                  {openSections.has("applied") && (
                     <div className="px-4 pb-4 bg-muted/10">
                       {/* Unified items list with badges */}
                       <div className="flex flex-col gap-3">
@@ -284,16 +298,16 @@ function OptimisationContent() {
                 <div className="border-b last:border-b-0">
                   <button
                     onClick={() => toggleSection("incomplete")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                    className="w-full px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors text-left group"
                   >
-                    <span className="font-semibold text-muted-foreground">Informations manquantes</span>
+                    <span className="font-semibold text-foreground">Informations manquantes</span>
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform ${
-                        openSection === "incomplete" ? "rotate-0" : "-rotate-90"
+                      className={`h-4 w-4 transition-transform flex-shrink-0 text-foreground/60 group-hover:text-foreground ${
+                        openSections.has("incomplete") ? "rotate-0" : "-rotate-90"
                       }`}
                     />
                   </button>
-                  {openSection === "incomplete" && (
+                  {openSections.has("incomplete") && (
                     <div className="px-4 pb-4 bg-muted/10">
                       <p className="text-xs text-muted-foreground mb-3">
                         {"Ajoutez le montant pour calculer votre avantage fiscal."}
@@ -339,19 +353,26 @@ function OptimisationContent() {
                 <div className="border-b last:border-b-0">
                   <button
                     onClick={() => toggleSection("upgrade")}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                    className="w-full px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors text-left group"
                   >
                     <div className="flex-1">
-                      <span className="font-semibold">Économies supplémentaires possibles</span>
-                      <p className="text-xs text-muted-foreground mt-0.5">Vous pouvez encore réduire vos impôts avec ces actions.</p>
+                      <span className="font-semibold text-foreground">Économies supplémentaires possibles</span>
+                      <p className="text-xs text-muted-foreground mt-1">Vous pouvez encore réduire vos impôts.</p>
                     </div>
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform flex-shrink-0 ${
-                        openSection === "upgrade" ? "rotate-0" : "-rotate-90"
-                      }`}
-                    />
+                    <span className="flex items-center gap-3 flex-shrink-0 ml-4">
+                      <span className="text-right">
+                        <p className="text-sm font-semibold text-emerald-600">
+                          +{formatMoney(upgradeTotal)}<span className="text-xs">/an</span>
+                        </p>
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform text-foreground/60 group-hover:text-foreground ${
+                          openSections.has("upgrade") ? "rotate-0" : "-rotate-90"
+                        }`}
+                      />
+                    </span>
                   </button>
-                  {openSection === "upgrade" && (
+                  {openSections.has("upgrade") && (
                     <div className="px-4 pb-4 bg-muted/10">
                       <div className="flex flex-col gap-2">
                         {displayResults.optimisations.upgrade.map((item) => (
