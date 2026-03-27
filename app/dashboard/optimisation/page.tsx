@@ -15,7 +15,6 @@ import type { AppliedOptimizations } from "@/lib/fiscal/belgium/types"
 import { UnsavedSimulationBanner } from "@/components/unsaved-simulation-banner"
 import { DashboardHeader } from "@/components/dashboard/header"
 import { getWizardStepForIncomplete, buildIncompleteResumeUrl } from "@/lib/incomplete-navigation"
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 
 function OptimisationContent() {
   const searchParams = useSearchParams()
@@ -26,6 +25,20 @@ function OptimisationContent() {
   const [isLoadingSimulation, setIsLoadingSimulation] = useState(true)
   const [liveAppliedOptimizations, setLiveAppliedOptimizations] = useState<AppliedOptimizations | null>(null)
   const [isComputingTax, setIsComputingTax] = useState(false)
+
+  // Accordion section state - independent toggles for each section
+  const [openSections, setOpenSections] = useState({
+    applied: true,
+    incomplete: true,
+    upgrade: false,
+  })
+
+  const toggleSection = (key: keyof typeof openSections) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }
 
   // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
@@ -200,7 +213,7 @@ function OptimisationContent() {
         </div>
       ) : (
         <>
-          {/* Optimizations Accordion */}
+          {/* Optimizations Sections */}
           <div className="mb-8">
             {/* Notes */}
             {displayResults.notes.length > 0 && (
@@ -213,137 +226,169 @@ function OptimisationContent() {
               </div>
             )}
 
-            <Accordion type="single" collapsible defaultValue="applied" className="space-y-0">
+            <div className="space-y-0 border border-border/50 rounded-lg overflow-hidden">
               {/* Section 1: Applied + Potential */}
               {unifiedItems.length > 0 && (
-                <AccordionItem value="applied" className="border-b">
-                  <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="border-b last:border-b-0">
+                  <button
+                    onClick={() => toggleSection("applied")}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                  >
                     <span className="font-semibold">Ce que vous avez déjà optimisé</span>
-                    <span className="ml-auto mr-2 text-sm font-medium text-primary">
-                      {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
+                    <span className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-primary">
+                        {formatMoneyRange(optimizationTotalMin, optimizationTotalMax)}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          openSections.applied ? "rotate-0" : "-rotate-90"
+                        }`}
+                      />
                     </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-4">
-                    {/* Unified items list with badges */}
-                    <div className="flex flex-col gap-3">
-                      {unifiedItems.map((item) => (
-                        <div
-                          key={item.key}
-                          className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-3"
-                        >
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-sm font-medium text-card-foreground">
-                                {item.title}
+                  </button>
+                  {openSections.applied && (
+                    <div className="px-4 pb-4 bg-muted/10">
+                      {/* Unified items list with badges */}
+                      <div className="flex flex-col gap-3">
+                        {unifiedItems.map((item) => (
+                          <div
+                            key={item.key}
+                            className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-3"
+                          >
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-medium text-card-foreground">
+                                  {item.title}
+                                </p>
+                                <span className={`inline-block rounded-full px-1.5 py-0 text-xs font-medium whitespace-nowrap ${
+                                  item.badge === "Confirmé"
+                                    ? "bg-accent/10 text-accent"
+                                    : "bg-amber-500/10 text-amber-600"
+                                }`}>
+                                  {item.badge}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {item.reason}
                               </p>
-                              <span className={`inline-block rounded-full px-1.5 py-0 text-xs font-medium whitespace-nowrap ${
-                                item.badge === "Confirmé"
-                                  ? "bg-accent/10 text-accent"
-                                  : "bg-amber-500/10 text-amber-600"
-                              }`}>
-                                {item.badge}
-                              </span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {item.reason}
-                            </p>
+                            <div className="text-right shrink-0">
+                              <p className="text-xs font-semibold text-card-foreground">
+                                {formatMoneyRange(item.amountMin, item.amountMax)}
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-xs font-semibold text-card-foreground">
-                              {formatMoneyRange(item.amountMin, item.amountMax)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
+                  )}
+                </div>
               )}
 
               {/* Section 2: Incomplete */}
               {displayResults.optimisations.incomplete.length > 0 && (
-                <AccordionItem value="incomplete" className="border-b">
-                  <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="border-b last:border-b-0">
+                  <button
+                    onClick={() => toggleSection("incomplete")}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                  >
                     <span className="font-semibold text-muted-foreground">À compléter</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-4">
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {"Certaines optimisations nécessitent des informations supplémentaires."}
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      {displayResults.optimisations.incomplete.map((item) => {
-                        const stepId = getWizardStepForIncomplete(item.id)
-                        const wizardAnswers = currentSimulation?.wizard_answers || answers
-                        const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, wizardAnswers, currentSimulation?.id) : "/wizard"
-                        
-                        return (
-                          <div
-                            key={item.id}
-                            className="flex items-start gap-3 justify-between rounded-lg border border-border/50 bg-card/30 p-3"
-                          >
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                              <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground/60 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-card-foreground">
-                                  {item.label}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {item.reason}
-                                </p>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        openSections.incomplete ? "rotate-0" : "-rotate-90"
+                      }`}
+                    />
+                  </button>
+                  {openSections.incomplete && (
+                    <div className="px-4 pb-4 bg-muted/10">
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {"Certaines optimisations nécessitent des informations supplémentaires."}
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {displayResults.optimisations.incomplete.map((item) => {
+                          const stepId = getWizardStepForIncomplete(item.id)
+                          const wizardAnswers = currentSimulation?.wizard_answers || answers
+                          const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, wizardAnswers, currentSimulation?.id) : "/wizard"
+                          
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex items-start gap-3 justify-between rounded-lg border border-border/50 bg-card/30 p-3"
+                            >
+                              <div className="flex items-start gap-3 flex-1 min-w-0">
+                                <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground/60 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-card-foreground">
+                                    {item.label}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {item.reason}
+                                  </p>
+                                </div>
                               </div>
+                              <Link href={resumeUrl} className="shrink-0">
+                                <Button variant="outline" size="xs">
+                                  Compléter
+                                </Button>
+                              </Link>
                             </div>
-                            <Link href={resumeUrl} className="shrink-0">
-                              <Button variant="outline" size="xs">
-                                Compléter
-                              </Button>
-                            </Link>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
+                  )}
+                </div>
               )}
 
               {/* Section 3: Upgrade */}
               {displayResults.optimisations.upgrade.length > 0 && (
-                <AccordionItem value="upgrade" className="border-b">
-                  <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="border-b last:border-b-0">
+                  <button
+                    onClick={() => toggleSection("upgrade")}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
+                  >
                     <span className="font-semibold">Opportunités d'économies</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-4">
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {"Vous pouvez encore optimiser votre situation fiscale."}
-                    </p>
-                    <div className="flex flex-col gap-3">
-                      {displayResults.optimisations.upgrade.map((item) => (
-                        <div
-                          key={item.id}
-                          className="rounded-lg border border-amber-200/50 bg-amber-50/50 p-3"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <p className="text-sm font-medium text-foreground">{item.label}</p>
-                            {item.additionalGain !== undefined && (
-                              <div className="text-right shrink-0">
-                                <p className="text-xs font-semibold text-amber-700">
-                                  +{formatMoney(item.additionalGain)}/an
-                                </p>
-                              </div>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        openSections.upgrade ? "rotate-0" : "-rotate-90"
+                      }`}
+                    />
+                  </button>
+                  {openSections.upgrade && (
+                    <div className="px-4 pb-4 bg-muted/10">
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {"Vous pouvez encore optimiser votre situation fiscale."}
+                      </p>
+                      <div className="flex flex-col gap-3">
+                        {displayResults.optimisations.upgrade.map((item) => (
+                          <div
+                            key={item.id}
+                            className="rounded-lg border border-amber-200/50 bg-amber-50/50 p-3"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-sm font-medium text-foreground">{item.label}</p>
+                              {item.additionalGain !== undefined && (
+                                <div className="text-right shrink-0">
+                                  <p className="text-xs font-semibold text-amber-700">
+                                    +{formatMoney(item.additionalGain)}/an
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            {item.additionalBase !== undefined && item.maxAmount !== undefined && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {"Ajoutez "}{formatMoney(item.additionalBase)}{" pour atteindre le plafond"}
+                              </p>
                             )}
                           </div>
-                          {item.additionalBase !== undefined && item.maxAmount !== undefined && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {"Ajoutez "}{formatMoney(item.additionalBase)}{" pour atteindre le plafond"}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
+                  )}
+                </div>
               )}
-            </Accordion>
+            </div>
           </div>
 
           {/* View full simulation button */}
