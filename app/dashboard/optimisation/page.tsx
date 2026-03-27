@@ -26,18 +26,11 @@ function OptimisationContent() {
   const [liveAppliedOptimizations, setLiveAppliedOptimizations] = useState<AppliedOptimizations | null>(null)
   const [isComputingTax, setIsComputingTax] = useState(false)
 
-  // Accordion section state - independent toggles for each section
-  const [openSections, setOpenSections] = useState({
-    applied: true,
-    incomplete: true,
-    upgrade: false,
-  })
+  // Accordion section state - only one section open at a time
+  const [openSection, setOpenSection] = useState<"applied" | "incomplete" | "upgrade" | null>("applied")
 
-  const toggleSection = (key: keyof typeof openSections) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }))
+  const toggleSection = (key: "applied" | "incomplete" | "upgrade") => {
+    setOpenSection(openSection === key ? null : key)
   }
 
   // Fetch simulation: contextual (by ID) or global (latest) or last viewed
@@ -241,12 +234,12 @@ function OptimisationContent() {
                       </span>
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${
-                          openSections.applied ? "rotate-0" : "-rotate-90"
+                          openSection === "applied" ? "rotate-0" : "-rotate-90"
                         }`}
                       />
                     </span>
                   </button>
-                  {openSections.applied && (
+                  {openSection === "applied" && (
                     <div className="px-4 pb-4 bg-muted/10">
                       {/* Unified items list with badges */}
                       <div className="flex flex-col gap-3">
@@ -293,17 +286,17 @@ function OptimisationContent() {
                     onClick={() => toggleSection("incomplete")}
                     className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
                   >
-                    <span className="font-semibold text-muted-foreground">À compléter</span>
+                    <span className="font-semibold text-muted-foreground">Informations manquantes</span>
                     <ChevronDown
                       className={`h-4 w-4 transition-transform ${
-                        openSections.incomplete ? "rotate-0" : "-rotate-90"
+                        openSection === "incomplete" ? "rotate-0" : "-rotate-90"
                       }`}
                     />
                   </button>
-                  {openSections.incomplete && (
+                  {openSection === "incomplete" && (
                     <div className="px-4 pb-4 bg-muted/10">
                       <p className="text-xs text-muted-foreground mb-3">
-                        {"Certaines optimisations nécessitent des informations supplémentaires."}
+                        {"Ajoutez le montant pour calculer votre avantage fiscal."}
                       </p>
                       <div className="flex flex-col gap-2">
                         {displayResults.optimisations.incomplete.map((item) => {
@@ -348,38 +341,38 @@ function OptimisationContent() {
                     onClick={() => toggleSection("upgrade")}
                     className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors text-left"
                   >
-                    <span className="font-semibold">Opportunités d'économies</span>
+                    <div className="flex-1">
+                      <span className="font-semibold">Économies supplémentaires possibles</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">Vous pouvez encore réduire vos impôts avec ces actions.</p>
+                    </div>
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform ${
-                        openSections.upgrade ? "rotate-0" : "-rotate-90"
+                      className={`h-4 w-4 transition-transform flex-shrink-0 ${
+                        openSection === "upgrade" ? "rotate-0" : "-rotate-90"
                       }`}
                     />
                   </button>
-                  {openSections.upgrade && (
+                  {openSection === "upgrade" && (
                     <div className="px-4 pb-4 bg-muted/10">
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {"Vous pouvez encore optimiser votre situation fiscale."}
-                      </p>
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-2">
                         {displayResults.optimisations.upgrade.map((item) => (
                           <div
                             key={item.id}
-                            className="rounded-lg border border-amber-200/50 bg-amber-50/50 p-3"
+                            className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-background p-3"
                           >
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-foreground">{item.label}</p>
-                              {item.additionalGain !== undefined && (
-                                <div className="text-right shrink-0">
-                                  <p className="text-xs font-semibold text-amber-700">
-                                    +{formatMoney(item.additionalGain)}/an
-                                  </p>
-                                </div>
+                              {item.additionalBase !== undefined && item.maxAmount !== undefined && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {"Ajoutez "}{formatMoney(item.additionalBase)}{" pour atteindre le plafond"}
+                                </p>
                               )}
                             </div>
-                            {item.additionalBase !== undefined && item.maxAmount !== undefined && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                {"Ajoutez "}{formatMoney(item.additionalBase)}{" pour atteindre le plafond"}
-                              </p>
+                            {item.additionalGain !== undefined && (
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-sm font-bold text-emerald-600">
+                                  +{formatMoney(item.additionalGain)}<span className="text-xs font-semibold">/an</span>
+                                </p>
+                              </div>
                             )}
                           </div>
                         ))}
