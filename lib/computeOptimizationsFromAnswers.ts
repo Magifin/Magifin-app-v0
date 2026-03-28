@@ -521,6 +521,49 @@ export function computeOptimizationsFromAnswers(
     })
   }
 
+  // === UNUSED OPTIMIZATIONS: Add to upgrade bucket ===
+  // These are optimizations the user is NOT currently using but COULD activate
+
+  // PENSION (unused case)
+  if (answers.pensionSaving !== "Oui") {
+    const maxAmount = 990 // 2024 tax year maximum
+    const additionalGain = Math.round(maxAmount * 0.30)
+
+    upgrade.push({
+      id: "pension_unused",
+      category: "pension",
+      label: "Épargne pension non utilisée",
+      status: "upgrade",
+      confidence: "estimated",
+      reason:
+        "Vous pourriez réduire vos impôts en épargnant pour votre pension.",
+      additionalBase: maxAmount,
+      additionalGain,
+    })
+  }
+
+  // TITRES-SERVICES (unused case)
+  if (answers.serviceVouchers !== "Oui") {
+    const maxAmount = 2000 // Safe heuristic for max eligible base
+    const additionalGain = Math.round(maxAmount * 0.30)
+
+    upgrade.push({
+      id: "service_vouchers_unused",
+      category: "other",
+      label: "Titres-services non utilisés",
+      status: "upgrade",
+      confidence: "estimated",
+      reason:
+        "Vous pourriez réduire vos impôts en utilisant des titres-services.",
+      additionalBase: maxAmount,
+      additionalGain,
+    })
+  }
+
+  // === SORT UPGRADE ITEMS ===
+  // Sort by additionalGain DESC so highest impact appears first
+  upgrade.sort((a, b) => (b.additionalGain ?? 0) - (a.additionalGain ?? 0))
+
   return {
     optimisations: {
       applied,
