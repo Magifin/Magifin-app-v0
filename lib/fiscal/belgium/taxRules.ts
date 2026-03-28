@@ -20,6 +20,12 @@ export const taxRules = {
       2024: 2000,
     },
   },
+  childcare: {
+    maxEligibleAmountByYear: {
+      2024: 4100,
+    },
+    deductionRate: 0.45,
+  },
 }
 
 /**
@@ -61,4 +67,20 @@ export function getServiceVouchersCreditRate(): number {
 export function getServiceVouchersUnusedHeuristicAmount(year?: number): number {
   const targetYear = year ?? 2024
   return taxRules.serviceVouchers.unusedHeuristicAmountByYear[targetYear as 2024] ?? taxRules.serviceVouchers.unusedHeuristicAmountByYear[2024]
+}
+
+/**
+ * Get the max eligible amount for childcare in a given year
+ * Falls back to 2024 if year not defined
+ */
+export function getChildcareMaxEligibleAmount(year?: number): number {
+  const targetYear = year ?? 2024
+  return taxRules.childcare.maxEligibleAmountByYear[targetYear as 2024] ?? taxRules.childcare.maxEligibleAmountByYear[2024]
+}
+
+/**
+ * Get the deduction rate for childcare
+ */
+export function getChildcareDeductionRate(): number {
+  return taxRules.childcare.deductionRate
 }

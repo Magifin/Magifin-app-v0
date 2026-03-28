@@ -5,6 +5,8 @@ import {
   getServiceVouchersMaxAmount,
   getServiceVouchersCreditRate,
   getServiceVouchersUnusedHeuristicAmount,
+  getChildcareMaxEligibleAmount,
+  getChildcareDeductionRate,
 } from "./fiscal/belgium/taxRules"
 
 export type OptimizationPrecision = "confirmed" | "estimated" | "advisory"
@@ -279,10 +281,13 @@ export function computeOptimizationsFromAnswers(
 
   // 4. Childcare expenses
   if (answers.childcare === "Oui") {
+    const childcareMaxAmount = getChildcareMaxEligibleAmount(answers.taxYear)
+    const deductionRate = getChildcareDeductionRate()
+
     if (answers.childcareCost > 0) {
-      // Cost provided and > 0 → potential
-      const maxDeductible = Math.min(answers.childcareCost, 4100)
-      const deduction = maxDeductible * 0.45
+      // Cost provided and > 0 → applied/detected
+      const maxDeductible = Math.min(answers.childcareCost, childcareMaxAmount)
+      const deduction = maxDeductible * deductionRate
       const amountMin = Math.round(deduction * 0.7)
       const amountMax = Math.round(deduction)
 
@@ -524,6 +529,34 @@ export function computeOptimizationsFromAnswers(
       currentAmount,
       maxAmount: serviceVouchersMaxAmount,
       additionalBase: remainingCapacity,
+      additionalGain,
+    })
+  }
+
+  // === UPGRADE LOGIC: CHILDCARE ===
+  // Detect when user has childcare costs but could increase deduction by reaching max
+  const childcareMaxAmount = getChildcareMaxEligibleAmount(answers.taxYear)
+  const childcareDeductionRate = getChildcareDeductionRate()
+
+  if (
+    answers.childcare === "Oui" &&
+    answers.childcareCost > 0 &&
+    answers.childcareCost < childcareMaxAmount
+  ) {
+    const currentAmount = answers.childcareCost
+    const remainingBase = childcareMaxAmount - currentAmount
+    const additionalGain = Math.round(remainingBase * childcareDeductionRate)
+
+    upgrade.push({
+      id: "childcare_upgrade",
+      category: "family",
+      label: "Déduction de garde d'enfants supplémentaire",
+      status: "upgrade",
+      confidence: "estimated",
+      reason:
+        "Vous pourriez bénéficier d'une déduction fiscale supplémentaire en augmentant les frais déclarés.",
+      additionalBase: remainingBase,
+      maxAmount: childcareMaxAmount,
       additionalGain,
     })
   }
