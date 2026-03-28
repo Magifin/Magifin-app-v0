@@ -149,7 +149,11 @@ function OptimisationContent() {
   const optimizationTotalMin = unifiedItems.reduce((sum, item) => sum + item.amountMin, 0)
   const optimizationTotalMax = unifiedItems.reduce((sum, item) => sum + item.amountMax, 0)
 
-  const hasAnyContent = unifiedItems.length > 0
+  // Check if there's ANY content: applied items OR incomplete items OR upgrade items
+  const hasAppliedItems = unifiedItems.length > 0
+  const hasIncompleteItems = displayResults.optimisations.incomplete.length > 0
+  const hasUpgradeItems = displayResults.optimisations.upgrade.length > 0
+  const hasAnyContent = hasAppliedItems || hasIncompleteItems || hasUpgradeItems
 
   // Show Modifier/Voir résultat only when content exists
   const showDetailCtas = !isLoadingSimulation && hasData && hasAnyContent
@@ -315,7 +319,8 @@ function OptimisationContent() {
                       <div className="flex flex-col gap-2">
                         {displayResults.optimisations.incomplete.map((item) => {
                           const stepId = getWizardStepForIncomplete(item.id)
-                          const wizardAnswers = currentSimulation?.wizard_answers || answers
+                          // Use simulation's wizard answers as priority source, then fall back to global answers
+                          const wizardAnswers = currentSimulation?.wizard_answers ?? answers
                           const resumeUrl = stepId ? buildIncompleteResumeUrl(stepId, wizardAnswers, currentSimulation?.id) : "/wizard"
                           
                           return (
@@ -357,7 +362,7 @@ function OptimisationContent() {
                   >
                     <div className="flex-1">
                       <span className="font-semibold text-foreground">Économies supplémentaires possibles</span>
-                      <p className="text-xs text-muted-foreground mt-1">Vous pouvez encore réduire vos impôts.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Selon votre situation, vous pourriez encore réduire vos impôts.</p>
                     </div>
                     <span className="flex items-center gap-3 flex-shrink-0 ml-4">
                       <span className="text-right">
