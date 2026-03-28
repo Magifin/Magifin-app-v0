@@ -488,21 +488,25 @@ export function computeOptimizationsFromAnswers(
   ) {
     const currentAmount = answers.pensionSavingAmount
     const remainingCapacity = pensionMaxAmount - currentAmount
-    const additionalGain = Math.round(remainingCapacity * getPensionCreditRate())
     
-    upgrade.push({
-      id: "pension_upgrade",
-      category: "pension",
-      label: "Optimisation épargne pension supplémentaire",
-      status: "upgrade",
-      confidence: "estimated",
-      reason:
-        "Vous pourriez augmenter votre épargne pension pour optimiser davantage votre avantage fiscal.",
-      currentAmount,
-      maxAmount: pensionMaxAmount,
-      additionalBase: remainingCapacity,
-      additionalGain,
-    })
+    // Avoid noise: skip if remaining is negligible (≤ 1€)
+    if (remainingCapacity > 1) {
+      const additionalGain = Math.round(remainingCapacity * getPensionCreditRate())
+      
+      upgrade.push({
+        id: "pension_upgrade",
+        category: "pension",
+        label: "Optimisation épargne pension supplémentaire",
+        status: "upgrade",
+        confidence: "estimated",
+        reason:
+          "Vous pourriez augmenter votre épargne pension pour optimiser davantage votre avantage fiscal.",
+        currentAmount,
+        maxAmount: pensionMaxAmount,
+        additionalBase: remainingCapacity,
+        additionalGain,
+      })
+    }
   }
 
   // === UPGRADE LOGIC: TITRES-SERVICES ===
@@ -516,21 +520,25 @@ export function computeOptimizationsFromAnswers(
   ) {
     const currentAmount = answers.serviceVouchersAmount
     const remainingCapacity = serviceVouchersMaxAmount - currentAmount
-    const additionalGain = Math.round(remainingCapacity * getServiceVouchersCreditRate())
+    
+    // Avoid noise: skip if remaining is negligible (≤ 1€)
+    if (remainingCapacity > 1) {
+      const additionalGain = Math.round(remainingCapacity * getServiceVouchersCreditRate())
 
-    upgrade.push({
-      id: "service_vouchers_upgrade",
-      category: "other",
-      label: "Optimisation titres-services supplémentaire",
-      status: "upgrade",
-      confidence: "estimated",
-      reason:
-        "Vous pourriez augmenter vos titres-services pour optimiser davantage votre avantage fiscal.",
-      currentAmount,
-      maxAmount: serviceVouchersMaxAmount,
-      additionalBase: remainingCapacity,
-      additionalGain,
-    })
+      upgrade.push({
+        id: "service_vouchers_upgrade",
+        category: "other",
+        label: "Optimisation titres-services supplémentaire",
+        status: "upgrade",
+        confidence: "estimated",
+        reason:
+          "Vous pourriez augmenter vos titres-services pour optimiser davantage votre avantage fiscal.",
+        currentAmount,
+        maxAmount: serviceVouchersMaxAmount,
+        additionalBase: remainingCapacity,
+        additionalGain,
+      })
+    }
   }
 
   // === UPGRADE LOGIC: CHILDCARE ===
@@ -545,20 +553,24 @@ export function computeOptimizationsFromAnswers(
   ) {
     const currentAmount = answers.childcareCost
     const remainingBase = childcareMaxAmount - currentAmount
-    const additionalGain = Math.round(remainingBase * childcareDeductionRate)
+    
+    // Avoid noise: skip if remaining is negligible (≤ 1€)
+    if (remainingBase > 1) {
+      const additionalGain = Math.round(remainingBase * childcareDeductionRate)
 
-    upgrade.push({
-      id: "childcare_upgrade",
-      category: "family",
-      label: "Déduction de garde d'enfants supplémentaire",
-      status: "upgrade",
-      confidence: "estimated",
-      reason:
-        "Vous pourriez bénéficier d'une déduction fiscale supplémentaire en augmentant les frais déclarés.",
-      additionalBase: remainingBase,
-      maxAmount: childcareMaxAmount,
-      additionalGain,
-    })
+      upgrade.push({
+        id: "childcare_upgrade",
+        category: "family",
+        label: "Déduction de garde d'enfants supplémentaire",
+        status: "upgrade",
+        confidence: "estimated",
+        reason:
+          "Vous pourriez bénéficier d'une déduction fiscale supplémentaire en augmentant les frais déclarés.",
+        additionalBase: remainingBase,
+        maxAmount: childcareMaxAmount,
+        additionalGain,
+      })
+    }
   }
 
   // === UNUSED OPTIMIZATIONS: Add to upgrade bucket ===

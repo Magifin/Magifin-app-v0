@@ -98,7 +98,11 @@ export function StepChildcare({
               type="number"
               min={0}
               value={childcareCost || ""}
-              onChange={(e) => onCostChange(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const raw = Number(e.target.value || 0)
+                const amount = Math.round(raw)
+                onCostChange(amount)
+              }}
               placeholder="Ex: 2400"
               className="w-40"
             />

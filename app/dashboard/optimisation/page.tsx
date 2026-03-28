@@ -362,7 +362,7 @@ function OptimisationContent() {
                   >
                     <div className="flex-1">
                       <span className="font-semibold text-foreground">Économies supplémentaires possibles</span>
-                      <p className="text-xs text-muted-foreground mt-1">Selon votre situation, vous pourriez encore réduire vos impôts.</p>
+                      <p className="text-xs text-muted-foreground mt-1">En fonction de votre situation, vous pourriez augmenter votre avantage fiscal l&apos;année prochaine.</p>
                     </div>
                     <span className="flex items-center gap-3 flex-shrink-0 ml-4">
                       <span className="text-right">
