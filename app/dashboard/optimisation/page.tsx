@@ -41,12 +41,6 @@ function OptimisationContent() {
     setOpenSections(newOpen)
   }
 
-  // Calculate upgrade total (sum of additionalGain)
-  const upgradeTotal = displayResults.optimisations.upgrade.reduce(
-    (sum, item) => sum + (item.additionalGain || 0),
-    0
-  )
-
   // Fetch simulation: contextual (by ID) or global (latest) or last viewed
   useEffect(() => {
     const fetchSimulation = async () => {
@@ -138,6 +132,12 @@ function OptimisationContent() {
     : currentSimulation?.wizard_answers
     ? computeOptimizationsFromAnswers(currentSimulation.wizard_answers)
     : results
+
+  // Calculate upgrade total (sum of additionalGain) - MOVED AFTER displayResults declaration
+  const upgradeTotal = displayResults.optimisations.upgrade.reduce(
+    (sum, item) => sum + (item.additionalGain || 0),
+    0
+  )
 
   // Build unified optimization items (engine + heuristic)
   const unifiedItems = buildUnifiedOptimizationItems(

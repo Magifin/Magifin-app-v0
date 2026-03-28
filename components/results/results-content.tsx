@@ -72,17 +72,17 @@ export function ResultsContent() {
     setOpenSections(newOpen)
   }
 
-  // Calculate upgrade total (sum of additionalGain)
-  const upgradeTotal = results.optimisations.upgrade.reduce(
-    (sum, item) => sum + (item.additionalGain || 0),
-    0
-  )
-
   // Effective answers: saved simulation or current wizard session
   const activeAnswers = simulationAnswers ?? answers
   const results = useMemo(
     () => computeOptimizationsFromAnswers(activeAnswers),
     [activeAnswers]
+  )
+
+  // Calculate upgrade total (sum of additionalGain) - MOVED AFTER results declaration
+  const upgradeTotal = results.optimisations.upgrade.reduce(
+    (sum, item) => sum + (item.additionalGain || 0),
+    0
   )
 
   // Hydrate wizard store only in current session mode
@@ -172,7 +172,7 @@ export function ResultsContent() {
       .then((data) => {
         if (data.simulation?.id) {
           if (!editingSimulationId) {
-            // New simulation created — store ID so next autosaves use UPDATE
+            // New simulation created �� store ID so next autosaves use UPDATE
             setEditingSimulationId(data.simulation.id)
             if (typeof window !== "undefined") {
               localStorage.setItem("magifin_last_viewed_simulation_id", data.simulation.id)
