@@ -1,4 +1,11 @@
 import type { WizardAnswers } from "./wizard-store"
+import {
+  getPensionMaxContribution,
+  getPensionCreditRate,
+  getServiceVouchersMaxAmount,
+  getServiceVouchersCreditRate,
+  getServiceVouchersUnusedHeuristicAmount,
+} from "./fiscal/belgium/taxRules"
 
 export type OptimizationPrecision = "confirmed" | "estimated" | "advisory"
 export type OptimizationCategory =
@@ -185,7 +192,7 @@ export function computeOptimizationsFromAnswers(
   // 2. Pension saving
   if (answers.pensionSaving === "Oui") {
     // User indicated they have pension savings
-    const pensionMaxAmount = 990 // 2024 tax year maximum
+    const pensionMaxAmount = getPensionMaxContribution(answers.taxYear)
     
     if (answers.pensionSavingAmount > 0) {
       // Amount provided → potential (can calculate benefit)
@@ -193,8 +200,8 @@ export function computeOptimizationsFromAnswers(
         key: "pension_credit",
         title: "Crédit d'impôt épargne pension",
         category: "pension",
-        amountMin: Math.round(answers.pensionSavingAmount * 0.30),
-        amountMax: Math.round(answers.pensionSavingAmount * 0.30),
+        amountMin: Math.round(answers.pensionSavingAmount * getPensionCreditRate()),
+        amountMax: Math.round(answers.pensionSavingAmount * getPensionCreditRate()),
         available: true,
         precision: "estimated",
         reason: "Crédit d'impôt estimé sur votre épargne pension (30%).",
@@ -467,7 +474,7 @@ export function computeOptimizationsFromAnswers(
 
   // === UPGRADE LOGIC ===
   // Detect when user is already using an optimization but could increase contribution
-  const pensionMaxAmount = 990 // 2024 tax year maximum
+  const pensionMaxAmount = getPensionMaxContribution(answers.taxYear)
   
   if (
     answers.pensionSaving === "Oui" &&
@@ -476,7 +483,7 @@ export function computeOptimizationsFromAnswers(
   ) {
     const currentAmount = answers.pensionSavingAmount
     const remainingCapacity = pensionMaxAmount - currentAmount
-    const additionalGain = Math.round(remainingCapacity * 0.30)
+    const additionalGain = Math.round(remainingCapacity * getPensionCreditRate())
     
     upgrade.push({
       id: "pension_upgrade",
@@ -495,7 +502,7 @@ export function computeOptimizationsFromAnswers(
 
   // === UPGRADE LOGIC: TITRES-SERVICES ===
   // Detect when user uses titres-services but could increase amount for more benefit
-  const serviceVouchersMaxAmount = 1800 // Belgian cap for titres-services
+  const serviceVouchersMaxAmount = getServiceVouchersMaxAmount(answers.taxYear)
 
   if (
     answers.serviceVouchers === "Oui" &&
@@ -504,7 +511,7 @@ export function computeOptimizationsFromAnswers(
   ) {
     const currentAmount = answers.serviceVouchersAmount
     const remainingCapacity = serviceVouchersMaxAmount - currentAmount
-    const additionalGain = Math.round(remainingCapacity * 0.30)
+    const additionalGain = Math.round(remainingCapacity * getServiceVouchersCreditRate())
 
     upgrade.push({
       id: "service_vouchers_upgrade",
@@ -526,8 +533,8 @@ export function computeOptimizationsFromAnswers(
 
   // PENSION (unused case)
   if (answers.pensionSaving !== "Oui") {
-    const maxAmount = 990 // 2024 tax year maximum
-    const additionalGain = Math.round(maxAmount * 0.30)
+    const maxAmount = getPensionMaxContribution(answers.taxYear)
+    const additionalGain = Math.round(maxAmount * getPensionCreditRate())
 
     upgrade.push({
       id: "pension_unused",
@@ -544,8 +551,8 @@ export function computeOptimizationsFromAnswers(
 
   // TITRES-SERVICES (unused case)
   if (answers.serviceVouchers !== "Oui") {
-    const maxAmount = 2000 // Safe heuristic for max eligible base
-    const additionalGain = Math.round(maxAmount * 0.30)
+    const maxAmount = getServiceVouchersUnusedHeuristicAmount(answers.taxYear)
+    const additionalGain = Math.round(maxAmount * getServiceVouchersCreditRate())
 
     upgrade.push({
       id: "service_vouchers_unused",
