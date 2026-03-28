@@ -197,13 +197,19 @@ export function computeOptimizationsFromAnswers(
     const pensionMaxAmount = getPensionMaxContribution(answers.taxYear)
     
     if (answers.pensionSavingAmount > 0) {
+      // Normalize amount: cap at max and round properly
+      const normalizedAmount = Math.min(
+        Math.round(answers.pensionSavingAmount),
+        pensionMaxAmount
+      )
+      
       // Amount provided → potential (can calculate benefit)
       legacyItems.push({
         key: "pension_credit",
         title: "Crédit d'impôt épargne pension",
         category: "pension",
-        amountMin: Math.round(answers.pensionSavingAmount * getPensionCreditRate()),
-        amountMax: Math.round(answers.pensionSavingAmount * getPensionCreditRate()),
+        amountMin: Math.round(normalizedAmount * getPensionCreditRate()),
+        amountMax: Math.round(normalizedAmount * getPensionCreditRate()),
         available: true,
         precision: "estimated",
         reason: "Crédit d'impôt estimé sur votre épargne pension (30%).",
@@ -285,8 +291,14 @@ export function computeOptimizationsFromAnswers(
     const deductionRate = getChildcareDeductionRate()
 
     if (answers.childcareCost > 0) {
+      // Normalize: cap at max and round properly
+      const normalizedCost = Math.min(
+        Math.round(answers.childcareCost),
+        childcareMaxAmount
+      )
+      
       // Cost provided and > 0 → applied/detected
-      const maxDeductible = Math.min(answers.childcareCost, childcareMaxAmount)
+      const maxDeductible = normalizedCost
       const deduction = maxDeductible * deductionRate
       const amountMin = Math.round(deduction * 0.7)
       const amountMax = Math.round(deduction)
@@ -486,26 +498,41 @@ export function computeOptimizationsFromAnswers(
     answers.pensionSavingAmount > 0 &&
     answers.pensionSavingAmount < pensionMaxAmount
   ) {
-    const currentAmount = answers.pensionSavingAmount
-    const remainingCapacity = pensionMaxAmount - currentAmount
+    // Normalize: ensure amount doesn't exceed max due to floating-point drift
+    const normalizedAmount = Math.min(
+      Math.round(answers.pensionSavingAmount),
+      pensionMaxAmount
+    )
     
-    // Avoid noise: skip if remaining is negligible (≤ 1€)
-    if (remainingCapacity > 1) {
-      const additionalGain = Math.round(remainingCapacity * getPensionCreditRate())
+    // Compute remaining base with proper rounding
+    const remainingBaseRaw = pensionMaxAmount - normalizedAmount
+    let remainingBase = Math.max(0, Math.round(remainingBaseRaw))
+    
+    // Hard threshold guard: if at/near max, treat as complete
+    if (normalizedAmount >= pensionMaxAmount - 1) {
+      remainingBase = 0
+    }
+    
+    // Prevent useless upgrades
+    if (remainingBase > 1) {
+      const additionalGain = Math.round(remainingBase * getPensionCreditRate())
       
-      upgrade.push({
-        id: "pension_upgrade",
-        category: "pension",
-        label: "Optimisation épargne pension supplémentaire",
-        status: "upgrade",
-        confidence: "estimated",
-        reason:
-          "Vous pourriez augmenter votre épargne pension pour optimiser davantage votre avantage fiscal.",
-        currentAmount,
-        maxAmount: pensionMaxAmount,
-        additionalBase: remainingCapacity,
-        additionalGain,
-      })
+      // Only push if gain is meaningful
+      if (additionalGain > 1) {
+        upgrade.push({
+          id: "pension_upgrade",
+          category: "pension",
+          label: "Optimisation épargne pension supplémentaire",
+          status: "upgrade",
+          confidence: "estimated",
+          reason:
+            "Vous pourriez augmenter votre épargne pension pour optimiser davantage votre avantage fiscal.",
+          currentAmount: normalizedAmount,
+          maxAmount: pensionMaxAmount,
+          additionalBase: remainingBase,
+          additionalGain,
+        })
+      }
     }
   }
 
@@ -518,26 +545,41 @@ export function computeOptimizationsFromAnswers(
     answers.serviceVouchersAmount > 0 &&
     answers.serviceVouchersAmount < serviceVouchersMaxAmount
   ) {
-    const currentAmount = answers.serviceVouchersAmount
-    const remainingCapacity = serviceVouchersMaxAmount - currentAmount
+    // Normalize: ensure amount doesn't exceed max due to floating-point drift
+    const normalizedAmount = Math.min(
+      Math.round(answers.serviceVouchersAmount),
+      serviceVouchersMaxAmount
+    )
     
-    // Avoid noise: skip if remaining is negligible (≤ 1€)
-    if (remainingCapacity > 1) {
-      const additionalGain = Math.round(remainingCapacity * getServiceVouchersCreditRate())
-
-      upgrade.push({
-        id: "service_vouchers_upgrade",
-        category: "other",
-        label: "Optimisation titres-services supplémentaire",
-        status: "upgrade",
-        confidence: "estimated",
-        reason:
-          "Vous pourriez augmenter vos titres-services pour optimiser davantage votre avantage fiscal.",
-        currentAmount,
-        maxAmount: serviceVouchersMaxAmount,
-        additionalBase: remainingCapacity,
-        additionalGain,
-      })
+    // Compute remaining base with proper rounding
+    const remainingBaseRaw = serviceVouchersMaxAmount - normalizedAmount
+    let remainingBase = Math.max(0, Math.round(remainingBaseRaw))
+    
+    // Hard threshold guard: if at/near max, treat as complete
+    if (normalizedAmount >= serviceVouchersMaxAmount - 1) {
+      remainingBase = 0
+    }
+    
+    // Prevent useless upgrades
+    if (remainingBase > 1) {
+      const additionalGain = Math.round(remainingBase * getServiceVouchersCreditRate())
+      
+      // Only push if gain is meaningful
+      if (additionalGain > 1) {
+        upgrade.push({
+          id: "service_vouchers_upgrade",
+          category: "other",
+          label: "Optimisation titres-services supplémentaire",
+          status: "upgrade",
+          confidence: "estimated",
+          reason:
+            "Vous pourriez augmenter vos titres-services pour optimiser davantage votre avantage fiscal.",
+          currentAmount: normalizedAmount,
+          maxAmount: serviceVouchersMaxAmount,
+          additionalBase: remainingBase,
+          additionalGain,
+        })
+      }
     }
   }
 
@@ -551,25 +593,40 @@ export function computeOptimizationsFromAnswers(
     answers.childcareCost > 0 &&
     answers.childcareCost < childcareMaxAmount
   ) {
-    const currentAmount = answers.childcareCost
-    const remainingBase = childcareMaxAmount - currentAmount
+    // Normalize: ensure amount doesn't exceed max due to floating-point drift
+    const normalizedAmount = Math.min(
+      Math.round(answers.childcareCost),
+      childcareMaxAmount
+    )
     
-    // Avoid noise: skip if remaining is negligible (≤ 1€)
+    // Compute remaining base with proper rounding
+    const remainingBaseRaw = childcareMaxAmount - normalizedAmount
+    let remainingBase = Math.max(0, Math.round(remainingBaseRaw))
+    
+    // Hard threshold guard: if at/near max, treat as complete
+    if (normalizedAmount >= childcareMaxAmount - 1) {
+      remainingBase = 0
+    }
+    
+    // Prevent useless upgrades
     if (remainingBase > 1) {
       const additionalGain = Math.round(remainingBase * childcareDeductionRate)
-
-      upgrade.push({
-        id: "childcare_upgrade",
-        category: "family",
-        label: "Déduction de garde d'enfants supplémentaire",
-        status: "upgrade",
-        confidence: "estimated",
-        reason:
-          "Vous pourriez bénéficier d'une déduction fiscale supplémentaire en augmentant les frais déclarés.",
-        additionalBase: remainingBase,
-        maxAmount: childcareMaxAmount,
-        additionalGain,
-      })
+      
+      // Only push if gain is meaningful
+      if (additionalGain > 1) {
+        upgrade.push({
+          id: "childcare_upgrade",
+          category: "family",
+          label: "Déduction de garde d'enfants supplémentaire",
+          status: "upgrade",
+          confidence: "estimated",
+          reason:
+            "Vous pourriez bénéficier d'une déduction fiscale supplémentaire en augmentant les frais déclarés.",
+          additionalBase: remainingBase,
+          maxAmount: childcareMaxAmount,
+          additionalGain,
+        })
+      }
     }
   }
 
