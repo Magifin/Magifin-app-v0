@@ -334,9 +334,29 @@ export function computeOptimizationsFromAnswers(
   // However, if user indicates they use them but hasn't entered the amount,
   // we show an incomplete item to prompt for the missing data.
   if (answers.serviceVouchers === "Oui") {
+    const serviceVouchersMaxAmount = getServiceVouchersMaxAmount(answers.taxYear)
+    const creditRate = getServiceVouchersCreditRate()
+
     if (answers.serviceVouchersAmount > 0) {
-      // Amount provided → could be detected by tax engine (no heuristic needed)
-      // Tax engine handles this, so we don't add anything here
+      // Normalize: cap at max and round properly
+      const normalizedAmount = Math.min(
+        Math.round(answers.serviceVouchersAmount),
+        serviceVouchersMaxAmount
+      )
+      
+      // Amount provided → applied/detected
+      const benefit = Math.round(normalizedAmount * creditRate)
+
+      legacyItems.push({
+        key: "service_vouchers",
+        title: "Titres-services",
+        category: "other",
+        amountMin: benefit,
+        amountMax: benefit,
+        available: true,
+        precision: "estimated",
+        reason: "Réduction d'impôt estimée pour titres-services (30%).",
+      })
     } else {
       // User confirmed but amount missing → incomplete
       legacyItems.push({
@@ -622,6 +642,7 @@ export function computeOptimizationsFromAnswers(
           confidence: "estimated",
           reason:
             "Vous pourriez bénéficier d'une déduction fiscale supplémentaire en augmentant les frais déclarés.",
+          currentAmount: normalizedAmount,
           additionalBase: remainingBase,
           maxAmount: childcareMaxAmount,
           additionalGain,
