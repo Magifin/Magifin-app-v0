@@ -72,13 +72,13 @@ export function buildUnifiedOptimizationItems(
       })
     }
 
-    if (appliedOptimizations.mortgageTracked > 0) {
+    if (appliedOptimizations.mortgageBenefit > 0) {
       unified.push({
-        key: "mortgage_tracked",
-        title: "Prêt hypothécaire (suivi)",
-        amountMin: appliedOptimizations.mortgageTracked,
-        amountMax: appliedOptimizations.mortgageTracked,
-        reason: "Intérêts et capital remboursés documentés (déductibilité à vérifier selon région).",
+        key: "mortgage",
+        title: "Prêt hypothécaire",
+        amountMin: appliedOptimizations.mortgageBenefit,
+        amountMax: appliedOptimizations.mortgageBenefit,
+        reason: "Réduction d'impôt estimée sur votre prêt hypothécaire.",
         badge: "Confirmé",
       })
     }

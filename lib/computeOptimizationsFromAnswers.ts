@@ -172,10 +172,10 @@ export function computeOptimizationsFromAnswers(
           available: false,
           precision: isWallonie && isSalarie ? "confirmed" : "estimated",
           reason:
-            "Complétez les montants d'intérêt et capital pour calculer la déduction applicable.",
+            "Complétez les intérêts et capital pour estimer votre avantage fiscal.",
         })
       }
-      // If base > 0, mortgage is tracked by tax engine, do NOT add heuristic item
+      // If base > 0, mortgage benefit is calculated by tax engine, do NOT add heuristic item
     }
   }
 

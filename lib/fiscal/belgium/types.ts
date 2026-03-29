@@ -74,8 +74,8 @@ export interface AppliedOptimizations {
   serviceVouchersCredit: number
   /** Childcare deduction benefit (45% of eligible cost) */
   childcareDeduction: number
-  /** Mortgage interest and capital tracked (for documentation, not tax-reducing in MVP) */
-  mortgageTracked: number
+  /** Mortgage benefit (30% of eligible base, capped at €3,000/year) */
+  mortgageBenefit: number
   /** Total of all applied user-driven optimizations */
   total: number
 }

@@ -75,6 +75,7 @@ export interface DetailedTaxResult extends BaseTaxResult {
     childrenCredit: number
     serviceVouchersCredit: number
     childcareDeduction: number
+    mortgageBenefit: number
     total: number
   }
   /** List of deductions that were applied */

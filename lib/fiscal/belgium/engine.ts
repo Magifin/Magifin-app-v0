@@ -81,7 +81,20 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   // === Stage 6: Apply non-quotité tax credits ===
   // Pension is applied as 30% credit
   const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost })
-  const estimatedTax = clampNonNegative(taxBeforeCredits - taxCredits.totalCredits)
+  
+  // === Stage 6b: Calculate mortgage benefit ===
+  // Mortgage benefit: 30% of eligible base, capped at €3,000/year (MVP assumption)
+  let mortgageBenefit = 0
+  if (input.housingStatus === "ProprietaireAvecPret" && input.propertyUse === "HabitationPropreUnique") {
+    const mortgageBase = mortgageInterest + mortgageCapital
+    if (mortgageBase > 0) {
+      const mortgageCap = 3000
+      const eligibleBase = Math.min(mortgageBase, mortgageCap)
+      mortgageBenefit = Math.round(eligibleBase * 0.30)
+    }
+  }
+  
+  const estimatedTax = clampNonNegative(taxBeforeCredits - taxCredits.totalCredits - mortgageBenefit)
 
   // === Stage 7: Calculate effective rate and balance ===
   const effectiveTaxRate = calculateEffectiveRate(estimatedTax, grossIncome)
@@ -100,8 +113,8 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
       childrenCredit,
       serviceVouchersCredit: taxCredits.serviceVouchersCredit,
       childcareDeduction: taxCredits.childcareDeduction,
-      mortgageTracked: mortgageInterest + mortgageCapital,
-      total: taxCredits.totalCredits + childrenCredit,
+      mortgageBenefit,
+      total: taxCredits.totalCredits + childrenCredit + mortgageBenefit,
     },
     deductionsApplied: totalDeductionsApplied,
     effectiveTaxRate,
@@ -166,7 +179,19 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
 
   // === Stage 6: Apply tax credits ===
   const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost })
-  const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits)
+  
+  // === Stage 6b: Calculate mortgage benefit ===
+  let mortgageBenefit = 0
+  if (input.housingStatus === "ProprietaireAvecPret" && input.propertyUse === "HabitationPropreUnique") {
+    const mortgageBase = mortgageInterest + mortgageCapital
+    if (mortgageBase > 0) {
+      const mortgageCap = 3000
+      const eligibleBase = Math.min(mortgageBase, mortgageCap)
+      mortgageBenefit = Math.round(eligibleBase * 0.30)
+    }
+  }
+  
+  const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits - mortgageBenefit)
 
   // === Stage 7: Build detailed result ===
   const totalDeductionsApplied = profExpenses + deductionResult.totalDeductions
@@ -180,8 +205,8 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
       childrenCredit,
       serviceVouchersCredit: taxCredits.serviceVouchersCredit,
       childcareDeduction: taxCredits.childcareDeduction,
-      mortgageTracked: mortgageInterest + mortgageCapital,
-      total: taxCredits.totalCredits + childrenCredit,
+      mortgageBenefit,
+      total: taxCredits.totalCredits + childrenCredit + mortgageBenefit,
     })
     .setDeductionsApplied(totalDeductionsApplied)
 

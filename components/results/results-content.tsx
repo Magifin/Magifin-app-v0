@@ -602,6 +602,12 @@ export function ResultsContent() {
                     <span className="font-[family-name:var(--font-heading)] font-medium text-primary">-{formatMoney(taxResult.appliedOptimizations.childcareDeduction)}</span>
                   </div>
                 )}
+                {taxResult.appliedOptimizations.mortgageBenefit > 0 && (
+                  <div className="flex items-center justify-between text-sm pl-4 border-l-2 border-primary/20">
+                    <span className="text-muted-foreground">- Prêt hypothécaire</span>
+                    <span className="font-[family-name:var(--font-heading)] font-medium text-primary">-{formatMoney(taxResult.appliedOptimizations.mortgageBenefit)}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between text-sm border-t border-border/50 pt-2">
                   <span className="font-medium">= Impôt dû après optimisations</span>
