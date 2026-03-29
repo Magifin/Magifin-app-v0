@@ -86,11 +86,6 @@ export function buildUnifiedOptimizationItems(
       continue
     }
 
-    // Skip childcare if already applied by engine as childcare_deduction
-    if (item.id === "childcare" && appliedOptimizations?.childcareDeduction > 0) {
-      continue
-    }
-
     unified.push({
       key: item.id,
       title: item.label,
