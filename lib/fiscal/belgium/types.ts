@@ -42,6 +42,12 @@ export interface TaxInput extends BaseTaxInput {
    * Art. 145/21 CIR 92 — 30% tax credit applied post-brackets.
    */
   serviceVouchersCost?: number
+  /**
+   * Total annual childcare expenses (frais de garde), in euros.
+   * Deductible at 45% rate up to yearly max (€4,100 for 2024).
+   * Art. 78 CIR 92 — deductible before tax calculation.
+   */
+  childcareCost?: number
 }
 
 /**
@@ -54,6 +60,8 @@ export interface AppliedOptimizations {
   childrenCredit: number
   /** Service vouchers credit */
   serviceVouchersCredit: number
+  /** Childcare deduction benefit (45% of eligible cost) */
+  childcareDeduction: number
   /** Total of all applied user-driven optimizations */
   total: number
 }

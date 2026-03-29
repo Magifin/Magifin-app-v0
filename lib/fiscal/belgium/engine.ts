@@ -35,6 +35,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   const grossIncome = clampNonNegative(input.salaryIncome)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const serviceVouchersCost = clampNonNegative(input.serviceVouchersCost ?? 0)
+  const childcareCost = clampNonNegative(input.childcareCost ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
   const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
@@ -77,7 +78,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
 
   // === Stage 6: Apply non-quotité tax credits ===
   // Pension is applied as 30% credit
-  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost })
+  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost })
   const estimatedTax = clampNonNegative(taxBeforeCredits - taxCredits.totalCredits)
 
   // === Stage 7: Calculate effective rate and balance ===
@@ -96,6 +97,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
       pensionCredit: taxCredits.pensionCredit,
       childrenCredit,
       serviceVouchersCredit: taxCredits.serviceVouchersCredit,
+      childcareDeduction: taxCredits.childcareDeduction,
       total: taxCredits.totalCredits + childrenCredit,
     },
     deductionsApplied: totalDeductionsApplied,
@@ -121,6 +123,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const grossIncome = clampNonNegative(input.salaryIncome)
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const serviceVouchersCost = clampNonNegative(input.serviceVouchersCost ?? 0)
+  const childcareCost = clampNonNegative(input.childcareCost ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
 
   // === Stage 2: Calculate net income ===
@@ -157,7 +160,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const childrenCredit = Math.max(0, taxNoChildren - totalTax)
 
   // === Stage 6: Apply tax credits ===
-  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost })
+  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost })
   const finalTax = clampNonNegative(totalTax - taxCredits.totalCredits)
 
   // === Stage 7: Build detailed result ===
@@ -171,6 +174,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
       pensionCredit: taxCredits.pensionCredit,
       childrenCredit,
       serviceVouchersCredit: taxCredits.serviceVouchersCredit,
+      childcareDeduction: taxCredits.childcareDeduction,
       total: taxCredits.totalCredits + childrenCredit,
     })
     .setDeductionsApplied(totalDeductionsApplied)

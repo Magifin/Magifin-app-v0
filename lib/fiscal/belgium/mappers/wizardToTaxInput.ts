@@ -88,6 +88,12 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
       ? Math.min(answers.serviceVouchersAmount, SERVICE_VOUCHERS_MAX_UNITS) * SERVICE_VOUCHERS_COST_PER_UNIT
       : 0
 
+  // Map childcare cost
+  const childcareCost =
+    answers.childcare === "Oui" && answers.childcareCost > 0
+      ? answers.childcareCost
+      : 0
+
   return {
     fiscalYear: answers.taxYear ?? getDefaultTaxYear(),
     region,
@@ -96,6 +102,7 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
     pensionContribution,
     taxesAlreadyPaid,
     serviceVouchersCost,
+    childcareCost,
   }
 }
 

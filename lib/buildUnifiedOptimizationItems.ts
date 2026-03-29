@@ -60,6 +60,17 @@ export function buildUnifiedOptimizationItems(
         badge: "Confirmé",
       })
     }
+
+    if (appliedOptimizations.childcareDeduction > 0) {
+      unified.push({
+        key: "childcare_deduction",
+        title: "Frais de garde d'enfants",
+        amountMin: appliedOptimizations.childcareDeduction,
+        amountMax: appliedOptimizations.childcareDeduction,
+        reason: "Déduction fiscale de 45% sur vos frais de garde d'enfants.",
+        badge: "Confirmé",
+      })
+    }
   }
 
   // SECTION 2: Heuristic items with status="potential" (show "Estimé" badge)
@@ -72,6 +83,11 @@ export function buildUnifiedOptimizationItems(
 
     // Skip service_vouchers if already applied by engine as titres_services
     if (item.id === "service_vouchers" && appliedOptimizations?.serviceVouchersCredit > 0) {
+      continue
+    }
+
+    // Skip childcare if already applied by engine as childcare_deduction
+    if (item.id === "childcare" && appliedOptimizations?.childcareDeduction > 0) {
       continue
     }
 
