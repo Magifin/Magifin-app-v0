@@ -70,6 +70,11 @@ export function buildUnifiedOptimizationItems(
       continue
     }
 
+    // Skip service_vouchers if already applied by engine as titres_services
+    if (item.id === "service_vouchers" && appliedOptimizations?.serviceVouchersCredit > 0) {
+      continue
+    }
+
     unified.push({
       key: item.id,
       title: item.label,
