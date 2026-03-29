@@ -153,28 +153,15 @@ export function computeOptimizationsFromAnswers(
   // Apply with full precision when Wallonie + Salarié + Propriétaire avec prêt
 
   // 1. Mortgage deduction (Prêt hypothécaire)
+  // Mortgage is NOW handled by the tax engine when both interest and capital are provided
+  // We only show incomplete status here
   if (answers.housingStatus === "ProprietaireAvecPret") {
     if (answers.hasMortgagePayments === "Oui") {
       const interest = answers.mortgageInterest ?? 0
       const capital = answers.mortgageCapital ?? 0
       const base = interest + capital
 
-      if (base > 0) {
-        // Both amounts provided and > 0 → potential
-        const amountMin = Math.round(base * 0.25)
-        const amountMax = Math.round(base * 0.40)
-
-        legacyItems.push({
-          key: "mortgage_deduction",
-          title: "Déduction liée au prêt hypothécaire",
-          category: "mortgage",
-          amountMin,
-          amountMax,
-          available: true,
-          precision: isWallonie && isSalarie ? "confirmed" : "estimated",
-          reason: "Déduction estimée basée sur remboursement déclaré.",
-        })
-      } else {
+      if (base === 0) {
         // User confirmed payments but amounts missing → incomplete
         legacyItems.push({
           key: "mortgage_incomplete",
@@ -188,6 +175,7 @@ export function computeOptimizationsFromAnswers(
             "Complétez les montants d'intérêt et capital pour calculer la déduction applicable.",
         })
       }
+      // If base > 0, mortgage is tracked by tax engine, do NOT add heuristic item
     }
   }
 

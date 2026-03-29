@@ -26,6 +26,14 @@ export const taxRules = {
     },
     deductionRate: 0.45,
   },
+  mortgage: {
+    // Mortgage interest and capital are tracked but benefit calculation
+    // depends on regional rules and requires manual tax determination.
+    // For MVP, mortgage is included in the calculation framework but
+    // actual deduction rates vary by region (Wallonie has specific rules).
+    // This is intentionally left as a placeholder for future expansion.
+    deductionRate: 0, // 0 = pass-through (tracked but not auto-deducted)
+  },
 }
 
 /**

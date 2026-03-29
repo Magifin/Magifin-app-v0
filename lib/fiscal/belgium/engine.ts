@@ -36,6 +36,8 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const serviceVouchersCost = clampNonNegative(input.serviceVouchersCost ?? 0)
   const childcareCost = clampNonNegative(input.childcareCost ?? 0)
+  const mortgageInterest = clampNonNegative(input.mortgageInterest ?? 0)
+  const mortgageCapital = clampNonNegative(input.mortgageCapital ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
   const taxesAlreadyPaid = clampNonNegative(input.taxesAlreadyPaid ?? 0)
 
@@ -98,6 +100,7 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
       childrenCredit,
       serviceVouchersCredit: taxCredits.serviceVouchersCredit,
       childcareDeduction: taxCredits.childcareDeduction,
+      mortgageTracked: mortgageInterest + mortgageCapital,
       total: taxCredits.totalCredits + childrenCredit,
     },
     deductionsApplied: totalDeductionsApplied,
@@ -124,6 +127,8 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const pensionContribution = clampNonNegative(input.pensionContribution ?? 0)
   const serviceVouchersCost = clampNonNegative(input.serviceVouchersCost ?? 0)
   const childcareCost = clampNonNegative(input.childcareCost ?? 0)
+  const mortgageInterest = clampNonNegative(input.mortgageInterest ?? 0)
+  const mortgageCapital = clampNonNegative(input.mortgageCapital ?? 0)
   const donations = clampNonNegative(input.donations ?? 0)
 
   // === Stage 2: Calculate net income ===
@@ -175,6 +180,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
       childrenCredit,
       serviceVouchersCredit: taxCredits.serviceVouchersCredit,
       childcareDeduction: taxCredits.childcareDeduction,
+      mortgageTracked: mortgageInterest + mortgageCapital,
       total: taxCredits.totalCredits + childrenCredit,
     })
     .setDeductionsApplied(totalDeductionsApplied)

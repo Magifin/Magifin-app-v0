@@ -94,6 +94,17 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
       ? answers.childcareCost
       : 0
 
+  // Map mortgage interest and capital
+  const mortgageInterest =
+    answers.hasMortgagePayments === "Oui" && answers.mortgageInterest !== null && answers.mortgageInterest > 0
+      ? answers.mortgageInterest
+      : 0
+
+  const mortgageCapital =
+    answers.hasMortgagePayments === "Oui" && answers.mortgageCapital !== null && answers.mortgageCapital > 0
+      ? answers.mortgageCapital
+      : 0
+
   return {
     fiscalYear: answers.taxYear ?? getDefaultTaxYear(),
     region,
@@ -103,6 +114,8 @@ export function mapWizardAnswersToTaxInput(answers: WizardAnswers): TaxInput | n
     taxesAlreadyPaid,
     serviceVouchersCost,
     childcareCost,
+    mortgageInterest,
+    mortgageCapital,
   }
 }
 

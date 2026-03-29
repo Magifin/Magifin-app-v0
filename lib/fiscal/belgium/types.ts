@@ -48,6 +48,18 @@ export interface TaxInput extends BaseTaxInput {
    * Art. 78 CIR 92 — deductible before tax calculation.
    */
   childcareCost?: number
+  /**
+   * Annual mortgage interest paid (intérêts du prêt hypothécaire), in euros.
+   * Deductibility depends on regional rules and housing type.
+   * Tracked for documentation and regional-specific calculations.
+   */
+  mortgageInterest?: number
+  /**
+   * Annual mortgage capital paid (capital remboursé du prêt hypothécaire), in euros.
+   * Generally not deductible, but tracked for completeness.
+   * May be relevant for specific regional rules or future expansion.
+   */
+  mortgageCapital?: number
 }
 
 /**
@@ -62,6 +74,8 @@ export interface AppliedOptimizations {
   serviceVouchersCredit: number
   /** Childcare deduction benefit (45% of eligible cost) */
   childcareDeduction: number
+  /** Mortgage interest and capital tracked (for documentation, not tax-reducing in MVP) */
+  mortgageTracked: number
   /** Total of all applied user-driven optimizations */
   total: number
 }

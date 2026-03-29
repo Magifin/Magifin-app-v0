@@ -71,6 +71,17 @@ export function buildUnifiedOptimizationItems(
         badge: "Confirmé",
       })
     }
+
+    if (appliedOptimizations.mortgageTracked > 0) {
+      unified.push({
+        key: "mortgage_tracked",
+        title: "Prêt hypothécaire (suivi)",
+        amountMin: appliedOptimizations.mortgageTracked,
+        amountMax: appliedOptimizations.mortgageTracked,
+        reason: "Intérêts et capital remboursés documentés (déductibilité à vérifier selon région).",
+        badge: "Confirmé",
+      })
+    }
   }
 
   // SECTION 2: Heuristic items with status="potential" (show "Estimé" badge)
