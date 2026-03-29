@@ -136,7 +136,11 @@ export function StepPension({
               min={0}
               max={1310}
               value={pensionAmount || ""}
-              onChange={(e) => onAmountChange(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const raw = Number(e.target.value || 0)
+                const amount = Math.round(raw)
+                onAmountChange(amount)
+              }}
               placeholder="Ex: 990"
               className="w-40"
             />

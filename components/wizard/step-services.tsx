@@ -98,7 +98,11 @@ export function StepServices({
               type="number"
               min={0}
               value={servicesAmount || ""}
-              onChange={(e) => onAmountChange(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const raw = Number(e.target.value || 0)
+                const amount = Math.round(raw)
+                onAmountChange(amount)
+              }}
               placeholder="Ex: 150"
               className="w-40"
             />
