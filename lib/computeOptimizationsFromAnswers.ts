@@ -291,28 +291,10 @@ export function computeOptimizationsFromAnswers(
     const deductionRate = getChildcareDeductionRate()
 
     if (answers.childcareCost > 0) {
-      // Normalize: cap at max and round properly
-      const normalizedCost = Math.min(
-        Math.round(answers.childcareCost),
-        childcareMaxAmount
-      )
-      
-      // Cost provided and > 0 → applied/detected
-      const maxDeductible = normalizedCost
-      const deduction = maxDeductible * deductionRate
-      const amountMin = Math.round(deduction * 0.7)
-      const amountMax = Math.round(deduction)
-
-      legacyItems.push({
-        key: "childcare",
-        title: "Frais de garde d'enfants",
-        category: "family",
-        amountMin,
-        amountMax,
-        available: true,
-        precision: "estimated",
-        reason: "Déduction estimée pour frais de garde (max 45% des frais).",
-      })
+      // Childcare is NOW handled by the tax engine when cost > 0
+      // Do NOT add an applied item here to avoid duplication
+      // The tax engine will provide it via appliedOptimizations.childcareDeduction
+      // which is then rendered by buildUnifiedOptimizationItems
     } else {
       // User confirmed childcare but cost missing → incomplete
       legacyItems.push({

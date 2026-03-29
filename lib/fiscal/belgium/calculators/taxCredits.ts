@@ -6,7 +6,7 @@
  */
 
 import { clampNonNegative } from "@/lib/fiscal/core/validation"
-import { calculatePensionTaxCredit, PENSION_SAVINGS_RULE } from "../rules/deductions"
+import { calculatePensionTaxCredit, PENSION_SAVINGS_RULE, calculateChildcareDeductionBenefit } from "../rules/deductions"
 import { calculateServiceVouchersCredit } from "../rules/credits"
 
 /**
@@ -16,6 +16,8 @@ export interface TaxCreditInput {
   pensionContribution?: number
   /** Total annual cost paid for service vouchers (euros). */
   serviceVouchersCost?: number
+  /** Total annual childcare expenses (euros). */
+  childcareCost?: number
 }
 
 /**
@@ -28,6 +30,8 @@ export interface TaxCreditResult {
   pensionCredit: number
   /** Service vouchers credit (30% of cost, max 163 vouchers/year) */
   serviceVouchersCredit: number
+  /** Childcare deduction benefit (45% of eligible cost) */
+  childcareDeduction: number
 }
 
 /**
@@ -35,6 +39,8 @@ export interface TaxCreditResult {
  * 
  * P2: Pension savings is now applied as a tax credit (30% of contribution)
  * instead of as a deduction before tax.
+ * 
+ * Childcare expenses are deductible at 45% rate up to yearly max.
  * 
  * @param input - Tax credit inputs
  * @returns Total credits and breakdown
@@ -49,9 +55,15 @@ export function calculateAllTaxCredits(input: TaxCreditInput): TaxCreditResult {
     clampNonNegative(input.serviceVouchersCost ?? 0)
   )
 
+  // Childcare deduction benefit (45% of eligible cost)
+  const childcareDeduction = calculateChildcareDeductionBenefit(
+    clampNonNegative(input.childcareCost ?? 0)
+  )
+
   return {
     pensionCredit,
     serviceVouchersCredit,
-    totalCredits: clampNonNegative(pensionCredit + serviceVouchersCredit),
+    childcareDeduction,
+    totalCredits: clampNonNegative(pensionCredit + serviceVouchersCredit + childcareDeduction),
   }
 }

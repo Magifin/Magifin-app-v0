@@ -84,6 +84,7 @@ export class TaxResultBuilder {
         pensionCredit: 0,
         childrenCredit: 0,
         serviceVouchersCredit: 0,
+        childcareDeduction: 0,
         total: 0,
       },
       appliedDeductions: [...this.appliedDeductions],

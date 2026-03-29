@@ -78,6 +78,28 @@ export const DONATIONS_RULE: DeductionRule = {
 }
 
 /**
+ * Childcare expenses deduction rule (Frais de garde d'enfants)
+ * 
+ * Reference: Art. 78, 5° CIR 92
+ * Maximum €4,100 per year (2024)
+ * Deductible at 45% rate
+ * 
+ * Eligible expenses:
+ * - Professional childcare (day care, nurseries, babysitters, nannies)
+ * - Extra-curricular activities (approved programs)
+ * - School fees (eligible institutions)
+ */
+export const CHILDCARE_EXPENSES_RULE: DeductionRule = {
+  key: "childcare_expenses",
+  label: "Frais de garde d'enfants",
+  maxAmount: 4100, // 2024 maximum
+  hasCap: true,
+  certainty: "confirmed",
+  reference: "Art. 78, 5° CIR 92",
+  eligibilityConditions: "Dependent children under 14, with eligible childcare provider",
+}
+
+/**
  * Dependent deduction rule (Quotité exemptée / Belastingvrije som)
  * 
  * Reference: Art. 132-140 CIR 92
@@ -151,4 +173,26 @@ export function calculateDependentDeduction(dependents: number): number {
   if (dependents <= 0) return 0
   const cappedDependents = Math.min(dependents, MAX_DEPENDENTS_MVP)
   return cappedDependents * DEPENDENT_DEDUCTION_AMOUNT
+}
+
+/**
+ * Calculate childcare expenses benefit (45% deduction)
+ * 
+ * Art. 78, 5° CIR 92: Childcare expenses are deductible at 45% rate,
+ * up to the yearly maximum of €4,100 (2024).
+ * 
+ * The benefit is: cost × 0.45, applied before tax calculation.
+ * 
+ * @param childcareCost - Annual childcare cost in euros
+ * @returns Tax benefit from childcare deduction (45% of eligible cost)
+ */
+export function calculateChildcareDeductionBenefit(childcareCost: number): number {
+  if (childcareCost <= 0) return 0
+  // Cap at maximum and round properly
+  const eligibleCost = Math.min(
+    Math.round(childcareCost),
+    CHILDCARE_EXPENSES_RULE.maxAmount ?? 0
+  )
+  // Return 45% benefit
+  return Math.round(eligibleCost * 0.45)
 }
