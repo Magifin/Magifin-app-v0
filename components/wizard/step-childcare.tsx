@@ -103,6 +103,7 @@ export function StepChildcare({
                 const amount = Math.round(raw)
                 onCostChange(amount)
               }}
+              onWheel={(e) => e.currentTarget.blur()}
               placeholder="Ex: 2400"
               className="w-40"
             />

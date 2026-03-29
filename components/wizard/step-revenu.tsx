@@ -92,6 +92,7 @@ export function StepRevenu({
               placeholder="45 000"
               value={annualGrossIncome || ""}
               onChange={handleIncomeChange}
+              onWheel={(e) => e.currentTarget.blur()}
               className="pl-8"
               min="0"
               step="100"
@@ -114,6 +115,7 @@ export function StepRevenu({
               placeholder="0"
               value={taxesAlreadyPaid || ""}
               onChange={handleTaxesPaidChange}
+              onWheel={(e) => e.currentTarget.blur()}
               className="pl-8"
               min="0"
               step="100"
