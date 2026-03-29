@@ -109,6 +109,7 @@ export function StepMortgage({
                     e.target.value ? parseInt(e.target.value) : null
                   )
                 }
+                onWheel={(e) => e.currentTarget.blur()}
                 placeholder="Ex: 2500"
                 className="w-40"
               />
@@ -130,6 +131,7 @@ export function StepMortgage({
                     e.target.value ? parseInt(e.target.value) : null
                   )
                 }
+                onWheel={(e) => e.currentTarget.blur()}
                 placeholder="Ex: 4000"
                 className="w-40"
               />

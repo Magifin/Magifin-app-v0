@@ -103,6 +103,7 @@ export function StepServices({
                 const amount = Math.round(raw)
                 onAmountChange(amount)
               }}
+              onWheel={(e) => e.currentTarget.blur()}
               placeholder="Ex: 150"
               className="w-40"
             />

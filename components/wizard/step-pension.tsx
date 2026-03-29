@@ -141,6 +141,7 @@ export function StepPension({
                 const amount = Math.round(raw)
                 onAmountChange(amount)
               }}
+              onWheel={(e) => e.currentTarget.blur()}
               placeholder="Ex: 990"
               className="w-40"
             />
