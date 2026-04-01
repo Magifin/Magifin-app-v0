@@ -58,23 +58,22 @@ export function getQuotiteBase(fiscalYear?: number): number {
  * Service vouchers (titres-services) tax credit
  *
  * Reference: Art. 145/21 CIR 92
- * Rate: 30% of actual price paid per voucher
- * Cost per voucher: €9
- * Cap: 163 vouchers/year per household (single)
- * Maximum annual credit: 163 × €9 × 30% = €440.10
+ * Rate: 10% of actual expenditure (Wallonia MVP)
+ * Cap: 1850 EUR/person/year
+ * Maximum annual credit: 1850 × 10% = 185 EUR
  */
-export const SERVICE_VOUCHERS_CREDIT_RATE = 0.30
+export const SERVICE_VOUCHERS_CREDIT_RATE = 0.10
 export const SERVICE_VOUCHERS_COST_PER_UNIT = 9
 export const SERVICE_VOUCHERS_MAX_UNITS = 163
 
 /**
  * Calculate service vouchers tax credit
- * @param serviceVouchersCost - Total annual cost paid in euros (pre-capped by mapper)
- * @returns Tax credit amount in euros
+ * @param serviceVouchersCost - Total annual cost paid in euros
+ * @returns Tax credit amount in euros (10% of expenditure, capped at 1850 EUR)
  */
 export function calculateServiceVouchersCredit(serviceVouchersCost: number): number {
   if (serviceVouchersCost <= 0) return 0
-  const maxCost = SERVICE_VOUCHERS_MAX_UNITS * SERVICE_VOUCHERS_COST_PER_UNIT
+  const maxCost = 1850  // Max eligible expenditure per MVP spec
   const cappedCost = Math.min(serviceVouchersCost, maxCost)
-  return cappedCost * SERVICE_VOUCHERS_CREDIT_RATE
+  return Math.round(cappedCost * SERVICE_VOUCHERS_CREDIT_RATE)
 }

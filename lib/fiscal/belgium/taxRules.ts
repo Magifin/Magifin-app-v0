@@ -13,9 +13,9 @@ export const taxRules = {
   },
   serviceVouchers: {
     maxEligibleAmountByYear: {
-      2024: 1800,
+      2024: 1850,
     },
-    creditRate: 0.30,
+    creditRate: 0.10,
     unusedHeuristicAmountByYear: {
       2024: 2000,
     },
