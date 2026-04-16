@@ -79,8 +79,8 @@ export function computeBelgiumTax(input: TaxInput): TaxResult {
   const childrenCredit = Math.max(0, taxBeforeCreditsNoChildren - taxBeforeCredits)
 
   // === Stage 6: Apply non-quotité tax credits ===
-  // Pension is applied as 30% credit
-  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost })
+  // Pension uses TWO-TIER: 30% up to €990, 25% up to €1,270
+  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost, fiscalYear: input.fiscalYear })
   
   // === Stage 6b: Calculate mortgage benefit ===
   // Mortgage benefit: 30% of eligible base, capped at €3,000/year (MVP assumption)
@@ -178,7 +178,7 @@ export function computeBelgiumTaxDetailed(input: TaxInput): DetailedTaxResult {
   const childrenCredit = Math.max(0, taxNoChildren - totalTax)
 
   // === Stage 6: Apply tax credits ===
-  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost })
+  const taxCredits = calculateAllTaxCredits({ pensionContribution, serviceVouchersCost, childcareCost, fiscalYear: input.fiscalYear })
   
   // === Stage 6b: Calculate mortgage benefit ===
   let mortgageBenefit = 0

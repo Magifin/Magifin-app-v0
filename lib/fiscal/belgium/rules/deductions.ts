@@ -5,7 +5,7 @@
  * as per FISCAL_ENGINE.md specifications.
  */
 
-import type { RuleCertainty } from "@/lib/fiscal/core/types"
+import { getPensionLowerCeiling, getPensionUpperCeiling, getPensionCreditRateTier1, getPensionCreditRateTier2 } from "../taxRules"
 
 /**
  * Deduction rule definition
@@ -33,10 +33,14 @@ export interface DeductionRule {
  * Reference: Art. 1451, 1° CIR 92
  * Tax year 2024: Maximum €990 (standard) or €1270 (extended system)
  * 
- * P2 Implementation: Pension is now a TAX CREDIT (30% of contribution)
- * instead of a direct deduction. The credit is applied after tax calculation.
+ * P2 Implementation: Pension is now a TAX CREDIT with TWO-TIER rates:
+ * - Up to €990: 30% rate
+ * - Above €990 up to €1,270: 25% rate
+ * - Above €1,270: Capped
  * 
- * MVP: Using standard maximum of €990
+ * The credit is applied after tax calculation.
+ * 
+ * MVP: Using standard maximum of €990 and extended €1,270
  */
 export const PENSION_SAVINGS_RULE: DeductionRule = {
   key: "pension_savings",
@@ -49,13 +53,47 @@ export const PENSION_SAVINGS_RULE: DeductionRule = {
 }
 
 /**
- * Calculate pension savings TAX CREDIT (30% of contribution)
- * P2: Pension is now applied as a credit after tax, not as a deduction before tax
+ * Calculate pension savings TAX CREDIT with TWO-TIER formula
+ * 
+ * TIER 1 (30%): contribution up to lower ceiling
+ * TIER 2 (25%): contribution above lower ceiling up to upper ceiling
+ * CAPPED: contribution above upper ceiling is ignored
+ * 
+ * Formula:
+ * if contribution <= lowerCeiling:
+ *   credit = contribution × 30%
+ * else:
+ *   credit = (lowerCeiling × 30%) + ((min(contribution, upperCeiling) - lowerCeiling) × 25%)
+ * 
+ * @param contribution - Annual pension contribution in euros
+ * @param fiscalYear - Fiscal year (for threshold lookup)
+ * @returns Tax credit amount in euros
  */
-export function calculatePensionTaxCredit(contribution: number): number {
+export function calculatePensionTaxCredit(contribution: number, fiscalYear: number = 2024): number {
   if (contribution <= 0) return 0
-  const cappedContribution = Math.min(contribution, PENSION_SAVINGS_RULE.maxAmount ?? contribution)
-  return cappedContribution * 0.30
+  
+  const lowerCeiling = getPensionLowerCeiling(fiscalYear)
+  const upperCeiling = getPensionUpperCeiling(fiscalYear)
+  const rateTier1 = getPensionCreditRateTier1()
+  const rateTier2 = getPensionCreditRateTier2()
+  
+  let credit = 0
+  
+  if (contribution <= lowerCeiling) {
+    // Tier 1 only: 30% of contribution
+    credit = contribution * rateTier1
+  } else {
+    // Tier 1: 30% on lower ceiling
+    const tier1Credit = lowerCeiling * rateTier1
+    
+    // Tier 2: 25% on amount between lower and upper ceiling
+    const tier2Base = Math.min(contribution, upperCeiling) - lowerCeiling
+    const tier2Credit = tier2Base * rateTier2
+    
+    credit = tier1Credit + tier2Credit
+  }
+  
+  return Math.round(credit)
 }
 
 /**

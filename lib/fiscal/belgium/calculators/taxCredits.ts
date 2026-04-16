@@ -14,6 +14,8 @@ import { calculateServiceVouchersCredit } from "../rules/credits"
  */
 export interface TaxCreditInput {
   pensionContribution?: number
+  /** Fiscal year for threshold lookups (defaults to 2024) */
+  fiscalYear?: number
   /** Total annual cost paid for service vouchers (euros). */
   serviceVouchersCost?: number
   /** Total annual childcare expenses (euros). */
@@ -26,9 +28,9 @@ export interface TaxCreditInput {
 export interface TaxCreditResult {
   /** Total tax credits */
   totalCredits: number
-  /** Pension savings credit (30% of contribution) */
+  /** Pension savings credit (2-tier: 30% up to €990, 25% up to €1,270) */
   pensionCredit: number
-  /** Service vouchers credit (30% of cost, max 163 vouchers/year) */
+  /** Service vouchers credit (10% of cost, max €1,850/year) */
   serviceVouchersCredit: number
   /** Childcare deduction benefit (45% of eligible cost) */
   childcareDeduction: number
@@ -37,18 +39,24 @@ export interface TaxCreditResult {
 /**
  * Calculate all applicable tax credits for Belgium
  * 
- * P2: Pension savings is now applied as a tax credit (30% of contribution)
- * instead of as a deduction before tax.
+ * Pension savings now uses TWO-TIER formula:
+ * - 30% up to lower ceiling
+ * - 25% from lower to upper ceiling
+ * - Capped at upper ceiling
  * 
- * Childcare expenses are deductible at 45% rate up to yearly max.
+ * Service vouchers: 10% rate (Wallonia MVP)
+ * Childcare: 45% deduction up to yearly max
  * 
- * @param input - Tax credit inputs
+ * @param input - Tax credit inputs (includes fiscalYear for thresholds)
  * @returns Total credits and breakdown
  */
 export function calculateAllTaxCredits(input: TaxCreditInput): TaxCreditResult {
-  // Pension savings tax credit (30% of contribution)
+  const fiscalYear = input.fiscalYear ?? 2024
+  
+  // Pension savings tax credit (TWO-TIER: 30% then 25%)
   const pensionCredit = calculatePensionTaxCredit(
-    clampNonNegative(input.pensionContribution ?? 0)
+    clampNonNegative(input.pensionContribution ?? 0),
+    fiscalYear
   )
 
   const serviceVouchersCredit = calculateServiceVouchersCredit(

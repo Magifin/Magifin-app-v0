@@ -9,7 +9,17 @@ export const taxRules = {
     maxContributionByYear: {
       2024: 990,
     },
-    creditRate: 0.30,
+    // Two-tier thresholds for 2024
+    // Tier 1 (30%): up to lowerCeiling
+    // Tier 2 (25%): above lowerCeiling up to upperCeiling
+    lowerCeilingByYear: {
+      2024: 990,   // Standard system maximum
+    },
+    upperCeilingByYear: {
+      2024: 1270,  // Extended system maximum
+    },
+    creditRateTier1: 0.30,  // 30% for contribution up to lower ceiling
+    creditRateTier2: 0.25,  // 25% for contribution between lower and upper ceiling
   },
   serviceVouchers: {
     maxEligibleAmountByYear: {
@@ -46,10 +56,35 @@ export function getPensionMaxContribution(year?: number): number {
 }
 
 /**
- * Get the credit rate for pension savings
+ * Get the lower ceiling (Tier 1) for pension savings in a given year
+ * Falls back to 2024 if year not defined
  */
-export function getPensionCreditRate(): number {
-  return taxRules.pensionSavings.creditRate
+export function getPensionLowerCeiling(year?: number): number {
+  const targetYear = year ?? 2024
+  return taxRules.pensionSavings.lowerCeilingByYear[targetYear as 2024] ?? taxRules.pensionSavings.lowerCeilingByYear[2024]
+}
+
+/**
+ * Get the upper ceiling (Tier 2 limit) for pension savings in a given year
+ * Falls back to 2024 if year not defined
+ */
+export function getPensionUpperCeiling(year?: number): number {
+  const targetYear = year ?? 2024
+  return taxRules.pensionSavings.upperCeilingByYear[targetYear as 2024] ?? taxRules.pensionSavings.upperCeilingByYear[2024]
+}
+
+/**
+ * Get Tier 1 credit rate (30%) for pension savings
+ */
+export function getPensionCreditRateTier1(): number {
+  return taxRules.pensionSavings.creditRateTier1
+}
+
+/**
+ * Get Tier 2 credit rate (25%) for pension savings
+ */
+export function getPensionCreditRateTier2(): number {
+  return taxRules.pensionSavings.creditRateTier2
 }
 
 /**
