@@ -60,8 +60,9 @@ export function getPensionMaxContribution(year?: number): number {
  * Falls back to 2024 if year not defined
  */
 export function getPensionLowerCeiling(year?: number): number {
-  const targetYear = year ?? 2024
-  return (taxRules.pensionSavings.lowerCeilingByYear as Record<number, number>)[targetYear] ?? taxRules.pensionSavings.lowerCeilingByYear[2024]
+  const y = year ?? 2024
+  const value = taxRules.pensionSavings.lowerCeilingByYear[y as 2024]
+  return value ?? 990 // Hardcoded fallback if lookup fails
 }
 
 /**
@@ -69,8 +70,9 @@ export function getPensionLowerCeiling(year?: number): number {
  * Falls back to 2024 if year not defined
  */
 export function getPensionUpperCeiling(year?: number): number {
-  const targetYear = year ?? 2024
-  return (taxRules.pensionSavings.upperCeilingByYear as Record<number, number>)[targetYear] ?? taxRules.pensionSavings.upperCeilingByYear[2024]
+  const y = year ?? 2024
+  const value = taxRules.pensionSavings.upperCeilingByYear[y as 2024]
+  return value ?? 1270 // Hardcoded fallback if lookup fails
 }
 
 /**
@@ -92,15 +94,9 @@ export function getPensionCreditRateTier2(): number {
  * Falls back to 2024 if year not defined
  */
 export function getServiceVouchersMaxAmount(year?: number): number {
-  const targetYear = year ?? 2024
-  return (taxRules.serviceVouchers.maxEligibleAmountByYear as Record<number, number>)[targetYear] ?? taxRules.serviceVouchers.maxEligibleAmountByYear[2024]
-}
-
-/**
- * Get the credit rate for service vouchers
- */
-export function getServiceVouchersCreditRate(): number {
-  return taxRules.serviceVouchers.creditRate
+  const y = year ?? 2024
+  const value = taxRules.serviceVouchers.maxEligibleAmountByYear[y as 2024]
+  return value ?? 1850 // Hardcoded fallback if lookup fails
 }
 
 /**
@@ -108,8 +104,9 @@ export function getServiceVouchersCreditRate(): number {
  * Used to estimate benefit when user hasn't activated the feature yet
  */
 export function getServiceVouchersUnusedHeuristicAmount(year?: number): number {
-  const targetYear = year ?? 2024
-  return (taxRules.serviceVouchers.unusedHeuristicAmountByYear as Record<number, number>)[targetYear] ?? taxRules.serviceVouchers.unusedHeuristicAmountByYear[2024]
+  const y = year ?? 2024
+  const value = taxRules.serviceVouchers.unusedHeuristicAmountByYear[y as 2024]
+  return value ?? 2000 // Hardcoded fallback if lookup fails
 }
 
 /**
@@ -117,8 +114,9 @@ export function getServiceVouchersUnusedHeuristicAmount(year?: number): number {
  * Falls back to 2024 if year not defined
  */
 export function getChildcareMaxEligibleAmount(year?: number): number {
-  const targetYear = year ?? 2024
-  return (taxRules.childcare.maxEligibleAmountByYear as Record<number, number>)[targetYear] ?? taxRules.childcare.maxEligibleAmountByYear[2024]
+  const y = year ?? 2024
+  const value = taxRules.childcare.maxEligibleAmountByYear[y as 2024]
+  return value ?? 4100 // Hardcoded fallback if lookup fails
 }
 
 /**
