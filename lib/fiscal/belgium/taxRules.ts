@@ -52,7 +52,7 @@ export const taxRules = {
  */
 export function getPensionMaxContribution(year?: number): number {
   const targetYear = year ?? 2024
-  return taxRules.pensionSavings.maxContributionByYear[targetYear as 2024] ?? taxRules.pensionSavings.maxContributionByYear[2024]
+  return (taxRules.pensionSavings.maxContributionByYear as Record<number, number>)[targetYear] ?? taxRules.pensionSavings.maxContributionByYear[2024]
 }
 
 /**
@@ -61,7 +61,7 @@ export function getPensionMaxContribution(year?: number): number {
  */
 export function getPensionLowerCeiling(year?: number): number {
   const targetYear = year ?? 2024
-  return taxRules.pensionSavings.lowerCeilingByYear[targetYear as 2024] ?? taxRules.pensionSavings.lowerCeilingByYear[2024]
+  return (taxRules.pensionSavings.lowerCeilingByYear as Record<number, number>)[targetYear] ?? taxRules.pensionSavings.lowerCeilingByYear[2024]
 }
 
 /**
@@ -70,7 +70,7 @@ export function getPensionLowerCeiling(year?: number): number {
  */
 export function getPensionUpperCeiling(year?: number): number {
   const targetYear = year ?? 2024
-  return taxRules.pensionSavings.upperCeilingByYear[targetYear as 2024] ?? taxRules.pensionSavings.upperCeilingByYear[2024]
+  return (taxRules.pensionSavings.upperCeilingByYear as Record<number, number>)[targetYear] ?? taxRules.pensionSavings.upperCeilingByYear[2024]
 }
 
 /**
@@ -93,7 +93,7 @@ export function getPensionCreditRateTier2(): number {
  */
 export function getServiceVouchersMaxAmount(year?: number): number {
   const targetYear = year ?? 2024
-  return taxRules.serviceVouchers.maxEligibleAmountByYear[targetYear as 2024] ?? taxRules.serviceVouchers.maxEligibleAmountByYear[2024]
+  return (taxRules.serviceVouchers.maxEligibleAmountByYear as Record<number, number>)[targetYear] ?? taxRules.serviceVouchers.maxEligibleAmountByYear[2024]
 }
 
 /**
@@ -109,7 +109,7 @@ export function getServiceVouchersCreditRate(): number {
  */
 export function getServiceVouchersUnusedHeuristicAmount(year?: number): number {
   const targetYear = year ?? 2024
-  return taxRules.serviceVouchers.unusedHeuristicAmountByYear[targetYear as 2024] ?? taxRules.serviceVouchers.unusedHeuristicAmountByYear[2024]
+  return (taxRules.serviceVouchers.unusedHeuristicAmountByYear as Record<number, number>)[targetYear] ?? taxRules.serviceVouchers.unusedHeuristicAmountByYear[2024]
 }
 
 /**
@@ -118,7 +118,7 @@ export function getServiceVouchersUnusedHeuristicAmount(year?: number): number {
  */
 export function getChildcareMaxEligibleAmount(year?: number): number {
   const targetYear = year ?? 2024
-  return taxRules.childcare.maxEligibleAmountByYear[targetYear as 2024] ?? taxRules.childcare.maxEligibleAmountByYear[2024]
+  return (taxRules.childcare.maxEligibleAmountByYear as Record<number, number>)[targetYear] ?? taxRules.childcare.maxEligibleAmountByYear[2024]
 }
 
 /**
