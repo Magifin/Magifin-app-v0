@@ -40,21 +40,15 @@ export function UnsavedSimulationBanner() {
     setIsDismissed(true)
   }
 
-  // Smart resume logic:
-  // 1. If currentStepId is "taxYear", user was viewing results → go to /results (state in localStorage)
-  // 2. If currentStepId is anything else, user was in wizard → go to /wizard with state encoded in URL
-  //    (ensures state persists even if localStorage is cleared)
+  // Resume logic: Always route to /wizard with full state encoded in URL
+  // This ensures wizard state is restored regardless of where user was
   const resumeHref = (() => {
-    if (state.currentStepId === "taxYear" && state.completedStepIds.length > 0) {
-      return "/results"
-    }
-    // Encode full state in URL so wizard can restore it
     const resumeData = {
       answers: state.answers,
       currentStepId: state.currentStepId,
       completedStepIds: state.completedStepIds,
     }
-    return `/wizard?resume=${btoa(JSON.stringify(resumeData))}`
+    return `/wizard?resume=${encodeURIComponent(btoa(JSON.stringify(resumeData)))}`
   })()
 
   return (
