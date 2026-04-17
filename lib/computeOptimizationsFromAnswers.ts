@@ -1,13 +1,40 @@
 import type { WizardAnswers } from "./wizard-store"
 import {
   getPensionMaxContribution,
-  getPensionCreditRate,
+  getPensionLowerCeiling,
+  getPensionUpperCeiling,
+  getPensionCreditRateTier1,
+  getPensionCreditRateTier2,
   getServiceVouchersMaxAmount,
-  getServiceVouchersCreditRate,
   getServiceVouchersUnusedHeuristicAmount,
   getChildcareMaxEligibleAmount,
   getChildcareDeductionRate,
 } from "./fiscal/belgium/taxRules"
+
+// Local helpers for heuristic computation
+function getEstimatedPensionCredit(amount: number, year?: number): number {
+  const contribution = Math.max(0, Math.round(amount))
+  if (contribution <= 0) return 0
+
+  const lowerCeiling = getPensionLowerCeiling(year)
+  const upperCeiling = getPensionUpperCeiling(year)
+  const tier1Rate = getPensionCreditRateTier1()
+  const tier2Rate = getPensionCreditRateTier2()
+
+  if (contribution <= lowerCeiling) {
+    return Math.round(contribution * tier1Rate)
+  }
+
+  const tier1Credit = lowerCeiling * tier1Rate
+  const tier2Base = Math.min(contribution, upperCeiling) - lowerCeiling
+  const tier2Credit = tier2Base * tier2Rate
+
+  return Math.round(tier1Credit + tier2Credit)
+}
+
+function getServiceVouchersCreditRate(): number {
+  return 0.10
+}
 
 export type OptimizationPrecision = "confirmed" | "estimated" | "advisory"
 export type OptimizationCategory =
@@ -196,8 +223,8 @@ export function computeOptimizationsFromAnswers(
         key: "pension_credit",
         title: "Crédit d'impôt épargne pension",
         category: "pension",
-        amountMin: Math.round(normalizedAmount * getPensionCreditRate()),
-        amountMax: Math.round(normalizedAmount * getPensionCreditRate()),
+        amountMin: getEstimatedPensionCredit(normalizedAmount, answers.taxYear),
+        amountMax: getEstimatedPensionCredit(normalizedAmount, answers.taxYear),
         available: true,
         precision: "estimated",
         reason: "Crédit d'impôt estimé sur votre épargne pension (30%).",
@@ -505,7 +532,9 @@ export function computeOptimizationsFromAnswers(
     
     // Prevent useless upgrades
     if (remainingBase > 1) {
-      const additionalGain = Math.round(remainingBase * getPensionCreditRate())
+      const additionalGain =
+        getEstimatedPensionCredit(normalizedAmount + remainingBase, answers.taxYear) -
+        getEstimatedPensionCredit(normalizedAmount, answers.taxYear)
       
       // Only push if gain is meaningful
       if (additionalGain > 1) {
@@ -627,7 +656,7 @@ export function computeOptimizationsFromAnswers(
   // PENSION (unused case)
   if (answers.pensionSaving !== "Oui") {
     const maxAmount = getPensionMaxContribution(answers.taxYear)
-    const additionalGain = Math.round(maxAmount * getPensionCreditRate())
+    const additionalGain = getEstimatedPensionCredit(maxAmount, answers.taxYear)
 
     upgrade.push({
       id: "pension_unused",
