@@ -25,11 +25,7 @@ function getEstimatedPensionCredit(amount: number, year?: number): number {
     return Math.round(contribution * tier1Rate)
   }
 
-  const tier1Credit = lowerCeiling * tier1Rate
-  const tier2Base = Math.min(contribution, upperCeiling) - lowerCeiling
-  const tier2Credit = tier2Base * tier2Rate
-
-  return Math.round(tier1Credit + tier2Credit)
+  return Math.round(Math.min(contribution, upperCeiling) * tier2Rate)
 }
 
 function getServiceVouchersCreditRate(): number {
