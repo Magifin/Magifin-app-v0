@@ -6,10 +6,12 @@ import { PiggyBank, XCircle, ShieldCheck, ExternalLink } from "lucide-react"
 import { MagiHint } from "@/components/wizard/magi-hint"
 import type { YesNo } from "@/lib/wizard-store"
 import { track } from "@/lib/track"
+import { getPensionLowerCeiling, getPensionUpperCeiling } from "@/lib/fiscal/belgium/taxRules"
 
 interface StepPensionProps {
   hasPension: YesNo
   pensionAmount: number
+  taxYear?: number
   onHasChange: (value: YesNo) => void
   onAmountChange: (value: number) => void
 }
@@ -20,6 +22,7 @@ const PARTNER_URL =
 export function StepPension({
   hasPension,
   pensionAmount,
+  taxYear = 2024,
   onHasChange,
   onAmountChange,
 }: StepPensionProps) {
@@ -35,6 +38,10 @@ export function StepPension({
     track("click_insurance_cta", { source: "pension_step" })
   }
 
+  // Get year-specific thresholds
+  const lowerCeiling = getPensionLowerCeiling(taxYear)
+  const upperCeiling = getPensionUpperCeiling(taxYear)
+
   return (
     <div>
       <MagiHint message="L'épargne pension est l'une des optimisations fiscales les plus fréquentes en Belgique." />
@@ -42,7 +49,7 @@ export function StepPension({
         {"Avez-vous une épargne pension ?"}
       </h2>
       <p className="mt-2 text-muted-foreground">
-        {"L'épargne pension vous donne droit à une réduction d'impôt de 30\u00A0% (max 1.020\u00A0\u20AC) ou 25\u00A0% (max 1.310\u00A0\u20AC)."}
+        {`L'épargne pension vous donne droit à une réduction d'impôt de 30\u00A0% (max ${lowerCeiling.toLocaleString("fr-BE")}\u00A0€) ou 25\u00A0% (max ${upperCeiling.toLocaleString("fr-BE")}\u00A0€).`}
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -134,7 +141,7 @@ export function StepPension({
             <Input
               type="number"
               min={0}
-              max={1310}
+              max={upperCeiling}
               value={pensionAmount || ""}
               onChange={(e) => {
                 const raw = Number(e.target.value || 0)
@@ -142,13 +149,13 @@ export function StepPension({
                 onAmountChange(amount)
               }}
               onWheel={(e) => e.currentTarget.blur()}
-              placeholder="Ex: 990"
+              placeholder={`Ex: ${lowerCeiling}`}
               className="w-40"
             />
             <span className="text-sm text-muted-foreground">{"€ / an"}</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {"Plafond\u00A0: 1.020\u00A0\u20AC (réduction de 30\u00A0%) ou 1.310\u00A0\u20AC (réduction de 25\u00A0%)."}
+            {`Plafond\u00A0: ${lowerCeiling.toLocaleString("fr-BE")}\u00A0€ (réduction de 30\u00A0%) ou ${upperCeiling.toLocaleString("fr-BE")}\u00A0€ (réduction de 25\u00A0%).`}
           </p>
         </div>
       )}

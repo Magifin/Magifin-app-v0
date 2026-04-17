@@ -7,19 +7,25 @@
 export const taxRules = {
   pensionSavings: {
     maxContributionByYear: {
-      2024: 990,
+      2024: 1020,
+      2025: 1050,
+      2026: 1050,
     },
-    // Two-tier thresholds for 2024
-    // Tier 1 (30%): up to lowerCeiling
-    // Tier 2 (25%): above lowerCeiling up to upperCeiling
+    // Full-switch thresholds (NOT marginal/cumulative)
+    // If contribution <= lower ceiling: apply tier1 to entire amount
+    // If contribution > lower ceiling: apply tier2 to entire amount (capped at upper ceiling)
     lowerCeilingByYear: {
-      2024: 990,   // Standard system maximum
+      2024: 1020,   // 30% threshold for standard system
+      2025: 1050,   // 30% threshold for standard system
+      2026: 1050,   // 30% threshold for standard system
     },
     upperCeilingByYear: {
-      2024: 1270,  // Extended system maximum
+      2024: 1310,   // 25% cap (extended system)
+      2025: 1350,   // 25% cap (extended system)
+      2026: 1350,   // 25% cap (extended system)
     },
     creditRateTier1: 0.30,  // 30% for contribution up to lower ceiling
-    creditRateTier2: 0.25,  // 25% for contribution between lower and upper ceiling
+    creditRateTier2: 0.25,  // 25% for contribution above lower ceiling (capped at upper ceiling)
   },
   serviceVouchers: {
     maxEligibleAmountByYear: {

@@ -77,23 +77,18 @@ export function calculatePensionTaxCredit(contribution: number, fiscalYear: numb
   const rateTier1 = getPensionCreditRateTier1()
   const rateTier2 = getPensionCreditRateTier2()
   
-  let credit = 0
+  // FULL-SWITCH RULE (NOT marginal/cumulative):
+  // - If contribution <= lower ceiling: apply tier1 rate to entire amount
+  // - If contribution > lower ceiling: apply tier2 rate to entire amount (capped at upper ceiling)
   
   if (contribution <= lowerCeiling) {
-    // Tier 1 only: 30% of contribution
-    credit = contribution * rateTier1
-  } else {
-    // Tier 1: 30% on lower ceiling
-    const tier1Credit = lowerCeiling * rateTier1
-    
-    // Tier 2: 25% on amount between lower and upper ceiling
-    const tier2Base = Math.min(contribution, upperCeiling) - lowerCeiling
-    const tier2Credit = tier2Base * rateTier2
-    
-    credit = tier1Credit + tier2Credit
+    // Tier 1: 30% on full contribution
+    return Math.round(contribution * rateTier1)
   }
   
-  return Math.round(credit)
+  // Tier 2: 25% on full eligible amount (capped at upper ceiling)
+  const cappedContribution = Math.min(contribution, upperCeiling)
+  return Math.round(cappedContribution * rateTier2)
 }
 
 /**
